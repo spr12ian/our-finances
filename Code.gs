@@ -1678,7 +1678,29 @@ function sendEmail(recipient, subject, body, options) {
 
 function sendMeEmail(subject, emailBody, options) {
   const body = `${subject}\n\n${emailBody}`;
-  return sendEmail("hope.survives@gmail.com", subject, body, options);
+  return sendEmail(getMyEmailAddress(), subject, body, options);
+}
+
+function getMyEmailAddress() {
+    return getUserProperty('MY_EMAIL_ADDRESS');
+}
+
+function setMyEmailAddress() {
+    const key='MY_EMAIL_ADDRESS';
+    const value='hope.survives@gmail.com';
+    setUserProperty(key, value);
+}
+
+// Storing user-specific properties
+function setUserProperty(key, value) {
+  PropertiesService.getUserProperties().setProperty(key, value);
+}
+
+// Retrieving user-specific properties
+function getUserProperty(key) {
+  const value = PropertiesService.getUserProperties().getProperty(key);
+  Logger.log(`${key}: ${value}`);
+  return value;
 }
 
 function setLastUpdated(cell) {
