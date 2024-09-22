@@ -1,4 +1,12 @@
-class AccountSheet {
+const Sheet = class {
+  constructor(spreadsheet) {
+    this.spreadsheet = spreadsheet;
+    this.spreadsheetName = spreadsheet.getName();
+    console.log(`Spreadsheet: ${this.spreadsheetName}`);
+  }
+}
+
+const AccountSheet = class extends Sheet {
   static get COL_BALANCE() { return 8; }
   static get COL_COUNTERPARTY() { return 6; }
   static get COL_COUNTERPARTY_DATE() { return 7; }
@@ -24,7 +32,8 @@ class AccountSheet {
   static get MINIMUM_COLUMNS() { return 8; }
 
   constructor(sheet) {
-    this.spreadsheet = sheet.getParent();
+    const spreadsheet = sheet.getParent();
+    super(spreadsheet);
     this.sheet = sheet;
     this.sheetName = sheet.getName();
     this.log(`AccountSheet initialized for sheet: ${this.sheetName}`);
@@ -112,7 +121,7 @@ class AccountSheet {
   log(message, level = 'info') {
     const logPrefix = `[${this.sheetName}] `;
     const logMessage = `${logPrefix}${message}`;
-    level === 'error' ? Logger.log(`ERROR: ${logMessage}`) : Logger.log(logMessage);
+    level === 'error' ? console.log(`ERROR: ${logMessage}`) : console.log(logMessage);
   }
 
   logSheetDetails() {
@@ -300,7 +309,7 @@ class AccountSheet {
   }
 }
 
-class BalanceSheet {
+const BalanceSheet = class {
   static get SHEET_NAME() { return 'Balance Sheet'; }
   constructor(spreadsheet) {
     this.sheetName = BalanceSheet.SHEET_NAME;
@@ -325,11 +334,33 @@ class BalanceSheet {
   log(message, level = 'info') {
     const logPrefix = `[${this.sheetName}] `;
     const logMessage = `${logPrefix}${message}`;
-    level === 'error' ? Logger.log(`ERROR: ${logMessage}`) : Logger.log(logMessage);
+    level === 'error' ? console.log(`ERROR: ${logMessage}`) : console.log(logMessage);
   }
 }
 
-class BankAccounts {
+const Spreadsheet = class {
+  constructor(spreadsheetId) {
+    if (spreadsheetId) {
+      this.spreadsheet = SpreadsheetApp.openById(spreadsheetId);
+    } else {
+      this.spreadsheet = SpreadsheetApp.getActiveSpreadsheet();
+    }
+  }
+
+  getRangeByName(rangeName) {
+    return this.spreadsheet.getRangeByName(rangeName)
+  }
+
+  getSheetByName(sheetName) {
+    return this.spreadsheet.getSheetByName(sheetName);
+  }
+
+  getUrl() {
+    return this.spreadsheet.getUrl()
+  }
+}
+
+const BankAccounts = class {
   static get COL_CHECK_BALANCE_FREQUENCY() { return 12; }
   static get COL_OWNER_CODE() { return 3; }
   static get OWNER_CODE_BRIAN() { return 'A'; }
@@ -395,7 +426,7 @@ class BankAccounts {
   log(message, level = 'info') {
     const logPrefix = `[${this.sheetName}] `;
     const logMessage = `${logPrefix}${message}`;
-    level === 'error' ? Logger.log(`ERROR: ${logMessage}`) : Logger.log(logMessage);
+    level === 'error' ? console.log(`ERROR: ${logMessage}`) : console.log(logMessage);
   }
 
 
@@ -462,156 +493,38 @@ class BankAccounts {
   }
 }
 
-class BankDebitsDue {
+const BankDebitsDue = class {
+  static get COL_ACCOUNT_KEY() { return 0; }
+  static get COL_CHANGE_AMOUNT() { return 1; }
+
   constructor(ourFinances) {
-    this.sheetName = 'Bank debits due'
-    this.spreadsheet = ourFinances.spreadsheet
-    this.sheet = this.spreadsheet.getSheetByName(this.sheetName)
-    this.howManyDaysAhead = ourFinances.howManyDaysAhead
+    this.sheetName = 'Bank debits due';
+    this.spreadsheet = ourFinances.spreadsheet;
+    this.sheet = this.spreadsheet.getSheetByName(this.sheetName);
+    this.howManyDaysAhead = ourFinances.howManyDaysAhead;
+
+    // Check if the sheet exists
+    if (!this.sheet) {
+      throw new Error(`Sheet "${this.sheetName}" not found in the spreadsheet.`);
+    }
   }
 
   getScheduledTransactions() {
-    return this.sheet.getDataRange().getValues()
+    return this.sheet.getDataRange().getValues();
   }
 
   getUpcomingDebits() {
-    const COL_ACCOUNT_KEY = 0
-    const COL_CHANGE_AMOUNT = 1
-
     let upcomingPayments = `Due in the next ${this.howManyDaysAhead} days:`
 
     const scheduledTransactions = this.getScheduledTransactions()
 
+    // Filter and format valid upcoming debits
     scheduledTransactions.forEach(transaction => {
-      if (transaction[COL_ACCOUNT_KEY].length) {
-        if (Math.abs(transaction[COL_CHANGE_AMOUNT]) > 1) {
-          upcomingPayments += `\n\t${transaction[COL_ACCOUNT_KEY]}`
-          upcomingPayments += ` ${getAmountAsGBP(transaction[COL_CHANGE_AMOUNT])}`
-        }
-      }
-    })
+      const accountKey = transaction[BankDebitsDue.COL_ACCOUNT_KEY]?.trim();  // Optional chaining and trim
+      const changeAmount = transaction[BankDebitsDue.COL_CHANGE_AMOUNT];
 
-
-    return upcomingPayments
-  }
-}
-
-class BudgetAnnualTransactions {
-  constructor(ourFinances) {
-    this.sheetName = 'Budget annual transactions'
-    this.spreadsheet = ourFinances.spreadsheet
-    this.sheet = this.spreadsheet.getSheetByName(this.sheetName)
-    this.howManyDaysAhead = ourFinances.howManyDaysAhead
-  }
-
-  getScheduledTransactions() {
-    return this.sheet.getDataRange().getValues()
-  }
-
-  getUpcomingDebits() {
-    Logger.log(`BudgetAnnualTransactions:getUpcomingDebits`)
-    const COL_DATE = 0
-    const COL_CHANGE_AMOUNT = 3
-    const COL_DESCRIPTION = 1
-    const COL_FROM_ACCOUNT = 4
-    const COL_PAYMENT_TYPE = 5
-    const howManyDaysAhead = this.howManyDaysAhead
-
-    let upcomingPayments = '\n'
-    const today = getNewDate()
-
-    const scheduledTransactions = this.getScheduledTransactions()
-    Logger.log(`scheduledTransactions: ${scheduledTransactions}`)
-
-    // Lose the header row
-    scheduledTransactions.shift()
-
-    scheduledTransactions.forEach(transaction => {
-      Logger.log(`transaction: ${transaction}`)
-      Logger.log(`transaction[COL_DATE]: ${transaction[COL_DATE]}`)
-      Logger.log(`transaction[COL_CHANGE_AMOUNT]: ${transaction[COL_CHANGE_AMOUNT]}`)
-      if (Math.abs(transaction[COL_CHANGE_AMOUNT]) > 1) {
-
-        const daySelected = transaction[COL_DATE]
-        Logger.log(`daySelected: ${daySelected}`)
-
-        const formattedDaySelected = getFormattedDate(new Date(daySelected), "GMT+1", "dd/MM/yyyy")
-        Logger.log(`formattedDaySelected: ${formattedDaySelected}`)
-
-        // Reset the day iterator
-        const { first, iterator: days } = setupDaysIterator(today)
-        let day = first
-        for (let index = 0; index <= howManyDaysAhead; index++) {
-          const dayDay = day.day
-
-          if (formattedDaySelected === dayDay) {
-            upcomingPayments += `\nAnnual payment due:`
-            upcomingPayments += ` ${getOrdinalDate(day.date)}`
-            upcomingPayments += ` ${getAmountAsGBP(transaction[COL_CHANGE_AMOUNT])}`
-            upcomingPayments += ` from`
-            upcomingPayments += ` ${transaction[COL_FROM_ACCOUNT]}`
-            upcomingPayments += ` by ${transaction[COL_PAYMENT_TYPE]}`
-            upcomingPayments += ` ${transaction[COL_DESCRIPTION]}`
-          }
-          day = days.next()
-        }
-      }
-    })
-
-
-    return upcomingPayments
-  }
-}
-
-class BudgetMonthlyTransactions {
-  constructor(ourFinances) {
-    this.sheetName = 'Budget monthly transactions'
-    this.spreadsheet = ourFinances.spreadsheet
-    this.sheet = this.spreadsheet.getSheetByName(this.sheetName)
-    this.howManyDaysAhead = ourFinances.howManyDaysAhead;
-  }
-
-  getScheduledTransactions() {
-    return this.sheet.getDataRange().getValues()
-  }
-
-  getUpcomingDebits() {
-    const COL_DATE = 0
-    const COL_DEBIT_AMOUNT = 3
-    const COL_DESCRIPTION = 1
-    const COL_FROM_ACCOUNT = 6
-    const COL_PAYMENT_TYPE = 9
-    const howManyDaysAhead = this.howManyDaysAhead
-
-    let upcomingPayments = '\n'
-    const today = getNewDate()
-
-    const scheduledTransactions = this.getScheduledTransactions()
-
-    // Remove the header row
-    scheduledTransactions.shift()
-
-    // Get the dates for the upcoming days
-    const upcomingDays = [];
-    const { first, iterator: days } = setupDaysIterator(today);
-    let day = first;
-    for (let index = 0; index <= howManyDaysAhead; index++) {
-      upcomingDays.push(day);
-      day = days.next();
-    }
-
-    scheduledTransactions.forEach(transaction => {
-      if (Math.abs(transaction[COL_DEBIT_AMOUNT]) > 1) {
-        const transactionDate = new Date(transaction[COL_DATE]);
-
-        upcomingDays.forEach(day => {
-          if (transactionDate.toDateString() === day.date.toDateString()) {
-            upcomingPayments += `\nMonthly payment due: ${getOrdinalDate(day.date)} `;
-            upcomingPayments += `${getAmountAsGBP(transaction[COL_DEBIT_AMOUNT])} from `;
-            upcomingPayments += `${transaction[COL_FROM_ACCOUNT]} by ${transaction[COL_PAYMENT_TYPE]} `;
-            upcomingPayments += `${transaction[COL_DESCRIPTION]}`;
-          }
-        });
+      if (accountKey && Math.abs(changeAmount) > 1) {
+        upcomingPayments += `\n\t${accountKey} ${getAmountAsGBP(changeAmount)}`;
       }
     });
 
@@ -619,12 +532,102 @@ class BudgetMonthlyTransactions {
   }
 }
 
-class BudgetOneOffTransactions {
+const BudgetAnnualTransactions = class {
+  static get COL_DATE() { return 0; }
+  static get COL_CHANGE_AMOUNT() { return 3; }
+  static get COL_DESCRIPTION() { return 1; }
+  static get COL_FROM_ACCOUNT() { return 4; }
+  static get COL_PAYMENT_TYPE() { return 5; }
+
   constructor(ourFinances) {
-    this.sheetName = 'Budget one-off transactions'
+    this.sheetName = 'Budget annual transactions';
+    this.spreadsheet = ourFinances.spreadsheet;
+    this.sheet = this.spreadsheet.getSheetByName(this.sheetName);
+    this.howManyDaysAhead = ourFinances.howManyDaysAhead;
+
+    if (!this.sheet) {
+      throw new Error(`Sheet "${this.sheetName}" not found.`);
+    }
+  }
+
+  // Get all scheduled transactions from the sheet
+  getScheduledTransactions() {
+    return this.sheet.getDataRange().getValues();
+  }
+
+  // Main method to get upcoming debits
+  getUpcomingDebits() {
+    console.log('BudgetAnnualTransactions:getUpcomingDebits');
+    const howManyDaysAhead = this.howManyDaysAhead;
+    const today = getNewDate();
+    let upcomingPayments = '';
+
+    // Fetch scheduled transactions and remove the header row
+    const scheduledTransactions = this.getScheduledTransactions();
+    scheduledTransactions.shift(); // Remove header row
+
+    if (!scheduledTransactions.length) return upcomingPayments;
+
+    // Iterate over each transaction and filter the valid ones
+    scheduledTransactions.forEach(transaction => {
+      const {
+        [BudgetAnnualTransactions.COL_DATE]: date,
+        [BudgetAnnualTransactions.COL_CHANGE_AMOUNT]: changeAmount,
+        [BudgetAnnualTransactions.COL_DESCRIPTION]: description,
+        [BudgetAnnualTransactions.COL_FROM_ACCOUNT]: fromAccount,
+        [BudgetAnnualTransactions.COL_PAYMENT_TYPE]: paymentType
+      } = transaction;
+
+      if (Math.abs(changeAmount) > 1) {
+        const formattedDaySelected = getFormattedDate(new Date(date), "GMT+1", "dd/MM/yyyy");
+
+        // Generate payment details if the date falls within the upcoming days
+        const paymentDetails = this._generatePaymentDetails(formattedDaySelected, changeAmount, fromAccount, paymentType, description, today, howManyDaysAhead);
+        if (paymentDetails) {
+          upcomingPayments += paymentDetails;
+        }
+      }
+    });
+
+    if (upcomingPayments.length) {
+      upcomingPayments = '\nAnnual payment(s) due:\n' + upcomingPayments;
+    }
+
+    return upcomingPayments;
+  }
+
+  // Helper method to generate payment details
+  _generatePaymentDetails(formattedDaySelected, changeAmount, fromAccount, paymentType, description, today, howManyDaysAhead) {
+    const { first, iterator: days } = setupDaysIterator(today);
+    let day = first;
+
+    for (let index = 0; index <= howManyDaysAhead; index++) {
+      if (formattedDaySelected === day.day) {
+        return `\t${getOrdinalDate(day.date)} ${getAmountAsGBP(changeAmount)} from ${fromAccount} by ${paymentType} ${description}\n`;
+      }
+      day = days.next();
+    }
+
+    return null;
+  }
+}
+
+const BudgetMonthlyTransactions = class {
+  static get COL_DATE() { return 0; }
+  static get COL_DEBIT_AMOUNT() { return 3; }
+  static get COL_DESCRIPTION() { return 1; }
+  static get COL_FROM_ACCOUNT() { return 6; }
+  static get COL_PAYMENT_TYPE() { return 9; }
+
+  constructor(ourFinances) {
+    this.sheetName = 'Budget monthly transactions'
     this.spreadsheet = ourFinances.spreadsheet
     this.sheet = this.spreadsheet.getSheetByName(this.sheetName)
-    this.howManyDaysAhead = ourFinances.howManyDaysAhead
+    this.howManyDaysAhead = ourFinances.howManyDaysAhead;
+
+    if (!this.sheet) {
+      throw new Error(`Sheet "${this.sheetName}" not found.`);
+    }
   }
 
   getScheduledTransactions() {
@@ -632,61 +635,119 @@ class BudgetOneOffTransactions {
   }
 
   getUpcomingDebits() {
-    Logger.log(`BudgetOneOffTransactions:getUpcomingDebits`)
-    const COL_DATE = 0
-    const COL_CHANGE_AMOUNT = 3
-    const COL_DESCRIPTION = 1
-    const COL_FROM_ACCOUNT = 4
-    const COL_PAYMENT_TYPE = 5
     const howManyDaysAhead = this.howManyDaysAhead
 
-    let upcomingPayments = '\n';
-    const today = getNewDate();
+    let upcomingPayments = ''
+    const today = getNewDate()
 
     const scheduledTransactions = this.getScheduledTransactions()
-    Logger.log(`scheduledTransactions: ${scheduledTransactions}`)
 
-    // Lose the header row
+    // Remove the header row
     scheduledTransactions.shift()
 
-    scheduledTransactions.forEach(transaction => {
-      Logger.log(`transaction: ${transaction}`)
-      Logger.log(`transaction[COL_DATE]: ${transaction[COL_DATE]}`)
-      Logger.log(`transaction[COL_CHANGE_AMOUNT]: ${transaction[COL_CHANGE_AMOUNT]}`)
-      if (Math.abs(transaction[COL_CHANGE_AMOUNT]) > 1) {
-
-        const daySelected = transaction[COL_DATE]
-        Logger.log(`daySelected: ${daySelected}`)
-
-        const formattedDaySelected = getFormattedDate(new Date(daySelected), "GMT+1", "dd/MM/yyyy")
-        Logger.log(`formattedDaySelected: ${formattedDaySelected}`)
-
-        // Reset the day iterator
-        const { first, iterator: days } = setupDaysIterator(today)
-        let day = first
-        for (let index = 0; index <= howManyDaysAhead; index++) {
-          const dayDay = day.day
-
-          if (formattedDaySelected === dayDay) {
-            upcomingPayments += `\nOne-off payment due:`
-            upcomingPayments += ` ${getOrdinalDate(day.date)}`
-            upcomingPayments += ` ${getAmountAsGBP(transaction[COL_CHANGE_AMOUNT])}`
-            upcomingPayments += ` from`
-            upcomingPayments += ` ${transaction[COL_FROM_ACCOUNT]}`
-            upcomingPayments += ` by ${transaction[COL_PAYMENT_TYPE]}`
-            upcomingPayments += ` ${transaction[COL_DESCRIPTION]}`
-          }
-          day = days.next()
-        }
+    if (scheduledTransactions.length > 0) {
+      upcomingPayments += `\nMonthly payment due:\n`;
+      // Get the dates for the upcoming days
+      const upcomingDays = [];
+      const { first, iterator: days } = setupDaysIterator(today);
+      let day = first;
+      for (let index = 0; index <= howManyDaysAhead; index++) {
+        upcomingDays.push(day);
+        day = days.next();
       }
-    })
 
+      scheduledTransactions.forEach(transaction => {
+        if (Math.abs(transaction[BudgetMonthlyTransactions.COL_DEBIT_AMOUNT]) > 1) {
+          const transactionDate = new Date(transaction[BudgetMonthlyTransactions.COL_DATE]);
+
+          upcomingDays.forEach(day => {
+            if (transactionDate.toDateString() === day.date.toDateString()) {
+              upcomingPayments += `\t${getOrdinalDate(day.date)} `;
+              upcomingPayments += `${getAmountAsGBP(transaction[BudgetMonthlyTransactions.COL_DEBIT_AMOUNT])} from `;
+              upcomingPayments += `${transaction[BudgetMonthlyTransactions.COL_FROM_ACCOUNT]} by ${transaction[BudgetMonthlyTransactions.COL_PAYMENT_TYPE]} `;
+              upcomingPayments += `${transaction[BudgetMonthlyTransactions.COL_DESCRIPTION]}\n`;
+            }
+          });
+        }
+      });
+    }
 
     return upcomingPayments
   }
 }
 
-class BudgetWeeklyTransactions {
+const BudgetOneOffTransactions = class {
+  static get COL_CHANGE_AMOUNT() { return 3; }
+  static get COL_DATE() { return 0; }
+  static get COL_DESCRIPTION() { return 1; }
+  static get COL_FROM_ACCOUNT() { return 6; }
+  static get COL_PAYMENT_TYPE() { return 7; }
+
+  constructor(ourFinances) {
+    this.sheetName = 'Budget one-off transactions';
+    this.spreadsheet = ourFinances.spreadsheet;
+    this.sheet = this.spreadsheet.getSheetByName(this.sheetName);
+    this.howManyDaysAhead = ourFinances.howManyDaysAhead;
+
+    if (!this.sheet) {
+      throw new Error(`Sheet "${this.sheetName}" not found.`);
+    }
+  }
+
+  // Get all transactions from the sheet
+  getScheduledTransactions() {
+    return this.sheet.getDataRange().getValues();
+  }
+
+  // Main method to get upcoming debits
+  getUpcomingDebits() {
+    let upcomingPayments = '';
+
+    // Fetch scheduled transactions and remove the header row
+    const scheduledTransactions = this.getScheduledTransactions();
+    scheduledTransactions.shift(); // Remove header row
+
+    if (!scheduledTransactions.length) return upcomingPayments;
+
+    upcomingPayments += '\nOne-off payment(s) due:\n';
+
+    // Iterate over transactions and filter valid ones
+    scheduledTransactions.forEach(transaction => {
+      const changeAmount = transaction[BudgetOneOffTransactions.COL_CHANGE_AMOUNT];
+      const transactionDate = transaction[BudgetOneOffTransactions.COL_DATE];
+
+      if (Math.abs(changeAmount) > 1) {
+        const formattedDaySelected = getFormattedDate(new Date(transactionDate), "GMT+1", "dd/MM/yyyy");
+
+        // Use a helper function for better readability
+        const upcomingPayment = this._getPaymentDetails(formattedDaySelected, changeAmount, transaction);
+        if (upcomingPayment) {
+          upcomingPayments += upcomingPayment;
+        }
+      }
+    });
+
+    return upcomingPayments;
+  }
+
+  // Helper function to generate payment details
+  _getPaymentDetails(formattedDaySelected, changeAmount, transaction) {
+    const { first, iterator: days } = setupDaysIterator(getNewDate());
+    let day = first;
+
+    for (let index = 0; index <= this.howManyDaysAhead; index++) {
+      if (formattedDaySelected === day.day) {
+        // Generate payment detail string
+        return `\t${getOrdinalDate(day.date)} ${getAmountAsGBP(changeAmount)} from ${transaction[BudgetOneOffTransactions.COL_FROM_ACCOUNT]} by ${transaction[BudgetOneOffTransactions.COL_PAYMENT_TYPE]} ${transaction[BudgetOneOffTransactions.COL_DESCRIPTION]}\n`;
+      }
+      day = days.next();
+    }
+
+    return null;
+  }
+}
+
+const BudgetWeeklyTransactions = class {
   constructor(ourFinances) {
     this.sheetName = 'Budget weekly transactions'
     this.spreadsheet = ourFinances.spreadsheet
@@ -717,10 +778,10 @@ class BudgetWeeklyTransactions {
     scheduledTransactions.forEach(transaction => {
       if (Math.abs(transaction[COL_DEBIT_AMOUNT]) > 1) {
         const daySelected = transaction[COL_DATE]
-        Logger.log(`daySelected: ${daySelected}`)
+        console.log(`daySelected: ${daySelected}`)
 
         const formattedDaySelected = getFormattedDate(new Date(daySelected), "GMT+1", "dd/MM/yyyy")
-        Logger.log(`formattedDaySelected: ${formattedDaySelected}`)
+        console.log(`formattedDaySelected: ${formattedDaySelected}`)
 
         // Reset the day iterator
         const { first, iterator: days } = setupDaysIterator(today)
@@ -729,17 +790,21 @@ class BudgetWeeklyTransactions {
           const dayDay = day.day;
 
           if (formattedDaySelected === dayDay) {
-            upcomingPayments += `\nWeekly payment due: ${getOrdinalDate(day.date)}`
+            upcomingPayments += `\t${getOrdinalDate(day.date)}`
             upcomingPayments += ` ${getAmountAsGBP(transaction[COL_DEBIT_AMOUNT])}`
             upcomingPayments += ` from`
             upcomingPayments += ` ${transaction[COL_FROM_ACCOUNT]}`
             upcomingPayments += ` by ${transaction[COL_PAYMENT_TYPE]}`
-            upcomingPayments += ` ${transaction[COL_DESCRIPTION]}`
+            upcomingPayments += ` ${transaction[COL_DESCRIPTION]}\n`
           }
           day = days.next()
         }
       }
     })
+
+    if (upcomingPayments.length) {
+      upcomingPayments = `\nWeekly payment due:\n${upcomingPayments}`;
+    }
 
     return upcomingPayments
   }
@@ -782,7 +847,7 @@ class Dependencies {
   }
 
   getAllDependencies() {
-    Logger.log("Dependencies.getAllDependencies")
+    console.log("Dependencies.getAllDependencies")
     let allDependencies
     const typeofThisAllDependencies = typeof this.allDependencies
     if (typeofThisAllDependencies === 'undefined') {
@@ -792,8 +857,8 @@ class Dependencies {
     } else {
       allDependencies = this.allDependencies;
     }
-    Logger.log("getAllDependencies: allDependencies %s", allDependencies);
-    Logger.log("getAllDependencies: this.allDependencies %s", this.allDependencies);
+    console.log("getAllDependencies: allDependencies %s", allDependencies);
+    console.log("getAllDependencies: this.allDependencies %s", this.allDependencies);
     return allDependencies;
   }
 
@@ -806,7 +871,7 @@ class Dependencies {
       const spreadsheet = SpreadsheetApp.openById(id);
       return spreadsheet.getName();
     } catch (error) {
-      Logger.log(`Error fetching spreadsheet with ID: ${id}. ${error.message}`);
+      console.log(`Error fetching spreadsheet with ID: ${id}. ${error.message}`);
       return null;  // or handle it accordingly
     }
   }
@@ -837,7 +902,7 @@ class Dependencies {
 
 class OurFinances {
   constructor() {
-    this.spreadsheet = SpreadsheetApp.getActiveSpreadsheet();
+    this.spreadsheet = new Spreadsheet();
   }
 
   checkFixedAmounts() {
@@ -847,14 +912,14 @@ class OurFinances {
 
   emailUpcomingPayments() {
     const subject = `Our Finances: Upcoming debits ${getToday()}`;
-    Logger.log(`Subject: ${subject}`);
+    console.log(`Subject: ${subject}`);
 
     // Initialize the email body
     let emailBody = `${subject}\n`;
 
     // Collect upcoming debits from different sources
     const upcomingDebits = [
-      this.BankDebitsDue.getUpcomingDebits(),
+      this.bankDebitsDue.getUpcomingDebits(),
       this.budgetOneOffTransactions.getUpcomingDebits(),
       this.budgetAnnualTransactions.getUpcomingDebits(),
       this.budgetMonthlyTransactions.getUpcomingDebits(),
@@ -864,7 +929,7 @@ class OurFinances {
     // Concatenate the debits into the email body
     emailBody += upcomingDebits.join("\n");
 
-    Logger.log(`Email Body: ${emailBody}`);
+    console.log(`Email Body: ${emailBody}`);
 
     // Append the spreadsheet URL
     emailBody += `\n\nSent from (onDateChange): ${this.spreadsheet.getUrl()}\n`;
@@ -894,11 +959,11 @@ class OurFinances {
     return this._bankAccounts
   }
 
-  get BankDebitsDue() {
-    if (typeof this._BankDebitsDue === 'undefined') {
-      this._BankDebitsDue = new BankDebitsDue(this)
+  get bankDebitsDue() {
+    if (typeof this._bankDebitsDue === 'undefined') {
+      this._bankDebitsDue = new BankDebitsDue(this)
     }
-    return this._BankDebitsDue
+    return this._bankDebitsDue
   }
 
   get howManyDaysAhead() {
@@ -909,7 +974,7 @@ class OurFinances {
   get budgetMonthlyTransactions() {
     if (typeof this._budgetMonthlyTransactions === 'undefined') {
       this._budgetMonthlyTransactions = new BudgetMonthlyTransactions(this)
-      Logger.log(`this._budgetMonthlyTransactions.sheetName: ${this._budgetMonthlyTransactions.sheetName}`)
+      console.log(`this._budgetMonthlyTransactions.sheetName: ${this._budgetMonthlyTransactions.sheetName}`)
     }
     return this._budgetMonthlyTransactions
   }
@@ -959,25 +1024,25 @@ function allAccounts() {
 }
 
 function analyzeActiveSheet() {
-  Logger.log(`analyzeActiveSheet started`);
+  console.log(`analyzeActiveSheet started`);
   const sheet = SpreadsheetApp.getActiveSheet();
   const sheetName = sheet.getName();
-  Logger.log(`sheetName: ${sheetName}`);
+  console.log(`sheetName: ${sheetName}`);
   if (sheetName[0] === '_') {
-    Logger.log(`${sheetName} is an account sheet`);
+    console.log(`${sheetName} is an account sheet`);
     const accountSheet = new AccountSheet(sheet);
     accountSheet.analyzeSheet();
   } else {
-    Logger.log(`${sheetName} is NOT an account sheet`);
+    console.log(`${sheetName} is NOT an account sheet`);
   }
-  Logger.log(`analyzeActiveSheet finished`);
+  console.log(`analyzeActiveSheet finished`);
 }
 
 function applyAccountSettings() {
   const sheet = getActiveSheet();
   const sheetName = sheet.getName();
   if (sheetName[0] === "_") {
-    Logger.log(`sheetName '${sheetName}' begins with an underscore`);
+    console.log(`sheetName '${sheetName}' begins with an underscore`);
   } else {
     throw new Error(`sheetName does NOT begin with an underscore`);
 
@@ -997,7 +1062,7 @@ function applyDescriptionReplacements() {
     throw new Error(`Cannot applyDescriptionReplacements to '${sheetName}'`);
   }
   checkDescriptionHeader(sheet, DESCRIPTION_COL);
-  Logger.log(`Processing sheet: ${sheetName}`);
+  console.log(`Processing sheet: ${sheetName}`);
 
   const lastRow = sheet.getLastRow();
   const numRows = lastRow + 1 - START_ROW;
@@ -1019,9 +1084,9 @@ function applyDescriptionReplacements() {
 
   if (numReplacements > 0) {
     range.setValues(values);
-    Logger.log(`Updated ${numReplacements} values in sheet: ${sheetName}`);
+    console.log(`Updated ${numReplacements} values in sheet: ${sheetName}`);
   } else {
-    Logger.log(`No replacements made in sheet: ${sheetName}`);
+    console.log(`No replacements made in sheet: ${sheetName}`);
   }
 }
 
@@ -1064,7 +1129,7 @@ function checkDependencies() {
 
 function checkDescriptionHeader(sheet, col) {
   const headerValue = sheet.getRange(1, col).getValue();
-  Logger.log(`Header value: ${headerValue}`);
+  console.log(`Header value: ${headerValue}`);
   if (!headerValue.startsWith("Description")) {
     throw new Error(`Unexpected description header '${headerValue}' in sheet: ${sheet.getName()}`);
   }
@@ -1111,7 +1176,7 @@ function createAccountsMenu() {
 }
 
 function createGasMenu() {
-  Logger.log('createGasMenu started')
+  console.log('createGasMenu started')
   const itemArray = [
     ['All accounts', 'allAccounts'],
     ['Analyze active sheet', 'analyzeActiveSheet'],
@@ -1127,11 +1192,11 @@ function createGasMenu() {
     ['Trim sheet', 'trimGoogleSheet'],
   ]
   createUiMenu('GAS Menu', itemArray)
-  Logger.log('createGasMenu finished')
+  console.log('createGasMenu finished')
 }
 
 function createSectionsMenu() {
-  Logger.log('createSectionsMenu started')
+  console.log('createSectionsMenu started')
 
   const ui = SpreadsheetApp.getUi();
   const menu = ui.createMenu('Sections')
@@ -1185,7 +1250,7 @@ function createSectionsMenu() {
     .addItem('Xfers mismatch', 'goToSheetXfersMismatch')
     .addToUi();
 
-  Logger.log('createSectionsMenu finished')
+  console.log('createSectionsMenu finished')
 }
 
 function createUiMenu(menuCaption, menuItemArray) {
@@ -1257,8 +1322,8 @@ function getDtf() {
 }
 
 function getFirstRowRange(sheet) {
-  const lastColumn = sheet.getLastColumn(); //Logger.log(lastColumn);
-  const firstRowRange = sheet.getRange(1, 1, 1, lastColumn); Logger.log(firstRowRange);
+  const lastColumn = sheet.getLastColumn(); //console.log(lastColumn);
+  const firstRowRange = sheet.getRange(1, 1, 1, lastColumn); console.log(firstRowRange);
   return firstRowRange;
 }
 
@@ -1396,7 +1461,7 @@ function getToday(options = { weekday: 'long', year: 'numeric', month: 'long', d
     const dtf = new Intl.DateTimeFormat(locale, options);
     today = dtf.format(date);
   } catch (error) {
-    Logger.log(`Error formatting date: ${error.message}`);
+    console.log(`Error formatting date: ${error.message}`);
     today = date.toLocaleDateString(locale, options); // Fallback to toLocaleDateString
   }
 
@@ -1414,7 +1479,7 @@ function goToSheet(sheetName) {
   if (sheet) {
     sheet.activate();
   } else {
-    Logger.log('Sheet not found: ' + sheetName);
+    console.log('Sheet not found: ' + sheetName);
   }
 }
 
@@ -1541,15 +1606,15 @@ function isSingleCell(range) {
 }
 
 function listSheetNames(sheetNameType) {
-  Logger.log('listSheetNames started');
-  Logger.log(`sheetNameType: ${sheetNameType}`);
+  console.log('listSheetNames started');
+  console.log(`sheetNameType: ${sheetNameType}`);
 
   const spreadsheet = SpreadsheetApp.getActiveSpreadsheet();
   const spreadsheetName = spreadsheet.getName();
-  Logger.log(`spreadsheetName: ${spreadsheetName}`);
+  console.log(`spreadsheetName: ${spreadsheetName}`);
 
   const sheets = spreadsheet.getSheets();
-  Logger.log(`${spreadsheetName} has ${sheets.length} sheets.`);
+  console.log(`${spreadsheetName} has ${sheets.length} sheets.`);
 
   // Constants for budget-related sheet names
   const budgetSheetNames = [
@@ -1578,7 +1643,7 @@ function listSheetNames(sheetNameType) {
     default:
       throw new Error(`Unexpected sheetNameType: ${sheetNameType}`);
   }
-  Logger.log('listSheetNames finished')
+  console.log('listSheetNames finished')
 }
 
 function mergeTransactionsX() {
@@ -1586,10 +1651,10 @@ function mergeTransactionsX() {
   const transactionsBuilderSheet = spreadsheet.getSheetByName("Transactions Builder");
   const transactionsSheet = spreadsheet.getSheetByName("Transactions");
   const keyFormula = "=" + transactionsBuilderSheet.getRange("G3").getValue();
-  Logger.log(`keyFormula: ${keyFormula}`);
+  console.log(`keyFormula: ${keyFormula}`);
   transactionsSheet.getRange("A1").setFormula(keyFormula);
   const secondFormula = "=" + transactionsBuilderSheet.getRange("G4").getValue();
-  Logger.log(`secondFormula: ${secondFormula}`);
+  console.log(`secondFormula: ${secondFormula}`);
   transactionsSheet.getRange("B1").setFormula(secondFormula);
   transactionsSheet.activate();
 }
@@ -1601,14 +1666,14 @@ function mergeTransactions() {
   const transactionsBuilderSheet = getSheetByName("Transactions Builder");
 
   if (!transactionsBuilderSheet) {
-    Logger.log("Sheet 'Transactions Builder' not found");
+    console.log("Sheet 'Transactions Builder' not found");
     return;
   }
 
   const transactionsSheet = getSheetByName("Transactions");
 
   if (!transactionsSheet) {
-    Logger.log("Sheet 'Transactions' not found");
+    console.log("Sheet 'Transactions' not found");
     return;
   }
 
@@ -1616,8 +1681,8 @@ function mergeTransactions() {
   const formulas = transactionsBuilderSheet.getRange("G3:G4").getValues();
 
   // Logging both formulas
-  Logger.log(`keyFormula: =${formulas[0][0]}`);
-  Logger.log(`secondFormula: =${formulas[1][0]}`);
+  console.log(`keyFormula: =${formulas[0][0]}`);
+  console.log(`secondFormula: =${formulas[1][0]}`);
 
   // Set the formulas in a single batch operation
   transactionsSheet.getRange("A1:B1").setFormulas([
@@ -1649,7 +1714,7 @@ function onEdit(e) {
 }
 
 function onOpen() {
-  Logger.log('onOpen started');
+  console.log('onOpen started');
 
   const spreadsheet = SpreadsheetApp.getActiveSpreadsheet();
 
@@ -1664,7 +1729,7 @@ function onOpen() {
   // Notifying the user that the tasks are finished
   spreadsheet.toast("You can do your thing now.", "I'm finished!", 3);
 
-  Logger.log('onOpen finished');
+  console.log('onOpen finished');
 }
 
 function openAccounts() {
@@ -1679,28 +1744,6 @@ function sendEmail(recipient, subject, body, options) {
 function sendMeEmail(subject, emailBody, options) {
   const body = `${subject}\n\n${emailBody}`;
   return sendEmail(getMyEmailAddress(), subject, body, options);
-}
-
-function getMyEmailAddress() {
-    return getUserProperty('MY_EMAIL_ADDRESS');
-}
-
-function setMyEmailAddress() {
-    const key='MY_EMAIL_ADDRESS';
-    const value='hope.survives@gmail.com';
-    setUserProperty(key, value);
-}
-
-// Storing user-specific properties
-function setUserProperty(key, value) {
-  PropertiesService.getUserProperties().setProperty(key, value);
-}
-
-// Retrieving user-specific properties
-function getUserProperty(key) {
-  const value = PropertiesService.getUserProperties().getProperty(key);
-  Logger.log(`${key}: ${value}`);
-  return value;
 }
 
 function setLastUpdated(cell) {
@@ -1800,7 +1843,7 @@ function showRowCountForAllSheets() {
     const lastRow = sheet.getLastRow();
 
     // Log the row count or display it in a message box
-    Logger.log("Sheet: " + sheetName + " has " + lastRow + " rows.");
+    console.log("Sheet: " + sheetName + " has " + lastRow + " rows.");
 
     // Optionally, display in a message box
     // Browser.msgBox("Sheet: " + sheetName + " has " + lastRow + " rows.");
@@ -1827,7 +1870,7 @@ function showTransactionsBuilderSteps() {
       const lastRow = sheet.getLastRow();
 
       // Log the row count or display it in a message box
-      Logger.log("Sheet: " + sheetName + " has " + lastRow + " rows.");
+      console.log("Sheet: " + sheetName + " has " + lastRow + " rows.");
 
       if (lastRow > 2) {
         const cell = sheet.getRange("A2");
@@ -1846,10 +1889,10 @@ function isCellADate(cell) {
 
   // Check if the value is a Date object
   if (Object.prototype.toString.call(cellValue) === '[object Date]' && !isNaN(cellValue.getTime())) {
-    Logger.log("Cell contains a valid date.");
+    console.log("Cell contains a valid date.");
     return true;
   } else {
-    Logger.log("Cell does NOT contain a date.");
+    console.log("Cell does NOT contain a date.");
     return false;
   }
 }
@@ -1914,16 +1957,16 @@ function trimGoogleSheets() {
   });
 }
 
-Logger.log('Setting up dynamic accounts functions')
+console.log('Setting up dynamic accounts functions')
 const accountSheetNames = listSheetNames('account');
-Logger.log(`There are ${accountSheetNames.length} account sheets.`);
+console.log(`There are ${accountSheetNames.length} account sheets.`);
 accountSheetNames.forEach(sheetName => {
   const funName = `dynamicAccount${sheetName}`;
   this[funName] = () => goToSheetLastRow(sheetName);
 });
-Logger.log('Setting up dynamic accounts functions complete')
+console.log('Setting up dynamic accounts functions complete')
 
-function findNamedRangeUsage(namedRange) {
+const findNamedRangeUsage = (namedRange) => {
   const sheets = SpreadsheetApp.getActiveSpreadsheet().getSheets();
   const rangeUsage = [];
 
@@ -1941,13 +1984,65 @@ function findNamedRangeUsage(namedRange) {
   });
 
   if (rangeUsage.length > 0) {
-    Logger.log(`Named range '${namedRange}' found in the following cells:`);
-    Logger.log(rangeUsage.join("\n"));
+    console.log(`Named range '${namedRange}' found in the following cells:`);
+    console.log(rangeUsage.join("\n"));
   } else {
-    Logger.log(`Named range '${namedRange}' not found in any formulas.`);
+    console.log(`Named range '${namedRange}' not found in any formulas.`);
   }
 }
 
-function quickie() {
+const getMyEmailAddress = () => {
+  // Use optional chaining to safely access the email address
+  const myEmailAddress = getPrivateData()?.['MY_EMAIL_ADDRESS'];
+
+  // Check if the email address exists and log accordingly
+  if (myEmailAddress) {
+    console.log(`myEmailAddress: ${myEmailAddress}`);
+    return myEmailAddress;
+  } else {
+    console.error('MY_EMAIL_ADDRESS not found in private data');
+    return null; // Return null if the email is not found
+  }
+};
+
+const getPrivateData = () => {
+  console.log('listPrivateData started');
+
+  const privateDataId = '1hxcINN1seSzn-sLPI25KmV9t4kxLvZlievc0X3EgMhs';
+  const sheet = SpreadsheetApp.openById(privateDataId);
+
+  if (!sheet) {
+    console.log("Sheet 'Private Data' not found");
+    return;
+  }
+
+  // Get data from sheet without header row
+  const values = sheet.getDataRange().getValues().slice(1);
+
+  if (values.length === 0) {
+    console.log('Sheet is empty');
+    return;
+  }
+
+  let keyValuePairs = {};
+
+  values.forEach(([key, value]) => {
+    if (key && value) {
+      console.log(`key: ${key}, value: ${value}`);
+      if (key && value) {
+        keyValuePairs[key] = value; // Store the key-value pair in the object
+      }
+    } else {
+      console.log(`Invalid key-value pair: key=${key}, value=${value}`);
+    }
+  });
+  console.log(keyValuePairs);
+
+  console.log('listPrivateData finished');
+
+  return keyValuePairs;
+};
+
+const quickie = () => {
   findNamedRangeUsage("bottom_line")
-}
+};
