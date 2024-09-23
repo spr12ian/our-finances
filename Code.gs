@@ -4,6 +4,18 @@ const Sheet = class {
     this.spreadsheetName = spreadsheet.getName();
     console.log(`Spreadsheet: ${this.spreadsheetName}`);
   }
+
+  getRange(range) {
+    return this.spreadsheet.getRange(range);
+  }
+
+  getValue(range) {
+    return this.getRange(range).getValue();
+  }
+
+  setValue(range, value) {
+    return this.getRange(range).setValue(value);
+  }
 }
 
 const AccountSheet = class extends Sheet {
@@ -367,6 +379,7 @@ const BankAccounts = class {
   static get OWNER_CODE_CHARLIE() { return 'C'; }
   static get OWNER_CODE_LINDA() { return 'L'; }
   static get SHEET_NAME() { return 'Bank accounts'; }
+
   constructor(ourFinances) {
     this.sheetName = BankAccounts.SHEET_NAME;
     this.spreadsheet = ourFinances.spreadsheet;
@@ -748,6 +761,12 @@ const BudgetOneOffTransactions = class {
 }
 
 const BudgetWeeklyTransactions = class {
+  static get COL_DATE() { return 0; }
+  static get COL_DEBIT_AMOUNT() { return 3; }
+  static get COL_DESCRIPTION() { return 1; }
+  static get COL_FROM_ACCOUNT() { return 6; }
+  static get COL_PAYMENT_TYPE() { return 15; }
+
   constructor(ourFinances) {
     this.sheetName = 'Budget weekly transactions'
     this.spreadsheet = ourFinances.spreadsheet
@@ -760,11 +779,6 @@ const BudgetWeeklyTransactions = class {
   }
 
   getUpcomingDebits() {
-    const COL_DATE = 0
-    const COL_DEBIT_AMOUNT = 3
-    const COL_DESCRIPTION = 1
-    const COL_FROM_ACCOUNT = 6
-    const COL_PAYMENT_TYPE = 15
     const howManyDaysAhead = this.howManyDaysAhead
 
     let upcomingPayments = ''
@@ -776,8 +790,8 @@ const BudgetWeeklyTransactions = class {
     scheduledTransactions.shift();
 
     scheduledTransactions.forEach(transaction => {
-      if (Math.abs(transaction[COL_DEBIT_AMOUNT]) > 1) {
-        const daySelected = transaction[COL_DATE]
+      if (Math.abs(transaction[BudgetWeeklyTransactions.COL_DEBIT_AMOUNT]) > 1) {
+        const daySelected = transaction[BudgetWeeklyTransactions.COL_DATE]
         console.log(`daySelected: ${daySelected}`)
 
         const formattedDaySelected = getFormattedDate(new Date(daySelected), "GMT+1", "dd/MM/yyyy")
@@ -791,11 +805,11 @@ const BudgetWeeklyTransactions = class {
 
           if (formattedDaySelected === dayDay) {
             upcomingPayments += `\t${getOrdinalDate(day.date)}`
-            upcomingPayments += ` ${getAmountAsGBP(transaction[COL_DEBIT_AMOUNT])}`
+            upcomingPayments += ` ${getAmountAsGBP(transaction[BudgetWeeklyTransactions.COL_DEBIT_AMOUNT])}`
             upcomingPayments += ` from`
-            upcomingPayments += ` ${transaction[COL_FROM_ACCOUNT]}`
-            upcomingPayments += ` by ${transaction[COL_PAYMENT_TYPE]}`
-            upcomingPayments += ` ${transaction[COL_DESCRIPTION]}\n`
+            upcomingPayments += ` ${transaction[BudgetWeeklyTransactions.COL_FROM_ACCOUNT]}`
+            upcomingPayments += ` by ${transaction[BudgetWeeklyTransactions.COL_PAYMENT_TYPE]}`
+            upcomingPayments += ` ${transaction[BudgetWeeklyTransactions.COL_DESCRIPTION]}\n`
           }
           day = days.next()
         }
@@ -810,7 +824,11 @@ const BudgetWeeklyTransactions = class {
   }
 }
 
-class CheckFixedAmounts {
+const CheckFixedAmounts = class {
+  static get COL_DESCRIPTION() { return 0; }
+  static get COL_DYNAMIC_AMOUNT() { return 2; }
+  static get COL_FIXED_AMOUNT() { return 1; }
+  static get COL_MISMATCH() { return 4; }
   constructor(ourFinances) {
     this.sheetName = 'Check Fixed Amounts'
     this.spreadsheet = ourFinances.spreadsheet
@@ -822,24 +840,18 @@ class CheckFixedAmounts {
   }
 
   reportMismatches() {
-    const COL_DESCRIPTION = 0
-    const COL_FIXED_AMOUNT = 1
-    const COL_DYNAMIC_AMOUNT = 2
-    const COL_TOLERANCE = 3
-    const COL_MISMATCH = 4
-
     const values = this.getValues()
 
     values.forEach(row => {
-      if (row[COL_MISMATCH] == 'Mismatch') {
-        const mismatchMessage = `${row[COL_DESCRIPTION]}: Dynamic amount (${row[COL_DYNAMIC_AMOUNT]}) does not match fixed amount (${row[COL_FIXED_AMOUNT]})`
+      if (row[CheckFixedAmounts.COL_MISMATCH] == 'Mismatch') {
+        const mismatchMessage = `${row[CheckFixedAmounts.COL_DESCRIPTION]}: Dynamic amount (${row[CheckFixedAmounts.COL_DYNAMIC_AMOUNT]}) does not match fixed amount (${row[CheckFixedAmounts.COL_FIXED_AMOUNT]})`
         alert(mismatchMessage)
       }
     })
   }
 }
 
-class Dependencies {
+const Dependencies = class {
   constructor(spreadsheet) {
     this.sheetName = 'Dependencies'
     this.spreadsheet = spreadsheet
@@ -900,7 +912,7 @@ class Dependencies {
   }
 }
 
-class OurFinances {
+const OurFinances = class {
   constructor() {
     this.spreadsheet = new Spreadsheet();
   }
@@ -1010,7 +1022,7 @@ class OurFinances {
   }
 }
 
-class SelfAssessment {
+const SelfAssessment = class {
   constructor(ourFinances) {
     this.sheetName = 'Self Assessment'
     this.spreadsheet = ourFinances.spreadsheet
@@ -1138,6 +1150,10 @@ function checkDescriptionHeader(sheet, col) {
 function checkFixedAmounts(e) {
   const ourFinances = new OurFinances()
   ourFinances.checkFixedAmounts()
+}
+
+function cloneDate(date) {
+  return new Date(date.getTime())
 }
 
 function convertCurrentColumnToUppercase() {
@@ -1293,8 +1309,72 @@ function emailUpcomingPayments() {
   ourFinances.emailUpcomingPayments()
 }
 
-function cloneDate(date) {
-  return new Date(date.getTime())
+const findAllNamedRangeUsage = () => {
+  const sheets = SpreadsheetApp.getActiveSpreadsheet().getSheets();
+  const namedRanges = SpreadsheetApp.getActiveSpreadsheet().getNamedRanges();
+  const rangeUsage = [];
+
+  if (!namedRanges.length) {
+    console.log('No named ranges found in this spreadsheet.');
+    return;
+  }
+
+  // Extract the named range names
+  const namedRangeNames = namedRanges.map(range => range.getName());
+
+  sheets.forEach(sheet => {
+    const formulas = sheet.getDataRange().getFormulas();
+
+    formulas.forEach((rowFormulas, rowIndex) => {
+      rowFormulas.forEach((formula, colIndex) => {
+        // Only track cells containing named ranges
+        if (formula) {
+          namedRangeNames.forEach(name => {
+            if (formula.includes(name)) {
+              const cellRef = sheet.getRange(rowIndex + 1, colIndex + 1).getA1Notation();
+              rangeUsage.push(`Sheet: ${sheet.getName()} - Cell: ${cellRef} - Name: ${name}`);
+            }
+          });
+        }
+      });
+    });
+  });
+
+  if (rangeUsage.length > 0) {
+    console.log('Named range(s) found in the following cells:');
+    console.log(rangeUsage.join('\n'));
+  } else {
+    console.log('No named ranges found in any formulas.');
+  }
+};
+
+const findNamedRangeUsage = () => {
+  findUsageByNamedRange("BRIAN_HALIFAX_BALANCE")
+}
+
+const findUsageByNamedRange = (namedRange) => {
+  const sheets = SpreadsheetApp.getActiveSpreadsheet().getSheets();
+  const rangeUsage = [];
+
+  sheets.forEach(sheet => {
+    const formulas = sheet.getDataRange().getFormulas();
+
+    formulas.forEach((rowFormulas, rowIndex) => {
+      rowFormulas.forEach((formula, colIndex) => {
+        if (formula.includes(namedRange)) {
+          const cellRef = sheet.getRange(rowIndex + 1, colIndex + 1).getA1Notation();
+          rangeUsage.push(`Sheet: ${sheet.getName()} - Cell: ${cellRef}`);
+        }
+      });
+    });
+  });
+
+  if (rangeUsage.length > 0) {
+    console.log(`Named range '${namedRange}' found in the following cells:`);
+    console.log(rangeUsage.join("\n"));
+  } else {
+    console.log(`Named range '${namedRange}' not found in any formulas.`);
+  }
 }
 
 function getAmountAsGBP(amount) {
@@ -1368,6 +1448,20 @@ function getMonthName(date) {
   return date.toLocaleDateString(this.locale, { month: 'long' });
 }
 
+const getMyEmailAddress = () => {
+  // Use optional chaining to safely access the email address
+  const myEmailAddress = getPrivateData()?.['MY_EMAIL_ADDRESS'];
+
+  // Check if the email address exists and log accordingly
+  if (myEmailAddress) {
+    console.log(`myEmailAddress: ${myEmailAddress}`);
+    return myEmailAddress;
+  } else {
+    console.error('MY_EMAIL_ADDRESS not found in private data');
+    return null; // Return null if the email is not found
+  }
+}
+
 // The getDate() method of Date instances returns the day of the month for this date according to local time.
 // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Date/getDate
 function getNewDate(date) {
@@ -1401,6 +1495,44 @@ function getOrdinalDate(date) {
   const fullYear = date.getFullYear();
 
   return `${ordinal} of ${monthName} ${fullYear}`;
+}
+
+const getPrivateData = () => {
+  console.log('listPrivateData started');
+
+  const privateDataId = '1hxcINN1seSzn-sLPI25KmV9t4kxLvZlievc0X3EgMhs';
+  const sheet = SpreadsheetApp.openById(privateDataId);
+
+  if (!sheet) {
+    console.log("Sheet 'Private Data' not found");
+    return;
+  }
+
+  // Get data from sheet without header row
+  const values = sheet.getDataRange().getValues().slice(1);
+
+  if (values.length === 0) {
+    console.log('Sheet is empty');
+    return;
+  }
+
+  let keyValuePairs = {};
+
+  values.forEach(([key, value]) => {
+    if (key && value) {
+      console.log(`key: ${key}, value: ${value}`);
+      if (key && value) {
+        keyValuePairs[key] = value; // Store the key-value pair in the object
+      }
+    } else {
+      console.log(`Invalid key-value pair: key=${key}, value=${value}`);
+    }
+  });
+  console.log(keyValuePairs);
+
+  console.log('listPrivateData finished');
+
+  return keyValuePairs;
 }
 
 function getReplacementHeadersMap() {
@@ -1531,6 +1663,10 @@ function goToSheetCategoryClash() {
   goToSheet('Category clash')
 }
 
+function goToSheetHMRCTransactionsSummary() {
+  goToSheet('HMRC Transactions Summary')
+}
+
 function goToSheetLoanGlenburnie() {
   goToSheet('Loan Glenburnie')
 }
@@ -1543,16 +1679,12 @@ function goToSheetSW183PTInventory() {
   goToSheet('SW18 3PT inventory')
 }
 
-function goToSheetTransactionsByDate() {
-  goToSheet('Transactions by date')
-}
-
 function goToSheetTransactionsBuilder() {
   goToSheet('Transactions builder')
 }
 
-function goToSheetHMRCTransactionsSummary() {
-  goToSheet('HMRC Transactions Summary')
+function goToSheetTransactionsByDate() {
+  goToSheet('Transactions by date')
 }
 
 function goToSheetTransactionsCategories() {
@@ -1577,10 +1709,10 @@ function isCellAccountBalance(sheet, column) {
   const values = firstRowRange.getValues()
   for (const row in values) {
     const cell = values[row][column - 1];
-    logString(cell);
+    console.log(cell);
 
     newCell = cell.replace(/\n/g, " ");
-    logString(newCell);
+    console.log(newCell);
 
     if (newCell == accountBalance) {
       isCellAccountBalance = true;
@@ -1589,6 +1721,20 @@ function isCellAccountBalance(sheet, column) {
   }
 
   return isCellAccountBalance;
+}
+
+function isCellADate(cell) {
+  // Get the value of the specified cell
+  const cellValue = cell.getValue();
+
+  // Check if the value is a Date object
+  if (Object.prototype.toString.call(cellValue) === '[object Date]' && !isNaN(cellValue.getTime())) {
+    console.log("Cell contains a valid date.");
+    return true;
+  } else {
+    console.log("Cell does NOT contain a date.");
+    return false;
+  }
 }
 
 /**
@@ -1646,19 +1792,6 @@ function listSheetNames(sheetNameType) {
   console.log('listSheetNames finished')
 }
 
-function mergeTransactionsX() {
-  const spreadsheet = SpreadsheetApp.getActiveSpreadsheet();
-  const transactionsBuilderSheet = spreadsheet.getSheetByName("Transactions Builder");
-  const transactionsSheet = spreadsheet.getSheetByName("Transactions");
-  const keyFormula = "=" + transactionsBuilderSheet.getRange("G3").getValue();
-  console.log(`keyFormula: ${keyFormula}`);
-  transactionsSheet.getRange("A1").setFormula(keyFormula);
-  const secondFormula = "=" + transactionsBuilderSheet.getRange("G4").getValue();
-  console.log(`secondFormula: ${secondFormula}`);
-  transactionsSheet.getRange("B1").setFormula(secondFormula);
-  transactionsSheet.activate();
-}
-
 function mergeTransactions() {
   const { getSheetByName } = SpreadsheetApp.getActiveSpreadsheet();
 
@@ -1691,7 +1824,6 @@ function mergeTransactions() {
 
   transactionsSheet.activate();
 }
-
 
 function monthlyUpdate() {
   const ourFinances = new OurFinances();
@@ -1774,32 +1906,6 @@ function setLastUpdatedOnAccountBalanceChange(e) {
   }
 }
 
-function setupDaysIteratorX(startDate, logIt = function () { }) {
-  function getNextResult(iteratorDate) {
-    const date = cloneDate(iteratorDate) // Default date long format
-    const day = getDtf().format(date) // 19/01/1964
-    const dayName = getDayName(date) // Sunday
-    const dayOfMonth = getDayOfMonth(date) // 29
-    const season = getSeasonName(date, logIt) // Winter, Spring, Summer, Autumn
-    const nextResult = { date, day, dayName, dayOfMonth, season }
-
-    return nextResult
-  }
-
-  const iteratorDate = new Date(startDate)
-  const first = getNextResult(iteratorDate)
-
-  const iterator = {
-    next: function () {
-      iteratorDate.setDate(iteratorDate.getDate() + 1)
-
-      return getNextResult(iteratorDate)
-    }
-  }
-
-  return { first, iterator }
-}
-
 function setupDaysIterator(startDate, logIt = () => { }) {
   const getNextResult = (iteratorDate) => {
     const date = cloneDate(iteratorDate);  // Default date in long format
@@ -1823,7 +1929,7 @@ function setupDaysIterator(startDate, logIt = () => { }) {
   };
 
   return { first, iterator };
-};
+}
 
 function showRowCountForAllSheets() {
   // Get the active spreadsheet
@@ -1883,22 +1989,7 @@ function showTransactionsBuilderSteps() {
   }
 }
 
-function isCellADate(cell) {
-  // Get the value of the specified cell
-  const cellValue = cell.getValue();
-
-  // Check if the value is a Date object
-  if (Object.prototype.toString.call(cellValue) === '[object Date]' && !isNaN(cellValue.getTime())) {
-    console.log("Cell contains a valid date.");
-    return true;
-  } else {
-    console.log("Cell does NOT contain a date.");
-    return false;
-  }
-}
-
 function sortGoogleSheets() {
-
   const ss = SpreadsheetApp.getActiveSpreadsheet();
 
   // Store all the worksheets in this array
@@ -1965,84 +2056,3 @@ accountSheetNames.forEach(sheetName => {
   this[funName] = () => goToSheetLastRow(sheetName);
 });
 console.log('Setting up dynamic accounts functions complete')
-
-const findNamedRangeUsage = (namedRange) => {
-  const sheets = SpreadsheetApp.getActiveSpreadsheet().getSheets();
-  const rangeUsage = [];
-
-  sheets.forEach(sheet => {
-    const formulas = sheet.getDataRange().getFormulas();
-
-    formulas.forEach((rowFormulas, rowIndex) => {
-      rowFormulas.forEach((formula, colIndex) => {
-        if (formula.includes(namedRange)) {
-          const cellRef = sheet.getRange(rowIndex + 1, colIndex + 1).getA1Notation();
-          rangeUsage.push(`Sheet: ${sheet.getName()} - Cell: ${cellRef}`);
-        }
-      });
-    });
-  });
-
-  if (rangeUsage.length > 0) {
-    console.log(`Named range '${namedRange}' found in the following cells:`);
-    console.log(rangeUsage.join("\n"));
-  } else {
-    console.log(`Named range '${namedRange}' not found in any formulas.`);
-  }
-}
-
-const getMyEmailAddress = () => {
-  // Use optional chaining to safely access the email address
-  const myEmailAddress = getPrivateData()?.['MY_EMAIL_ADDRESS'];
-
-  // Check if the email address exists and log accordingly
-  if (myEmailAddress) {
-    console.log(`myEmailAddress: ${myEmailAddress}`);
-    return myEmailAddress;
-  } else {
-    console.error('MY_EMAIL_ADDRESS not found in private data');
-    return null; // Return null if the email is not found
-  }
-};
-
-const getPrivateData = () => {
-  console.log('listPrivateData started');
-
-  const privateDataId = '1hxcINN1seSzn-sLPI25KmV9t4kxLvZlievc0X3EgMhs';
-  const sheet = SpreadsheetApp.openById(privateDataId);
-
-  if (!sheet) {
-    console.log("Sheet 'Private Data' not found");
-    return;
-  }
-
-  // Get data from sheet without header row
-  const values = sheet.getDataRange().getValues().slice(1);
-
-  if (values.length === 0) {
-    console.log('Sheet is empty');
-    return;
-  }
-
-  let keyValuePairs = {};
-
-  values.forEach(([key, value]) => {
-    if (key && value) {
-      console.log(`key: ${key}, value: ${value}`);
-      if (key && value) {
-        keyValuePairs[key] = value; // Store the key-value pair in the object
-      }
-    } else {
-      console.log(`Invalid key-value pair: key=${key}, value=${value}`);
-    }
-  });
-  console.log(keyValuePairs);
-
-  console.log('listPrivateData finished');
-
-  return keyValuePairs;
-};
-
-const quickie = () => {
-  findNamedRangeUsage("bottom_line")
-};
