@@ -1,4 +1,10 @@
-const AccountSheet = class {
+/* function logWithTimeInterval requires previousTime to be defined before being used */
+let previousTime = new Date().getTime();
+logWithTimeInterval(`# ${getLineNumber()} Processing Code.gs`);
+
+// Class declarations
+
+class AccountSheet {
   static get COLUMNS() {
     return {
       DATE: 1,
@@ -47,9 +53,8 @@ const AccountSheet = class {
     this.log(`Aligned range ${a1range} to the left`);
   }
 
-  analyzeSheet() {
+  formatSheet() {
     try {
-      this.logSheetDetails();
       this.validateSheet();
       this.setSheetFormatting();
       this.addDefaultNotes();
@@ -58,7 +63,7 @@ const AccountSheet = class {
       this.setColumnWidth(AccountSheet.COLUMNS.DESCRIPTION, 500);
       this.setColumnWidth(AccountSheet.COLUMNS.NOTE, 170);
     } catch (error) {
-      this.log(`Error during sheet analysis: ${error.message}`, 'error');
+      this.log(`Error formatting sheet: ${error.message}`, 'error');
       throw error;
     }
   }
@@ -229,7 +234,7 @@ const AccountSheet = class {
   }
 }
 
-const BankAccounts = class {
+class BankAccounts {
   static get COLUMNS() {
     return {
       KEY: 1,
@@ -249,7 +254,7 @@ const BankAccounts = class {
   static get SHEET() { return { NAME: 'Bank accounts' } };
 
   constructor() {
-    this.sheet = new IswSheet(BankAccounts.SHEET.NAME);
+    this.sheet = new Sheet(BankAccounts.SHEET.NAME);
 
     if (!this.sheet) {
       throw new Error(`Sheet '${BankAccounts.SHEET.NAME}' not found.`);
@@ -266,8 +271,8 @@ const BankAccounts = class {
 
     filters.forEach(item => {
       const criteria = item.hideValues === null
-        ? iswActiveSpreadsheet.newFilterCriteria().whenCellEmpty().build()
-        : iswActiveSpreadsheet.newFilterCriteria().setHiddenValues(item.hideValues).build();
+        ? activeSpreadsheet.newFilterCriteria().whenCellEmpty().build()
+        : activeSpreadsheet.newFilterCriteria().setHiddenValues(item.hideValues).build();
 
       filter.setColumnFilterCriteria(item.column, criteria);
     });
@@ -377,7 +382,7 @@ const BankAccounts = class {
   }
 }
 
-const BankDebitsDue = class {
+class BankDebitsDue {
   static get COL_ACCOUNT_KEY() { return 0; }
   static get COL_CHANGE_AMOUNT() { return 1; }
 
@@ -415,7 +420,7 @@ const BankDebitsDue = class {
   }
 }
 
-const BudgetAnnualTransactions = class {
+class BudgetAnnualTransactions {
   static get COLUMNS() {
     return {
       DATE: 0,
@@ -502,7 +507,7 @@ const BudgetAnnualTransactions = class {
   }
 }
 
-const BudgetMonthlyTransactions = class {
+class BudgetMonthlyTransactions {
   static get COL_DATE() { return 0; }
   static get COL_DEBIT_AMOUNT() { return 3; }
   static get COL_DESCRIPTION() { return 1; }
@@ -565,7 +570,7 @@ const BudgetMonthlyTransactions = class {
   }
 }
 
-const BudgetOneOffTransactions = class {
+class BudgetOneOffTransactions {
   static get COL_CHANGE_AMOUNT() { return 3; }
   static get COL_DATE() { return 0; }
   static get COL_DESCRIPTION() { return 1; }
@@ -635,7 +640,7 @@ const BudgetOneOffTransactions = class {
   }
 }
 
-const BudgetWeeklyTransactions = class {
+class BudgetWeeklyTransactions {
   static get COL_DATE() { return 0; }
   static get COL_DEBIT_AMOUNT() { return 3; }
   static get COL_DESCRIPTION() { return 1; }
@@ -698,7 +703,7 @@ const BudgetWeeklyTransactions = class {
   }
 }
 
-const CheckFixedAmounts = class {
+class CheckFixedAmounts {
   // Column definitions using static getters
   static get COLUMNS() {
     return {
@@ -726,7 +731,7 @@ const CheckFixedAmounts = class {
    */
   constructor() {
     try {
-      this.sheet = new IswSheet(CheckFixedAmounts.SHEET.NAME);
+      this.sheet = new Sheet(CheckFixedAmounts.SHEET.NAME);
       this.validateSheetStructure();
     } catch (error) {
       Logger.log(`Failed to initialize CheckFixedAmounts: ${error.message}`);
@@ -847,16 +852,12 @@ const CheckFixedAmounts = class {
       throw new Error(`Sheet must have at least ${CheckFixedAmounts.SHEET.MIN_COLUMNS} columns`);
     }
   }
-};
-
-const alert = (message) => {
-  SpreadsheetApp.getUi().alert(message);
 }
 
-const Dependencies = class {
+class Dependencies {
   static get SHEET_NAME() { return 'Dependencies'; }
   constructor() {
-    this.sheet = new IswSheet(Dependencies.SHEET_NAME);
+    this.sheet = new Sheet(Dependencies.SHEET_NAME);
   }
 
   getAllDependencies() {
@@ -887,7 +888,7 @@ const Dependencies = class {
 
   getSpreadsheetNameById(spreadsheetId) {
     try {
-      const spreadsheet = new IswSpreadsheet(spreadsheetId);
+      const spreadsheet = new Spreadsheet(spreadsheetId);
       return spreadsheet.spreadsheetName;
     } catch (error) {
       Logger.log(`Error fetching spreadsheet with ID: ${spreadsheetId}. ${error.message}`);
@@ -919,11 +920,11 @@ const Dependencies = class {
   }
 }
 
-const DescriptionReplacements = class {
+class DescriptionReplacements {
   static get SHEET_NAME() { return 'Description replacements'; }
 
   constructor() {
-    this.sheet = new IswSheet(DescriptionReplacements.SHEET_NAME);
+    this.sheet = new Sheet(DescriptionReplacements.SHEET_NAME);
   }
 
   applyReplacements(accountSheet) {
@@ -988,22 +989,23 @@ const DescriptionReplacements = class {
   }
 }
 
-const IswSheet = class {
+class Sheet {
   constructor(x = null) {
-    // logWithTimeInterval(getLineNumber())
+    //logWithTimeInterval(`# ${getLineNumber()}`);
     const xType = getType(x);
 
     if (xType === 'string') {
       const sheetName = x;
-      // logWithTimeInterval(getLineNumber())
-      this.sheet = iswActiveSpreadsheet.getSheetByName(sheetName).sheet;
+      logWithTimeInterval(`# ${getLineNumber()}`);
+      this.sheet = activeSpreadsheet.getSheetByName(sheetName);
+      logWithTimeInterval(`# ${getLineNumber()}`);
       if (!this.sheet) {
         throw new Error(`Sheet with name "${sheetName}" not found`);
       }
-      // this.log(`${this.getSheetName()} initialised`);
+      logWithTimeInterval(`# ${getLineNumber()}`);
       return;
     }
-
+    //logWithTimeInterval(`# ${getLineNumber()}`);
     if (xType === 'Object') {
       const gasSheet = x;
       this.sheet = gasSheet;
@@ -1013,7 +1015,7 @@ const IswSheet = class {
 
     if (x === null) {
       Logger.log('No input provided, initializing without a sheet');
-      const activeSheet = iswActiveSpreadsheet.getActiveSheet();
+      const activeSheet = activeSpreadsheet.getActiveSheet();
       if (activeSheet) {
         this.sheet = activeSheet;
         // this.log(`${this.getSheetName()} initialised`);
@@ -1030,7 +1032,7 @@ const IswSheet = class {
 
   get spreadsheet() {
     if (!this._spreadsheet) {
-      this._spreadsheet = new IswSpreadsheet(this.sheet.getParent().getId());
+      this._spreadsheet = new Spreadsheet(this.sheet.getParent().getId());
     }
     return this._spreadsheet;
   }
@@ -1105,6 +1107,10 @@ const IswSheet = class {
     return this.sheet.getLastRow();
   }
 
+  getName() {
+    return this.sheet.getName();
+  }
+
   getMaxColumns() {
     return this.sheet.getMaxColumns();
   }
@@ -1168,8 +1174,8 @@ const IswSheet = class {
   }
 
   setSheetByName(sheetName) {
-    this.spreadsheet = iswActiveSpreadsheet;
-    this.sheet = iswActiveSpreadsheet.getSheetByName(sheetName);
+    this.spreadsheet = activeSpreadsheet;
+    this.sheet = activeSpreadsheet.getSheetByName(sheetName);
 
     if (!this.sheet) {
       throw new Error(`Sheet '${sheetName}' not found.`);
@@ -1193,13 +1199,12 @@ const IswSheet = class {
   }
 }
 
-const IswSpreadsheet = class {
+class Spreadsheet {
   constructor(spreadsheetId) {
-    // logWithTimeInterval(getLineNumber())
     if (spreadsheetId) {
       Logger.log(`spreadsheetId: ${spreadsheetId}`);
       try {
-        this.spreadsheet = gasSpreadsheetApp.openById(spreadsheetId);
+        this.spreadsheet = this.openById(spreadsheetId);
       } catch (error) {
         Logger.log(`Error opening spreadsheet with ID: ${spreadsheetId}. ${error.message}`);
         throw error;
@@ -1207,9 +1212,8 @@ const IswSpreadsheet = class {
     } else {
       try {
         // logWithTimeInterval(getLineNumber())
-        this.spreadsheet = gasActiveSpreadsheet;
-
-        // logWithTimeInterval(getLineNumber())
+        this.spreadsheet = this.getActiveSpreadsheet();
+        logWithTimeInterval(`# ${getLineNumber()}`);
       } catch (error) {
         Logger.log(`Error opening active spreadsheet: ${error.message}`);
         throw error;
@@ -1219,8 +1223,11 @@ const IswSpreadsheet = class {
     // Logger.log(`Initialised spreadsheet: ${this.spreadsheetName}`);
   }
 
-  get spreadsheetName() {
-    return this.spreadsheet.getName();
+  getActiveSpreadsheet() {
+    if (!this._activeSpreadsheet) {
+      this._activeSpreadsheet = SpreadsheetApp.getActiveSpreadsheet();
+    }
+    return this._activeSpreadsheet;
   }
 
   getActiveSheet() {
@@ -1228,24 +1235,33 @@ const IswSpreadsheet = class {
     const activeSheetType = getType(activeSheet);
     Logger.log(`${activeSheet} has type ${activeSheetType}`);
 
-    const iswActiveSheet = new IswSheet(activeSheet);
+    const iswActiveSheet = new Sheet(activeSheet);
     const iswActiveSheetType = getType(iswActiveSheet);
     Logger.log(`${iswActiveSheet} has type ${iswActiveSheetType}`);
 
     return iswActiveSheet;
   }
 
+  getGasSheets() {
+    if (!this._gasSheets) {
+      logWithTimeInterval(`# ${getLineNumber()}\tFetching GAS sheets...`);
+
+      this._gasSheets = this.spreadsheet.getSheets();
+
+      logWithTimeInterval(`# ${getLineNumber()}\tRetrieved ${this._gasSheets.length} GAS sheets from ${this.spreadsheetName}.`);
+    }
+
+    return this._gasSheets;
+  }
+
   getSheetByName(sheetName) {
     let sheet;
-    // logWithTimeInterval(getLineNumber());
-    // Logger.log('IswSpreadsheet.getSheetByName');
-    // Logger.log(`sheetName: ${sheetName}`);
+    logWithTimeInterval(`# ${getLineNumber()}`);
 
     try {
-      // logWithTimeInterval(getLineNumber());
-      sheet = gasActiveSpreadsheet.getSheetByName(sheetName);
-      // logWithTimeInterval(getLineNumber());
-
+      logWithTimeInterval(`# ${getLineNumber()}`);
+      sheet = this.getSheetMap()[sheetName];
+      logWithTimeInterval(`# ${getLineNumber()}`);
       if (!sheet) {
         Logger.log('Sheet not found: ' + sheetName);
         return;
@@ -1254,24 +1270,30 @@ const IswSpreadsheet = class {
       Logger.log('Error accessing sheet: ' + error.message);
     }
 
-    // logWithTimeInterval(getLineNumber())
-    const iswSheet = new IswSheet(sheet);
+    return sheet;
+  }
 
-    // logWithTimeInterval(getLineNumber())
-    // Logger.log(`1185: iswSheet.getSheetName(): ${iswSheet.getSheetName()}`);
-
-    return iswSheet;
+  getSheetMap() {
+    if (!this._sheetMap) {
+      this._sheetMap = {};
+      this.getSheets().forEach(sheet => {
+        this._sheetMap[sheet.getName()] = sheet;
+      });
+    }
+    return this._sheetMap;
   }
 
   getSheets() {
-    Logger.log("Fetching sheets...");
+    if (!this._sheets) {
+      logWithTimeInterval(`# ${getLineNumber()}\tFetching sheets...`);
+      this._sheets = this.getGasSheets().map(sheet => new Sheet(sheet));
+      logWithTimeInterval(`# ${getLineNumber()}\tRetrieved ${this._sheets.length} sheets.`);
+    }
+    return this._sheets;
+  }
 
-    // Use map for a cleaner approach to create new IswSheet instances
-    const sheets = this.spreadsheet.getSheets().map(sheet => new IswSheet(sheet));
-
-    Logger.log(`Retrieved ${sheets.length} sheets from ${this.spreadsheetName}.`);
-
-    return sheets;
+  getSpreadsheetName() {
+    return this.spreadsheet.getName();
   }
 
   getUrl() {
@@ -1282,14 +1304,21 @@ const IswSpreadsheet = class {
     return gasSpreadsheetApp.newFilterCriteria();
   }
 
+  openById(spreadsheetId) {
+    if (!this.spreadsheets[spreadsheetId]) {
+      this.spreadsheets[spreadsheetId] = SpreadsheetApp.openById(spreadsheetId);
+    }
+    return this.spreadsheets[spreadsheetId];
+  }
+
   toast(msg, title, timeoutSeconds) {
     this.spreadsheet.toast(msg, title, timeoutSeconds);
   }
 }
 
-const OurFinances = class {
+class OurFinances {
   constructor() {
-    this.spreadsheet = iswActiveSpreadsheet;
+    this.spreadsheet = activeSpreadsheet;
   }
 
   getFixedAmountMismatches() {
@@ -1379,168 +1408,14 @@ const OurFinances = class {
   }
 }
 
-const SelfAssessment = class {
+class SelfAssessment {
   constructor(ourFinances) {
     this.spreadsheet = ourFinances.spreadsheet
     this.sheet = this.spreadsheet.getSheetByName('Self Assessment')
   }
 }
 
-function allAccounts() {
-  const ourFinances = new OurFinances()
-  ourFinances.showAllAccounts()
-}
-
-function analyzeActiveSheet() {
-  const activeSheet = iswActiveSpreadsheet.getActiveSheet();
-  
-  if (!activeSheet) {
-    Logger.log("No active sheet found.");
-    return;
-  }
-  
-  try {
-    const accountSheet = new AccountSheet(activeSheet);
-    accountSheet.analyzeSheet();
-  } catch (error) {
-    Logger.log(`${activeSheet.sheetName}: ${error.message}`);
-  }
-}
-
-const SpreadsheetSummaryX = class {
-  static get COLUMNS() {
-    return {
-      SHEET_NAME: 0,
-      LAST_ROW: 1,
-      LAST_COL: 2,
-      MAX_ROWS: 3,
-      MAX_COLS: 4,
-      IS_ACCOUNT: 5,
-      IS_BUDGET: 6
-    }
-  };
-  static get SHEET() {
-    return {
-      NAME: 'Spreadsheet summary'
-    }
-  };
-
-  constructor() {
-    // logWithTimeInterval(getLineNumber())
-    this.sheet = new IswSheet(SpreadsheetSummary.SHEET.NAME);
-
-    // Logger.log(`1358: Initialized sheet: ${this.getSheetName()}`);
-  }
-
-  getAccountSheetNames() {
-    const sheet = this.sheet;
-    // logWithTimeInterval(getLineNumber())
-    const accountSheetNames = [];
-    // Get all data starting from row 2.
-    const dataRange = sheet.getRange(2, 1, sheet.getLastRow() - 1, sheet.getLastColumn());
-
-    // logWithTimeInterval(getLineNumber())
-    const data = dataRange.getValues();
-    // logWithTimeInterval(getLineNumber())
-    data.forEach(row => {
-      if (row[SpreadsheetSummary.COLUMNS.IS_ACCOUNT]) {
-        accountSheetNames.push(row[SpreadsheetSummary.COLUMNS.SHEET_NAME]);
-      }
-    });
-
-    return accountSheetNames;
-  }
-
-  getBudgetSheetNames() {
-    const budgetSheetNames = [];
-    const dataRange = this.sheet.getDataRange().offset(1, 0);
-    const data = dataRange.getValues();
-    data.forEach(row => {
-      if (row[SpreadsheetSummary.COLUMNS.IS_BUDGET]) {
-        budgetSheetNames.push(row[SpreadsheetSummary.COLUMNS.SHEET_NAME]);
-      }
-    });
-    Logger.log(budgetSheetNames);
-
-    return budgetSheetNames;
-  }
-
-  getSheet() {
-    return this.sheet;
-  }
-
-  getSheetName() {
-    return this.sheet.getSheetName();
-  }
-
-  getSheetNames() {
-    const sheetNames = [];
-    const dataRange = this.sheet.getDataRange().offset(1, 0);
-    const data = dataRange.getValues();
-    data.forEach(row => {
-      sheetNames.push(row[SpreadsheetSummary.COLUMNS.SHEET_NAME]);
-    });
-
-    return sheetNames;
-  }
-
-  update() {
-    // Step 1: Collect sheet data
-    const iswSheets = iswActiveSpreadsheet.getSheets();
-    const sheetData = iswSheets.map(iswSheet => (
-      {
-        sheetName: iswSheet.getSheetName(),
-        lastRow: iswSheet.getLastRow(),
-        lastColumn: iswSheet.getLastColumn(),
-        maxRows: iswSheet.getMaxRows(),
-        maxColumns: iswSheet.getMaxColumns(),
-        isAccount: iswSheet.getSheetName().startsWith('_'),
-        isBudget: iswSheet.getSheetName().startsWith('Budget')
-      }
-    ));
-
-    sheetData.unshift({
-      sheetName: 'Sheet name',
-      lastRow: 'Last row',
-      lastColumn: 'Last column',
-      maxRows: 'Max rows',
-      maxColumns: 'Max columns',
-      isAccount: 'Account?',
-      isBudget: 'Budget?'
-    });
-
-    Logger.log(sheetData);  // Logging the collected sheet data
-
-    // Step 2: Transform the sheet data into an array suitable for setValues
-    const sheetArray = sheetData.map((sheet, row) => {
-      const rowArray = [];
-      rowArray[SpreadsheetSummary.COLUMNS.SHEET_NAME] = sheet.sheetName;
-      rowArray[SpreadsheetSummary.COLUMNS.LAST_ROW] = sheet.lastRow;
-      rowArray[SpreadsheetSummary.COLUMNS.LAST_COL] = sheet.lastColumn;
-      rowArray[SpreadsheetSummary.COLUMNS.MAX_ROWS] = sheet.maxRows;
-      rowArray[SpreadsheetSummary.COLUMNS.MAX_COLS] = sheet.maxColumns;
-      rowArray[SpreadsheetSummary.COLUMNS.IS_ACCOUNT] = sheet.isAccount;
-      rowArray[SpreadsheetSummary.COLUMNS.IS_BUDGET] = sheet.isBudget;
-      return rowArray;
-    });
-
-    Logger.log(sheetArray);  // Logging the transformed sheet array
-
-    // Step 3: Determine the maximum row length
-    const maxWidth = Math.max(
-      ...sheetArray.map(row => row.length)
-    );
-
-    // Step 4: Clear the sheet and set the values
-    this.sheet.clear();
-    const range = this.sheet.getRange(1, 1, sheetArray.length, maxWidth);
-    range.setValues(sheetArray);
-    this.sheet.activate();
-  }
-
-}
-
-const SpreadsheetSummary = class {
+class SpreadsheetSummary {
   static get COLUMNS() {
     return {
       SHEET_NAME: 0,
@@ -1560,7 +1435,7 @@ const SpreadsheetSummary = class {
   }
 
   constructor() {
-    this.sheet = new IswSheet(SpreadsheetSummary.SHEET.NAME);
+    this.sheet = new Sheet(SpreadsheetSummary.SHEET.NAME);
     this.data = this.sheet.getDataRange().offset(1, 0).getValues();
   }
 
@@ -1581,7 +1456,7 @@ const SpreadsheetSummary = class {
   }
 
   update() {
-    const sheetData = iswActiveSpreadsheet.getSheets().map(iswSheet => ({
+    const sheetData = activeSpreadsheet.getSheets().map(iswSheet => ({
       sheetName: iswSheet.getSheetName(),
       lastRow: iswSheet.getLastRow(),
       lastColumn: iswSheet.getLastColumn(),
@@ -1625,11 +1500,22 @@ const SpreadsheetSummary = class {
   getSheetName() {
     return this.sheet.getSheetName();
   }
-};
+}
+
+// Function declarations
+
+function alert(message) {
+  SpreadsheetApp.getUi().alert(message);
+}
+
+function allAccounts() {
+  const ourFinances = new OurFinances()
+  ourFinances.showAllAccounts()
+}
 
 function applyDescriptionReplacements() {
   Logger.log(`applyDescriptionReplacements started`);
-  const activeSheet = iswActiveSpreadsheet.getActiveSheet();
+  const activeSheet = activeSpreadsheet.getActiveSheet();
   const accountSheet = new AccountSheet(activeSheet);
   if (accountSheet) {
     accountSheet.applyDescriptionReplacements();
@@ -1691,7 +1577,8 @@ function convertCurrentColumnToUppercase() {
 }
 
 function createAccountsMenu() {
-  const accountSheetNames = listSheetNames('account');
+  // accountSheetNames is defined as a global
+  //const accountSheetNames = getSheetNamesByType('account');
 
   // Check if any accounts are found
   if (accountSheetNames.length === 0) {
@@ -1713,12 +1600,12 @@ function createGasMenu() {
   Logger.log('createGasMenu started')
   const itemArray = [
     ['All accounts', 'allAccounts'],
-    ['Analyze active sheet', 'analyzeActiveSheet'],
     ['Apply Description replacements', 'applyDescriptionReplacements'],
     ['Balance sheet', 'balanceSheet'],
     ['Check dependencies', 'checkDependencies'],
     ['Convert current column to uppercase', 'convertCurrentColumnToUppercase'],
     ['Daily update', 'dailyUpdate'],
+    ['Format sheet', 'formatSheet'],
     ['Monthly update', 'monthlyUpdate'],
     ['Open accounts', 'openAccounts'],
     ['Sort sheet order', 'sortGoogleSheets'],
@@ -1731,16 +1618,6 @@ function createGasMenu() {
 }
 
 function createSectionsMenu() {
-  Logger.log('createSectionsMenu started')
-
-  /*
-    const budgetSheetNames = listSheetNames('budget');
-  
-    const budgetSheetNamesMap = budgetSheetNames.map(sheetName => toValidFunctionName(sheetName));
-    Logger.log(budgetSheetNamesMap);
-    return;
-  */
-
   const ui = gasSpreadsheetApp.getUi();
   const menu = ui.createMenu('Sections')
     .addSubMenu(ui.createMenu('Budget')
@@ -1792,8 +1669,6 @@ function createSectionsMenu() {
     .addSeparator()
     .addItem('Xfers mismatch', 'goToSheetXfersMismatch')
     .addToUi();
-
-  Logger.log('createSectionsMenu finished')
 }
 
 function createUiMenu(menuCaption, menuItemArray) {
@@ -1808,7 +1683,6 @@ function createUiMenu(menuCaption, menuItemArray) {
 }
 
 function dailySorts() {
-  const spreadsheet = gasActiveSpreadsheet;
   const sheetsToSort = [
     "Bank accounts",
     "Budget annual transactions",
@@ -1818,7 +1692,7 @@ function dailySorts() {
     "Transactions categories",
   ];
   sheetsToSort.forEach(sheetName => {
-    const sheet = spreadsheet.getSheetByName(sheetName);
+    const sheet = activeSpreadsheet.getSheetByName(sheetName);
     if (sheet) {
       sortSheetByFirstColumnOmittingHeader(sheet);
     } else {
@@ -1858,8 +1732,8 @@ function examineObject(object, name = 'anonymous value') {
 }
 
 const findAllNamedRangeUsage = () => {
-  const sheets = gasActiveSpreadsheet.getSheets();
-  const namedRanges = gasActiveSpreadsheet.getNamedRanges();
+  const sheets = activeSpreadsheet.getSheets();
+  const namedRanges = activeSpreadsheet.getNamedRanges();
   const rangeUsage = [];
 
   if (!namedRanges.length) {
@@ -1901,7 +1775,7 @@ const findNamedRangeUsage = () => {
 }
 
 const findRowByKey = (sheetName, keyColumn, keyValue) => {
-  const sheet = gasActiveSpreadsheet.getSheetByName(sheetName);
+  const sheet = activeSpreadsheet.getSheetByName(sheetName);
   const data = sheet.getRange(`${keyColumn}1:${keyColumn}${sheet.getLastRow()}`).getValues();
 
   const rowIndex = data.findIndex(row => row[0] === keyValue);
@@ -1909,7 +1783,7 @@ const findRowByKey = (sheetName, keyColumn, keyValue) => {
 };
 
 const findUsageByNamedRange = (namedRange) => {
-  const sheets = gasActiveSpreadsheet.getSheets();
+  const sheets = activeSpreadsheet.getSheets();
   const rangeUsage = [];
 
   sheets.forEach(sheet => {
@@ -1933,13 +1807,29 @@ const findUsageByNamedRange = (namedRange) => {
   }
 }
 
+
+function formatSheet() {
+  const activeSheet = activeSpreadsheet.getActiveSheet();
+
+  if (!activeSheet) {
+    Logger.log("No active sheet found.");
+    return;
+  }
+
+  try {
+    const accountSheet = new AccountSheet(activeSheet);
+    accountSheet.formatSheet();
+  } catch (error) {
+    Logger.log(`${activeSheet.sheetName}: ${error.message}`);
+  }
+}
 /**
  * Formats an amount for display as GBP
  * @param {number} amount - The amount to format
  * @return {string} Formatted amount
  */
 const getAmountAsGBP = (amount) => {
-  const gbPound = new Intl.NumberFormat(getLocale(), {
+  const gbPound = new Intl.NumberFormat(locale, {
     style: 'currency',
     currency: 'GBP',
   });
@@ -1948,7 +1838,7 @@ const getAmountAsGBP = (amount) => {
 }
 
 function getDayName(date) {
-  const dayName = date.toLocaleDateString(getLocale(), { weekday: 'long' })
+  const dayName = date.toLocaleDateString(locale, { weekday: 'long' })
   return dayName
 }
 
@@ -1959,7 +1849,7 @@ function getDayOfMonth(date) {
 }
 
 function getDtf() {
-  return new Intl.DateTimeFormat(getLocale())
+  return new Intl.DateTimeFormat(locale);
 }
 
 function getFirstRowRange(sheet) {
@@ -1997,16 +1887,12 @@ function getLastUpdatedColumn(sheet) {
   return lastUpdatedColumn;
 }
 
-function getLocale() {
-  return 'en-GB'
-}
-
 function getMonthIndex(date) {
   return date.getMonth();
 }
 
 function getMonthName(date) {
-  return date.toLocaleDateString(this.locale, { month: 'long' });
+  return date.toLocaleDateString(locale, { month: 'long' });
 }
 
 const getMyEmailAddress = () => {
@@ -2097,8 +1983,7 @@ const getPrivateData = () => {
 }
 
 function getReplacementHeadersMap() {
-  const spreadsheet = gasActiveSpreadsheet;
-  const bankAccounts = spreadsheet.getSheetByName('Bank accounts');
+  const bankAccounts = activeSpreadsheet.getSheetByName('Bank accounts');
   if (!bankAccounts) {
     throw new Error(`Sheet named 'Bank accounts' not found.`);
   }
@@ -2129,9 +2014,31 @@ const getSheetFromEvent = (e) => {
   return range.getSheet();
 }
 
+function getSheetNamesByType(sheetNameType) {
+  let sheetNames;
+  logWithTimeInterval(`# ${getLineNumber()}`);
+  const spreadsheetSummary = new SpreadsheetSummary();
+  logWithTimeInterval(`# ${getLineNumber()}`);
+  // Process based on sheetNameType
+  switch (sheetNameType) {
+    case 'account':
+      sheetNames = spreadsheetSummary.getAccountSheetNames();
+      logWithTimeInterval(`# ${getLineNumber()}`);
+      break;
+    case 'all':
+      // Return all sheet names
+      sheetNames = spreadsheetSummary.getSheetNames();
+      break;
+    default:
+      throw new Error(`Unexpected sheetNameType: ${sheetNameType}`);
+  }
+  Logger.log(`There are ${sheetNames.length} sheets with sheetNameType = '${sheetNameType}'.`);
+
+  return sheetNames;
+}
+
 function getToday(options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }) {
   const date = new Date();
-  const locale = getLocale();
   let today;
 
   try {
@@ -2183,7 +2090,7 @@ function getType(value) {
 }
 
 function goToSheet(sheetName) {
-  const sheet = new IswSheet(sheetName);
+  const sheet = new Sheet(sheetName);
 
   // Check if the sheet exists before trying to activate it.
   if (sheet) {
@@ -2193,27 +2100,11 @@ function goToSheet(sheetName) {
   }
 }
 
-function goToSheetLastRowX(sheetName) {
-  // Get the sheet by name and activate it.
-  const sheet = new IswSheet(sheetName);
-
-  // Get the last row with content
-  const lastRow = sheet.getLastRow();
-
-  // Get the first cell in the last row (Column A)
-  const cell = sheet.getRange(lastRow, 1);
-
-  // Activate the cell
-  sheet.setActiveRange(cell);
-
-  const accountSheet = new AccountSheet(sheet);
-  accountSheet.analyzeSheet();
-}
 function goToSheetLastRow(sheetName) {
-  const sheet = new IswSheet(sheetName);
+  const sheet = new Sheet(sheetName);
   sheet.setActiveRange(sheet.getRange(sheet.getLastRow(), 1));
-  new AccountSheet(sheet).analyzeSheet();
 }
+
 function goToSheet_AHALIF() {
   goToSheet('_AHALIF')
 }
@@ -2335,31 +2226,15 @@ function isSingleCell(range) {
   return range.getNumColumns() === 1 && range.getNumRows() === 1;
 }
 
-function listSheetNames(sheetNameType) {
-
-  // logWithTimeInterval(getLineNumber())
-  const spreadsheetSummary = new SpreadsheetSummary();
-
-  // logWithTimeInterval(getLineNumber())
-  // Process based on sheetNameType
-  switch (sheetNameType) {
-    case 'account':
-      return spreadsheetSummary.getAccountSheetNames();
-
-    case 'all':
-      // Return all sheet names
-      return spreadsheetSummary.getSheetNames();
-
-    case 'budget':
-      return spreadsheetSummary.getBudgetSheetNames();
-
-    default:
-      throw new Error(`Unexpected sheetNameType: ${sheetNameType}`);
-  }
+function logWithTimeInterval(message) {
+  const time = new Date().getTime();
+  const timeDiffMs = time - previousTime;
+  Logger.log(`After ${timeDiffMs} milleseconds - ${message}`);
+  previousTime = time;
 }
 
 function mergeTransactions() {
-  const { getSheetByName } = gasActiveSpreadsheet;
+  const { getSheetByName } = activeSpreadsheet;
 
   // Destructuring to cleanly get sheets
   const transactionsBuilderSheet = getSheetByName("Transactions Builder");
@@ -2406,13 +2281,14 @@ function onDateChange() {
   dailySorts();
 }
 
-function onEdit(e) {
-  const sheet = getSheetFromEvent(e);
+function onEdit(event) {
+  Logger.log('onEdit');
+  const sheet = getSheetFromEvent(event);
   setLastUpdatedOnAccountBalanceChange(sheet);
 }
 
 function onOpen() {
-  const spreadsheet = iswActiveSpreadsheet;
+  const spreadsheet = activeSpreadsheet;
 
   // Displaying a temporary notification to the user
   spreadsheet.toast("Please wait while I do a few tasks", "Please wait!", 500);
@@ -2502,66 +2378,8 @@ function setupDaysIterator(startDate) {
   return { first, iterator };
 }
 
-function showRowCountForAllSheets() {
-  // Get the active spreadsheet
-  const spreadsheet = gasActiveSpreadsheet;
-
-  // Get all the sheets in the spreadsheet
-  const sheets = spreadsheet.getSheets();
-
-  // Loop through each sheet
-  for (let i = 0; i < sheets.length; i++) {
-    const sheet = sheets[i];
-
-    // Get the sheet name
-    const sheetName = sheet.getName();
-
-    // Get the last row with content (row count)
-    const lastRow = sheet.getLastRow();
-
-    // Log the row count or display it in a message box
-    Logger.log("Sheet: " + sheetName + " has " + lastRow + " rows.");
-
-    // Optionally, display in a message box
-    // Browser.msgBox("Sheet: " + sheetName + " has " + lastRow + " rows.");
-  }
-}
-
-function showTransactionsBuilderSteps() {
-  // Get the active spreadsheet
-  const spreadsheet = gasActiveSpreadsheet;
-
-  // Get all the sheets in the spreadsheet
-  const sheets = spreadsheet.getSheets();
-
-  // Loop through each sheet
-  for (let i = 0; i < sheets.length; i++) {
-    const sheet = sheets[i];
-
-    // Get the sheet name
-    const sheetName = sheet.getName();
-
-    // Only consider 'accounts' sheets
-    if (sheetName[0] === '_') {
-      // Get the last row with content (row count)
-      const lastRow = sheet.getLastRow();
-
-      // Log the row count or display it in a message box
-      Logger.log("Sheet: " + sheetName + " has " + lastRow + " rows.");
-
-      if (lastRow > 2) {
-        const cell = sheet.getRange("A2");
-        if (!isCellADate(cell)) {
-          crash(sheetName + "!A2 is NOT a date.")
-        }
-      }
-
-    }
-  }
-}
-
 function sortGoogleSheets() {
-  const ss = gasActiveSpreadsheet;
+  const ss = activeSpreadsheet;
 
   // Store all the worksheets in this array
   const sheetNameArray = [];
@@ -2615,16 +2433,14 @@ function trimGoogleSheet(iswSheet) {
   if (iswSheet) {
     sheet = iswSheet;
   } else {
-    sheet = iswActiveSpreadsheet.getActiveSheet();
+    sheet = activeSpreadsheet.getActiveSheet();
   }
 
   sheet.trimSheet();
 }
 
 function trimGoogleSheets() {
-  const spreadsheet = gasActiveSpreadsheet;
-
-  const sheets = spreadsheet.getSheets();
+  const sheets = activeSpreadsheet.getSheets();
   sheets.forEach(sheet => {
     sheet.trimSheet();
   });
@@ -2675,31 +2491,33 @@ function getLineNumber() {
   }
 }
 
-let previousTime = new Date().getTime();
-function logWithTimeInterval(message) {
-  const time = new Date().getTime();
-  const timeDiffMs = time - previousTime;
-  Logger.log(`After ${timeDiffMs} milleseconds - ${message}`);
-  previousTime = time;
-}
+// Main program starts here
 
-// logWithTimeInterval(getLineNumber());
+const locale = 'en-GB';
+
+logWithTimeInterval(`# ${getLineNumber()} Main program started`);
+
+const activeSpreadsheet = new Spreadsheet();
+logWithTimeInterval(`# ${getLineNumber()}`);
 
 const gasSpreadsheetApp = SpreadsheetApp;
 
 // logWithTimeInterval(getLineNumber());
 
-const gasActiveSpreadsheet = gasSpreadsheetApp.getActiveSpreadsheet();
-const iswActiveSpreadsheet = new IswSpreadsheet();
+logWithTimeInterval(`# ${getLineNumber()}`);
 
-// logWithTimeInterval(getLineNumber())
-
-const accountSheetNames = listSheetNames('account');
-// logWithTimeInterval(getLineNumber())
-
-accountSheetNames.forEach(sheetName => {
+const accountSheetNames = getSheetNamesByType('account');
+logWithTimeInterval(`# ${getLineNumber()}`);
+const dynamicFunctions = accountSheetNames.reduce((acc, sheetName) => {
   const funName = `dynamicAccount${sheetName}`;
-  this[funName] = () => goToSheetLastRow(sheetName);
-});
+  acc[funName] = () => goToSheetLastRow(sheetName);
+  return acc;
+}, {});
 
-// logWithTimeInterval(getLineNumber())
+logWithTimeInterval(`# ${getLineNumber()}`);
+
+Logger.log('Assigning dynamic functions');
+
+Object.assign(this, dynamicFunctions);
+
+logWithTimeInterval(`# ${getLineNumber()}`);
