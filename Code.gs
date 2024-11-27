@@ -989,6 +989,190 @@ class DescriptionReplacements {
   }
 }
 
+
+class HMRC_S {
+  // Column definitions using static getters
+  static get COLUMNS() {
+    return {
+      QUESTIONS: 0,
+      CATEGORY: 1,
+      LATEST_TAX_YEAR: 2,
+    };
+  }
+
+  // Sheet configuration using static getters
+  static get SHEET() {
+    return {
+      NAME: 'HMRC S',
+      HEADER_ROW: 1, // Number of header rows to skip
+    };
+  }
+
+  // Handles the edit event
+  handleEdit(trigger) {
+    try {
+      const value = trigger.getValue();
+      Logger.log(`value: ${value}`);
+      const row = trigger.getRow();
+      Logger.log(`row: ${row}`);
+      const column = trigger.getColumn();
+      Logger.log(`column: ${column}`);
+
+      // Exit early if value is empty or row is part of the header
+      if (!value || row <= HMRC_S.SHEET.HEADER_ROW) return;
+
+      // Check if the edit occurred in the "CATEGORY" column
+      if (column === HMRC_S.COLUMNS.CATEGORY + 1) {
+        const sheet = trigger.getSheet();
+        const startColLetter = this.columnNumberToLetter(HMRC_S.COLUMNS.LATEST_TAX_YEAR + 1);
+        const lastColLetter = this.columnNumberToLetter(sheet.getLastColumn());
+
+        // Construct QUERY formulas
+        const queries = this.buildQueries(value, startColLetter, lastColLetter, row);
+
+        // Set the formulas in the target range
+        const targetRange = `${startColLetter}${row}:${lastColLetter}${row}`;
+        sheet.getRange(targetRange).setValues([queries]);
+      }
+    } catch (error) {
+      console.error('Error handling onEdit:', error);
+    }
+  }
+
+  // Build QUERY formulas for the given range
+  buildQueries(value, startCol, lastCol, row) {
+    const baseQuery = `=IFNA(QUERY(Transactions!$A$2:$Z, `;
+    const labelSuffix = ` LABEL SUM(I) ''"), 0.0)`;
+
+    const queries = [];
+    for (let col = startCol; col <= lastCol; col = this.nextColumnLetter(col)) {
+      const query = `${baseQuery}"SELECT SUM(I) WHERE J='"&$${col}$1&"' AND M='${HMRC_S.SHEET.NAME} ${value}'${labelSuffix}`;
+      queries.push(query);
+    }
+    return queries;
+  }
+
+  // Convert column number to letter (e.g., 1 -> A)
+  columnNumberToLetter(colNum) {
+    let letter = '';
+    while (colNum > 0) {
+      const mod = (colNum - 1) % 26;
+      letter = String.fromCharCode(65 + mod) + letter;
+      colNum = Math.floor((colNum - 1) / 26);
+    }
+    return letter;
+  }
+
+  // Calculate the next column letter (e.g., A -> B)
+  nextColumnLetter(col) {
+    let carry = 1;
+    let result = '';
+    for (let i = col.length - 1; i >= 0; i--) {
+      const code = col.charCodeAt(i) + carry;
+      if (code > 90) {
+        result = 'A' + result;
+        carry = 1;
+      } else {
+        result = String.fromCharCode(code) + result;
+        carry = 0;
+      }
+    }
+    return carry ? 'A' + result : result;
+  }
+}
+
+class OurFinances {
+  constructor() {
+    this.spreadsheet = activeSpreadsheet;
+  }
+
+  getFixedAmountMismatches() {
+    return this.checkFixedAmounts.getMismatchMessages();
+  }
+
+  getUpcomingDebits() {
+    // Collect upcoming debits from different sources
+    return [
+      this.bankDebitsDue.getUpcomingDebits(),
+      this.budgetOneOffTransactions.getUpcomingDebits(),
+      this.budgetAnnualTransactions.getUpcomingDebits(),
+      this.budgetMonthlyTransactions.getUpcomingDebits(),
+      this.budgetWeeklyTransactions.getUpcomingDebits()
+    ];
+  }
+
+  get budgetAnnualTransactions() {
+    if (typeof this._budgetAnnualTransactions === 'undefined') {
+      this._budgetAnnualTransactions = new BudgetAnnualTransactions(this)
+    }
+    return this._budgetAnnualTransactions
+  }
+
+  get budgetOneOffTransactions() {
+    if (typeof this._budgetOneOffTransactions === 'undefined') {
+      this._budgetOneOffTransactions = new BudgetOneOffTransactions(this)
+    }
+    return this._budgetOneOffTransactions
+  }
+
+  get bankAccounts() {
+    if (typeof this._bankAccounts === 'undefined') {
+      this._bankAccounts = new BankAccounts(this)
+    }
+    return this._bankAccounts
+  }
+
+  get bankDebitsDue() {
+    if (typeof this._bankDebitsDue === 'undefined') {
+      this._bankDebitsDue = new BankDebitsDue(this)
+    }
+    return this._bankDebitsDue
+  }
+
+  get checkFixedAmounts() {
+    if (typeof this._checkFixedAmounts === 'undefined') {
+      this._checkFixedAmounts = new CheckFixedAmounts(this)
+    }
+    return this._checkFixedAmounts;
+  }
+
+  get howManyDaysAhead() {
+    if (typeof this._howManyDaysAhead === 'undefined') {
+      const sheetName = 'Bank debits due';
+      const sheet = this.getSheetByName(sheetName);
+      const searchValue = 'Look ahead';
+      this._howManyDaysAhead = xLookup(searchValue, sheet, 'D', 'E');
+    }
+    return this._howManyDaysAhead;
+  }
+
+  get budgetMonthlyTransactions() {
+    if (typeof this._budgetMonthlyTransactions === 'undefined') {
+      this._budgetMonthlyTransactions = new BudgetMonthlyTransactions(this);
+    }
+    return this._budgetMonthlyTransactions
+  }
+
+  get budgetWeeklyTransactions() {
+    if (typeof this._budgetWeeklyTransactions === 'undefined') {
+      this._budgetWeeklyTransactions = new BudgetWeeklyTransactions(this)
+    }
+    return this._budgetWeeklyTransactions
+  }
+
+  getName() {
+    return this.spreadsheet.getName();
+  }
+
+  getSheetByName(sheetName) {
+    return this.spreadsheet.getSheetByName(sheetName)
+  }
+
+  showAllAccounts() {
+    this.bankAccounts.showAll()
+  }
+}
+
 class Sheet {
   constructor(x = null) {
     //logWithTimeInterval(`# ${getLineNumber()}`);
@@ -1347,98 +1531,6 @@ class Spreadsheet {
   }
 }
 
-class OurFinances {
-  constructor() {
-    this.spreadsheet = activeSpreadsheet;
-  }
-
-  getFixedAmountMismatches() {
-    return this.checkFixedAmounts.getMismatchMessages();
-  }
-
-  getUpcomingDebits() {
-    // Collect upcoming debits from different sources
-    return [
-      this.bankDebitsDue.getUpcomingDebits(),
-      this.budgetOneOffTransactions.getUpcomingDebits(),
-      this.budgetAnnualTransactions.getUpcomingDebits(),
-      this.budgetMonthlyTransactions.getUpcomingDebits(),
-      this.budgetWeeklyTransactions.getUpcomingDebits()
-    ];
-  }
-
-  get budgetAnnualTransactions() {
-    if (typeof this._budgetAnnualTransactions === 'undefined') {
-      this._budgetAnnualTransactions = new BudgetAnnualTransactions(this)
-    }
-    return this._budgetAnnualTransactions
-  }
-
-  get budgetOneOffTransactions() {
-    if (typeof this._budgetOneOffTransactions === 'undefined') {
-      this._budgetOneOffTransactions = new BudgetOneOffTransactions(this)
-    }
-    return this._budgetOneOffTransactions
-  }
-
-  get bankAccounts() {
-    if (typeof this._bankAccounts === 'undefined') {
-      this._bankAccounts = new BankAccounts(this)
-    }
-    return this._bankAccounts
-  }
-
-  get bankDebitsDue() {
-    if (typeof this._bankDebitsDue === 'undefined') {
-      this._bankDebitsDue = new BankDebitsDue(this)
-    }
-    return this._bankDebitsDue
-  }
-
-  get checkFixedAmounts() {
-    if (typeof this._checkFixedAmounts === 'undefined') {
-      this._checkFixedAmounts = new CheckFixedAmounts(this)
-    }
-    return this._checkFixedAmounts;
-  }
-
-  get howManyDaysAhead() {
-    if (typeof this._howManyDaysAhead === 'undefined') {
-      const sheetName = 'Bank debits due';
-      const sheet = this.getSheetByName(sheetName);
-      const searchValue = 'Look ahead';
-      this._howManyDaysAhead = xLookup(searchValue, sheet, 'D', 'E');
-    }
-    return this._howManyDaysAhead;
-  }
-
-  get budgetMonthlyTransactions() {
-    if (typeof this._budgetMonthlyTransactions === 'undefined') {
-      this._budgetMonthlyTransactions = new BudgetMonthlyTransactions(this);
-    }
-    return this._budgetMonthlyTransactions
-  }
-
-  get budgetWeeklyTransactions() {
-    if (typeof this._budgetWeeklyTransactions === 'undefined') {
-      this._budgetWeeklyTransactions = new BudgetWeeklyTransactions(this)
-    }
-    return this._budgetWeeklyTransactions
-  }
-
-  getName() {
-    return this.spreadsheet.getName();
-  }
-
-  getSheetByName(sheetName) {
-    return this.spreadsheet.getSheetByName(sheetName)
-  }
-
-  showAllAccounts() {
-    this.bankAccounts.showAll()
-  }
-}
-
 class SpreadsheetSummary {
   static get COLUMNS() {
     return {
@@ -1541,6 +1633,36 @@ class Transactions {
     this.sheet.activate();
   }
 
+  evaluateQueryFunction(queryString) {
+    const sheet = this.sheet;
+    const dataRange = sheet.getDataRange(); // Adjust the range as needed
+    const a1range = `Transactions!${dataRange.getA1Notation()}`;
+    Logger.log(a1range);
+
+    // Construct the QUERY formula
+    const formula = `=IFNA(QUERY(${a1range}, "${queryString}"), 0.0)`;
+    Logger.log(formula);
+
+    // Add the formula to a temporary cell to evaluate it
+    const tempCell = sheet.getRange("Z1");
+    tempCell.setFormula(formula);
+
+    // Get the result of the QUERY function
+    const result = tempCell.getValue();
+
+    // Clear the temporary cell
+    tempCell.clear();
+
+    return result;
+  }
+
+  getTotalByYear(where, taxYear) {
+    const queryString = `SELECT SUM(I) WHERE J='${taxYear}' AND ${where} LABEL SUM(I) ''`;
+    Logger.log(queryString);
+    const result = this.evaluateQueryFunction(queryString);
+    Logger.log(result); // Outputs the result of the query
+  }
+
   updateBuilderFormulas(transactionFormulas) {
     // Validate input and extract formulas
     if (
@@ -1611,6 +1733,54 @@ class TransactionsBuilder {
   }
 }
 
+class Trigger {
+  constructor(event) {
+    this.event = event;
+  }
+  getColumn() {
+    if (!this._column) {
+      this._column = this.getRange().getColumn();
+    }
+    return this._column;
+  }
+  getOldValue() {
+    if (!this._oldValue) {
+      this._oldValue = this.event.oldValue;
+    }
+    return this._oldValue;
+  }
+  getRange() {
+    if (!this._range) {
+      this._range = this.event.range;
+    }
+    return this._range;
+  }
+  getRow() {
+    if (!this._row) {
+      this._row = this.getRange().getRow();
+    }
+    return this._row;
+  }
+  getSheet() {
+    if (!this._sheet) {
+      this._sheet = this.getRange().getSheet();
+    }
+    return this._sheet;
+  }
+  getSheetName() {
+    if (!this._sheetName) {
+      this._sheetName = this.getSheet().getName();
+    }
+    return this._sheetName;
+  }
+  getValue() {
+    if (!this._value) {
+      this._value = this.getRange().getValue();
+    }
+    return this._value;
+  }
+}
+
 // Function declarations
 
 function alert(message) {
@@ -1632,7 +1802,7 @@ function applyDescriptionReplacements() {
   Logger.log(`applyDescriptionReplacements finished`);
 }
 
-const balanceSheet = () => {
+function balanceSheet() {
   goToSheet('Balance sheet');
 }
 
@@ -1667,6 +1837,17 @@ function checkDependencies() {
 
 function cloneDate(date) {
   return new Date(date.getTime())
+}
+
+function columnNumberToLetter(columnNumber) {
+  let dividend = columnNumber;
+  let letter = "";
+  while (dividend > 0) {
+    const modulo = (dividend - 1) % 26;
+    letter = String.fromCharCode(65 + modulo) + letter;
+    dividend = Math.floor((dividend - modulo) / 26);
+  }
+  return letter;
 }
 
 function convertCurrentColumnToUppercase() {
@@ -1770,7 +1951,7 @@ function createSectionsMenu() {
       .addItem('HMRC Transactions Summary', 'goToSheetHMRCTransactionsSummary')
       .addItem('Property Management', 'goToSheetHMRCTransactionsSummary')
       .addItem('Self Assessment Ian Bernard', 'goToSheetHMRCIanB')
-      .addItem('Self Assessment Ian Sweeney', 'goToSheetHMRCIanS')
+      .addItem('Self Assessment Ian Sweeney', 'goToSheetHMRC_S')
     )
     .addSeparator()
     .addSubMenu(ui.createMenu('SW18 3PT')
@@ -1823,7 +2004,7 @@ function dynamicQuery(rangeString, queryString) {
     const dataTable = Charts.newDataTable()
       .addColumn('Column', 'string')
       .build();
-    
+
     rangeString = rangeString.trim();
     queryString = queryString.trim();
 
@@ -1835,13 +2016,6 @@ function dynamicQuery(rangeString, queryString) {
   }
 }
 
-function testDynamicQuery() {
-  const rangeString = 'Transactions!$A$2:$T';
-  const queryString = `SELECT SUM(I) WHERE T='2023 to 2024-HMRC S SE property management income' LABEL SUM(I) ''`;
-  
-  const result = dynamicQuery(rangeString, queryString);
-  Logger.log(result);
-}
 function emailUpcomingPayments() {
   const ourFinances = new OurFinances();
   ourFinances.emailUpcomingPayments();
@@ -1867,7 +2041,7 @@ function examineObject(object, name = 'anonymous value') {
   }
 }
 
-const findAllNamedRangeUsage = () => {
+function findAllNamedRangeUsage() {
   const sheets = activeSpreadsheet.getSheets();
   const namedRanges = activeSpreadsheet.getNamedRanges();
   const rangeUsage = [];
@@ -1904,21 +2078,21 @@ const findAllNamedRangeUsage = () => {
   } else {
     Logger.log('No named ranges found in any formulas.');
   }
-};
+}
 
-const findNamedRangeUsage = () => {
+function findNamedRangeUsage() {
   findUsageByNamedRange("BRIAN_HALIFAX_BALANCE")
 }
 
-const findRowByKey = (sheetName, keyColumn, keyValue) => {
+function findRowByKey(sheetName, keyColumn, keyValue) {
   const sheet = activeSpreadsheet.getSheetByName(sheetName);
   const data = sheet.getRange(`${keyColumn}1:${keyColumn}${sheet.getLastRow()}`).getValues();
 
   const rowIndex = data.findIndex(row => row[0] === keyValue);
   return rowIndex !== -1 ? rowIndex + 1 : -1; // Add 1 for 1-based indexing, return -1 if not found
-};
+}
 
-const findUsageByNamedRange = (namedRange) => {
+function findUsageByNamedRange(namedRange) {
   const sheets = activeSpreadsheet.getSheets();
   const rangeUsage = [];
 
@@ -1964,7 +2138,7 @@ function formatSheet() {
  * @param {number} amount - The amount to format
  * @return {string} Formatted amount
  */
-const getAmountAsGBP = (amount) => {
+function getAmountAsGBP(amount) {
   const gbPound = new Intl.NumberFormat(locale, {
     style: 'currency',
     currency: 'GBP',
@@ -2027,6 +2201,17 @@ function getLastUpdatedColumn(sheet) {
   return lastUpdatedColumn;
 }
 
+function getLineNumber() {
+  try {
+    throw new Error();
+  } catch (e) {
+    // Extract line number from the stack trace
+    const stack = e.stack.split('\n');
+    const line = stack[2].match(/:(\d+):\d+\)?$/);
+    return line ? line[1] : 'unknown';
+  }
+}
+
 function getMonthIndex(date) {
   return date.getMonth();
 }
@@ -2035,7 +2220,7 @@ function getMonthName(date) {
   return date.toLocaleDateString(locale, { month: 'long' });
 }
 
-const getMyEmailAddress = () => {
+function getMyEmailAddress() {
   // Use optional chaining to safely access the email address
   const myEmailAddress = getPrivateData()?.['MY_EMAIL_ADDRESS'];
 
@@ -2084,7 +2269,7 @@ function getOrdinalDate(date) {
   return `${ordinal} of ${monthName} ${fullYear}`;
 }
 
-const getPrivateData = () => {
+function getPrivateData() {
   Logger.log('listPrivateData started');
 
   const privateDataId = '1hxcINN1seSzn-sLPI25KmV9t4kxLvZlievc0X3EgMhs';
@@ -2146,12 +2331,6 @@ function getSeasonName(date) {
   const seasonIndex = monthSeasons[monthIndex];
 
   return seasons[seasonIndex];
-}
-
-const getSheetFromEvent = (e) => {
-  const range = e.range;
-
-  return range.getSheet();
 }
 
 function getSheetNamesByType(sheetNameType) {
@@ -2275,8 +2454,8 @@ function goToSheetHMRCIanB() {
   goToSheet('HMRC Ian B')
 }
 
-function goToSheetHMRCIanS() {
-  goToSheet('HMRC Ian S')
+function goToSheetHMRC_S() {
+  goToSheet(HMRC_S.SHEET.NAME)
 }
 
 function goToSheetHMRCTransactionsSummary() {
@@ -2315,7 +2494,7 @@ function goToSheetXfersMismatch() {
   goToSheet('Xfers mismatch')
 }
 
-const isAccountSheet = (sheet) => {
+function isAccountSheet(sheet) {
   if (sheet.getSheetName().startsWith('_')) return true;
   return false;
 }
@@ -2406,7 +2585,17 @@ function onDateChange() {
 
 function onEdit(event) {
   Logger.log('onEdit');
-  const sheet = getSheetFromEvent(event);
+  Logger.log(JSON.stringify(event));
+  const trigger = new Trigger(event);
+  const sheet = trigger.getSheet();
+  const sheetName = trigger.getSheetName();
+
+  if (sheetName == HMRC_S.SHEET.NAME) {
+    Logger.log(`sheetName: ${sheetName}`);
+    const hmrcS = new HMRC_S();
+    hmrcS.handleEdit(trigger);
+  }
+
   setLastUpdatedOnAccountBalanceChange(sheet);
 }
 
@@ -2430,7 +2619,7 @@ function openAccounts() {
   ourFinances.bankAccounts.showOpenAccounts();
 }
 
-const sendDailyEmail = () => {
+function sendDailyEmail() {
   const ourFinances = new OurFinances();
   const fixedAmountMismatches = ourFinances.getFixedAmountMismatches();
   const upcomingDebits = ourFinances.getUpcomingDebits();
@@ -2550,7 +2739,7 @@ function sortSheetByFirstColumnOmittingHeader(sheet) {
   rangeToSort.sort({ column: 1, ascending: true });
 }
 
-const toValidFunctionName = (str) => {
+function toValidFunctionName(str) {
   // Remove non-alphanumeric characters, except for letters and digits, replace them with underscores
   let validName = str.trim().replace(/[^a-zA-Z0-9]/g, '_');
 
@@ -2608,17 +2797,6 @@ function xLookup(searchValue, sheet, searchCol, resultCol, exactMatch = true) {
 
   Logger.log(`Value '${searchValue}' not found in column ${searchCol}`);
   return null;  // Return null if no match is found
-}
-
-function getLineNumber() {
-  try {
-    throw new Error();
-  } catch (e) {
-    // Extract line number from the stack trace
-    const stack = e.stack.split('\n');
-    const line = stack[2].match(/:(\d+):\d+\)?$/);
-    return line ? line[1] : 'unknown';
-  }
 }
 
 // Main program starts here
