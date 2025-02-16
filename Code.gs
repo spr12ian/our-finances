@@ -1202,11 +1202,14 @@ class OurFinances {
 
 class Sheet {
   constructor(x = null) {
+    Logger.log("Sheet:constructor")
     //logWithTimeInterval(`# ${getLineNumber()}`);
     const xType = getType(x);
+    Logger.log("xType: " + xType)
 
     if (xType === 'string') {
       const sheetName = x;
+      Logger.log("sheetName: " + sheetName)
       logWithTimeInterval(`# ${getLineNumber()}`);
       this.sheet = activeSpreadsheet.getSheetByName(sheetName);
       if (!this.sheet) {
@@ -1293,6 +1296,10 @@ class Sheet {
     }
   }
 
+  deleteRows(startRow, howManyRowsToDelete) {
+    this.sheet.deleteRows(startRow, howManyRowsToDelete);
+  }
+  
   getDataRange() {
     return this.sheet.getDataRange();
   }
@@ -1585,6 +1592,7 @@ class SpreadsheetSummary {
   }
 
   constructor() {
+    Logger.log("SpreadsheetSummary:constructor")
     this.sheet = new Sheet(SpreadsheetSummary.SHEET.NAME);
     this.data = this.sheet.getDataRange().offset(1, 0).getValues();
   }
@@ -2816,9 +2824,38 @@ function trimGoogleSheets() {
 }
 
 function updateSpreadsheetSummary() {
+  Logger.log("updateSpreadsheetSummary")
   const spreadsheetSummary = new SpreadsheetSummary();
-  spreadsheetSummary.update();
-  trimGoogleSheet(spreadsheetSummary.getSheet());
+  const sheets = activeSpreadsheet.getSheets();
+  const sheetData = sheets.map(sheet => [
+    sheet.getSheetName(),
+    sheet.getLastRow(),
+    sheet.getLastColumn(),
+    sheet.getMaxRows(),
+    sheet.getMaxColumns(),
+    sheet.getSheetName().startsWith('_'),
+    sheet.getSheetName().startsWith('Budget')
+  ]);
+
+  // Add headers
+  sheetData.unshift([
+    'Sheet name',
+    'Last row',
+    'Last column',
+    'Max rows',
+    'Max columns',
+    'Is an account file (starts with underscore)?',
+    'Is a budget file (starts with Budget)?'
+  ]);
+
+  const maxWidth = sheetData[0].length;
+
+  // Minimize calls to Google Sheets API by using clearContent instead of clear() if possible.
+  const summarySheet = spreadsheetSummary.getSheet();
+  summarySheet.clearContents();
+  summarySheet.getRange(1, 1, sheetData.length, maxWidth).setValues(sheetData);
+
+  trimGoogleSheet(summarySheet);
 }
 
 /**
