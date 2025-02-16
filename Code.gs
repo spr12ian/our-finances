@@ -1366,19 +1366,6 @@ class Spreadsheet {
     return this._gasSheets;
   }
 
-  getSheetByNameX(sheetName) {
-    let sheet;
-
-    try {
-      sheet = this.getSheetMap()[sheetName];
-      if (!sheet) {
-        return;
-      }
-    }
-
-    return sheet;
-  }
-
   getSheetByName(sheetName) {
     let sheet;
 
@@ -2021,10 +2008,9 @@ function formatSheet() {
     return;
   }
 
-  try {
-    const accountSheet = new AccountSheet(activeSheet);
-    accountSheet.formatSheet();
-  }
+  const accountSheet = new AccountSheet(activeSheet);
+  accountSheet.formatSheet();
+
 }
 
 /**
