@@ -1,7 +1,3 @@
-/* function logWithTimeInterval requires previousTime to be defined before being used */
-let previousTime = new Date().getTime();
-logWithTimeInterval(`# ${getLineNumber()} Processing Code.gs`);
-
 // Class declarations
 
 class AccountSheet {
@@ -30,7 +26,6 @@ class AccountSheet {
     if (iswSheet) {
       const sheetName = iswSheet.getSheetName();
       if (sheetName[0] === '_') {
-        // Logger.log(`${sheetName} is an account sheet`);
         this.sheet = iswSheet;
       } else {
         throw new Error(`${sheetName} is NOT an account sheet`);
@@ -45,12 +40,10 @@ class AccountSheet {
 
   addNoteToCell(a1CellRange, note) {
     this.sheet.getRange(a1CellRange).setNote(note);
-    this.log(`Added note '${note}' to cell ${a1CellRange}`);
   }
 
   alignLeft(a1range) {
     this.sheet.getRange(a1range).setHorizontalAlignment('left');
-    this.log(`Aligned range ${a1range} to the left`);
   }
 
   formatSheet() {
@@ -63,7 +56,6 @@ class AccountSheet {
       this.setColumnWidth(AccountSheet.COLUMNS.DESCRIPTION, 500);
       this.setColumnWidth(AccountSheet.COLUMNS.NOTE, 170);
     } catch (error) {
-      this.log(`Error formatting sheet: ${error.message}`, 'error');
       throw error;
     }
   }
@@ -82,12 +74,10 @@ class AccountSheet {
     const values = range.getValues().map(row => [row[0]?.toString().toUpperCase()]);
 
     range.setValues(values);
-    this.log(`Converted column ${column} to uppercase`);
   }
 
   formatAsBold(a1range) {
     this.sheet.getRange(a1range).setFontWeight('bold');
-    this.log(`Set range ${a1range} to bold`);
   }
 
   formatAsDate(...a1ranges) {
@@ -121,22 +111,12 @@ class AccountSheet {
     return this.sheet.getSheetName();
   }
 
-  log(message, level = 'info') {
-    this.sheet.log(message, level);
-  }
-
-  logSheetDetails() {
-    this.sheet.logSheetDetails();
-  }
-
   setBackground(a1range, background = '#FFFFFF') {
     this.sheet.getRange(a1range).setBackground(background);
-    this.log(`Background color set to ${background} for range ${a1range}`);
   }
 
   setColumnWidth(column, widthInPixels) {
     this.sheet.setColumnWidth(column, widthInPixels);
-    this.log(`Set column ${column} width to ${widthInPixels} pixels`);
   }
 
   setCounterpartyValidation(a1range) {
@@ -149,7 +129,6 @@ class AccountSheet {
       .build();
 
     range.setDataValidation(rule);
-    this.log(`Applied counterparty validation to ${a1range}`);
   }
 
   setDateValidation(a1range) {
@@ -161,12 +140,10 @@ class AccountSheet {
       .build();
 
     range.setDataValidation(rule);
-    this.log(`Applied date validation to ${a1range}`);
   }
 
   setNumberFormat(a1range, format) {
     this.sheet.getRange(a1range).setNumberFormat(format);
-    this.log(`Set number format for ${a1range} to '${format}'`);
   }
 
   /* Background colour can be cyan */
@@ -176,7 +153,6 @@ class AccountSheet {
       .setFontFamily(fontFamily)
       .setFontSize(fontSize)
       .setFontColor(fontColor);
-    this.log('Set sheet font to ${fontFamily}, size ${fontSize}, colour ${fontColor}');
   }
 
   setSheetFormatting() {
@@ -205,7 +181,6 @@ class AccountSheet {
     if (frozenRows !== 1) {
       throw new Error(`There should be 1 frozen row; found ${frozenRows}`);
     }
-    this.log('Frozen rows validation passed');
   }
 
   validateHeaders() {
@@ -216,7 +191,6 @@ class AccountSheet {
         throw new Error(`Column ${index + 1} should be '${expected}' but found '${value}'`);
       }
     });
-    this.log('Headers validation passed');
   }
 
   validateMinimumColumns() {
@@ -224,15 +198,12 @@ class AccountSheet {
     if (lastColumn < AccountSheet.MINIMUM_COLUMNS) {
       throw new Error(`Sheet ${this.getSheetName()} requires at least ${AccountSheet.MINIMUM_COLUMNS} columns, but found ${lastColumn}`);
     }
-    this.log('Minimum columns validation passed');
   }
 
   validateSheet() {
-    this.log('Starting sheet validation');
     this.validateMinimumColumns();
     this.validateHeaders();
     this.validateFrozenRows();
-    this.log('Sheet validation completed');
   }
 
   xLookup(searchValue, sheet, searchCol, resultCol) {
@@ -242,7 +213,6 @@ class AccountSheet {
         return sheet.getRange(`${resultCol}${i + 1}`).getValue();
       }
     }
-    this.log(`Value '${searchValue}' not found in column ${searchCol}`);
     return null;
   }
 }
@@ -289,8 +259,6 @@ class BankAccounts {
 
       filter.setColumnFilterCriteria(item.column, criteria);
     });
-
-    this.log(`Filters applied: ${JSON.stringify(filters)}`);
   }
 
   getDataRange() {
@@ -306,7 +274,6 @@ class BankAccounts {
   }
 
   getValues() {
-    this.log("Retrieving all values from data range");
     return this.getDataRange().getValues();
   }
 
@@ -315,17 +282,6 @@ class BankAccounts {
     const ranges = sheet.getRangeList(columnsToHide);
 
     ranges.getRanges().forEach(range => sheet.hideColumn(range));
-    this.log(`Columns hidden: ${columnsToHide}`);
-  }
-
-  log(message, level = 'info') {
-    const logPrefix = `[${this.getSheetName()}] `;
-    const logMessage = `${logPrefix}${message}`;
-    if (level === 'error') {
-      // Logger.log(`ERROR: ${logMessage}`);
-    } else {
-      // Logger.log(logMessage);
-    }
   }
 
   removeFilter() {
@@ -343,8 +299,6 @@ class BankAccounts {
     this.removeFilter();
     sheet.showColumns(1, sheet.getLastColumn());
     sheet.activate();
-
-    this.log("All columns shown");
   }
 
   showDaily() {
@@ -392,7 +346,7 @@ class BankAccounts {
 
   updateLastUpdatedByKey(key) {
     const row = findRowByKey(BankAccounts.SHEET.NAME, BankAccounts.COLUMNS.KEY_LABEL, key);
-    // this.log(`row: ${row}`);
+
 
     const lastUpdateCell = this.sheet.getRange(row, BankAccounts.COLUMNS.BALANCE_UPDATED);
     lastUpdateCell.setValue(new Date());
@@ -694,11 +648,10 @@ class BudgetWeeklyTransactions {
 
     scheduledTransactions.forEach(transaction => {
       if (Math.abs(transaction[BudgetWeeklyTransactions.COL_DEBIT_AMOUNT]) > 1) {
-        const daySelected = transaction[BudgetWeeklyTransactions.COL_DATE]
-        // Logger.log(`daySelected: ${daySelected}`)
+        const daySelected = transaction[BudgetWeeklyTransactions.COL_DATE];
 
         const formattedDaySelected = getFormattedDate(new Date(daySelected), "GMT+1", "dd/MM/yyyy")
-        // Logger.log(`formattedDaySelected: ${formattedDaySelected}`)
+
 
         // Reset the day iterator
         const { first, iterator: days } = setupDaysIterator(today)
@@ -758,7 +711,6 @@ class CheckFixedAmounts {
       this.sheet = new Sheet(CheckFixedAmounts.SHEET.NAME);
       this.validateSheetStructure();
     } catch (error) {
-      // Logger.log(`Failed to initialize CheckFixedAmounts: ${error.message}`);
       throw new Error(`Sheet initialization failed: ${error.message}`);
     }
   }
@@ -803,7 +755,6 @@ class CheckFixedAmounts {
       }
       return this.cachedValues;
     } catch (error) {
-      // Logger.log(`Failed to get sheet values: ${error.message}`);
       throw new Error(`Could not retrieve sheet data: ${error.message}`);
     }
   }
@@ -885,10 +836,8 @@ class Dependencies {
   }
 
   getAllDependencies() {
-    // Logger.log("Dependencies.getAllDependencies");
 
     if (typeof this.allDependencies !== 'undefined') {
-      // Logger.log(`getAllDependencies: using cached dependencies: ${this.allDependencies}`);
       return this.allDependencies;
     }
 
@@ -900,8 +849,6 @@ class Dependencies {
 
     // Cache the result for future use
     this.allDependencies = allDependencies;
-
-    // Logger.log(`getAllDependencies: freshly loaded dependencies: ${allDependencies}`);
 
     return allDependencies;
   }
@@ -915,7 +862,6 @@ class Dependencies {
       const spreadsheet = new Spreadsheet(spreadsheetId);
       return spreadsheet.spreadsheetName;
     } catch (error) {
-      // Logger.log(`Error fetching spreadsheet with ID: ${spreadsheetId}. ${error.message}`);
       return null;  // or handle it accordingly
     }
   }
@@ -982,9 +928,6 @@ class DescriptionReplacements {
 
     if (numReplacements > 0) {
       range.setValues(values);
-      // Logger.log(`Updated ${numReplacements} values in sheet: ${accountSheetName}`);
-    } else {
-      // Logger.log(`No replacements made in sheet: ${accountSheetName}`);
     }
   }
 
@@ -1004,16 +947,6 @@ class DescriptionReplacements {
 
   getSheet() {
     return this.sheet;
-  }
-
-  log(message, level = 'info') {
-    const logPrefix = `[${this.getSheetName()}] `;
-    const logMessage = `${logPrefix}${message}`;
-    if (level === 'error') {
-      // Logger.log(`ERROR: ${logMessage}`);
-    } else {
-      // Logger.log(logMessage);
-    }
   }
 }
 
@@ -1039,11 +972,8 @@ class HMRC_S {
   handleEdit(trigger) {
     try {
       const value = trigger.getValue();
-      // Logger.log(`value: ${value}`);
       const row = trigger.getRow();
-      // Logger.log(`row: ${row}`);
       const column = trigger.getColumn();
-      // Logger.log(`column: ${column}`);
 
       // Exit early if value is empty or row is part of the header
       if (!value || row <= HMRC_S.SHEET.HEADER_ROW) return;
@@ -1202,35 +1132,29 @@ class OurFinances {
 
 class Sheet {
   constructor(x = null) {
-    Logger.log("Sheet:constructor")
-    //logWithTimeInterval(`# ${getLineNumber()}`);
+    
     const xType = getType(x);
-    Logger.log("xType: " + xType)
 
     if (xType === 'string') {
       const sheetName = x;
-      Logger.log("sheetName: " + sheetName)
-      logWithTimeInterval(`# ${getLineNumber()}`);
+      
       this.sheet = activeSpreadsheet.getSheetByName(sheetName);
       if (!this.sheet) {
         throw new Error(`Sheet with name "${sheetName}" not found`);
       }
       return;
     }
-    //logWithTimeInterval(`# ${getLineNumber()}`);
+    
     if (xType === 'Object') {
       const gasSheet = x;
       this.sheet = gasSheet;
-      // this.log(`${this.getSheetName()} initialised`);
       return;
     }
 
     if (x === null) {
-      // Logger.log('No input provided, initializing without a sheet');
       this.sheet = activeSpreadsheet.getActiveSheet();
       if (!this.sheet) {
         this.sheet = null;
-        this.log('No active sheet found. Initialised to null');
       }
       return;
     }
@@ -1249,7 +1173,6 @@ class Sheet {
   get spreadsheetName() {
     if (!this._spreadsheetName) {
       this._spreadsheetName = this.spreadsheet.spreadsheetName;
-      this.log(`Spreadsheet: ${this._spreadsheetName}`);
     }
     return this._spreadsheetName;
   }
@@ -1364,20 +1287,6 @@ class Sheet {
     return this.sheet.hideColumn(...args)
   }
 
-  log(message, level = 'info') {
-    const logPrefix = `[${this.getSheetName()}] `;
-    console[level === 'error' ? 'error' : 'log'](`${logPrefix}${message}`);
-  }
-
-  logSheetDetails() {
-    const lastColumn = this.sheet.getLastColumn();
-    this.log('Logging sheet details...');
-    this.log(`Minimum required columns: ${AccountSheet.MINIMUM_COLUMNS}`);
-    this.log(`Sheet name: ${this.getSheetName()}`);
-    this.log(`Last column with data: ${lastColumn}`);
-    this.log(`Maximum possible columns: ${this.sheet.getMaxColumns()}`);
-  }
-
   setActiveCell(...args) {
     this.sheet.setActiveCell(...args)
   }
@@ -1397,8 +1306,6 @@ class Sheet {
     if (!this.sheet) {
       throw new Error(`Sheet '${sheetName}' not found.`);
     }
-
-    this.log(`Initialized sheet: ${sheetName}`);
   }
 
   setValue(range, value) {
@@ -1419,25 +1326,19 @@ class Sheet {
 class Spreadsheet {
   constructor(spreadsheetId) {
     if (spreadsheetId) {
-      // Logger.log(`spreadsheetId: ${spreadsheetId}`);
       try {
         this.spreadsheet = this.openById(spreadsheetId);
       } catch (error) {
-        // Logger.log(`Error opening spreadsheet with ID: ${spreadsheetId}. ${error.message}`);
         throw error;
       }
     } else {
       try {
-        // logWithTimeInterval(getLineNumber())
         this.spreadsheet = this.getActiveSpreadsheet();
-        logWithTimeInterval(`# ${getLineNumber()}`);
+        
       } catch (error) {
-        // Logger.log(`Error opening active spreadsheet: ${error.message}`);
         throw error;
       }
     }
-
-    // // Logger.log(`Initialised spreadsheet: ${this.spreadsheetName}`);
   }
 
   getActiveSpreadsheet() {
@@ -1459,11 +1360,7 @@ class Spreadsheet {
 
   getGasSheets() {
     if (!this._gasSheets) {
-      logWithTimeInterval(`# ${getLineNumber()}\tFetching GAS sheets...`);
-
       this._gasSheets = this.spreadsheet.getSheets();
-
-      logWithTimeInterval(`# ${getLineNumber()}\tRetrieved ${this._gasSheets.length} GAS sheets from ${this.spreadsheetName}.`);
     }
 
     return this._gasSheets;
@@ -1475,39 +1372,29 @@ class Spreadsheet {
     try {
       sheet = this.getSheetMap()[sheetName];
       if (!sheet) {
-        // Logger.log('Sheet not found: ' + sheetName);
         return;
       }
-    } catch (error) {
-      // Logger.log('Error accessing sheet: ' + error.message);
-
     }
 
     return sheet;
   }
 
   getSheetByName(sheetName) {
-    logWithTimeInterval(`# ${getLineNumber()} Called getSheetByName with sheetName: '${sheetName}'`);
     let sheet;
 
     try {
       const sheetMap = this.getSheetMap();
       const sheetCount = Object.keys(sheetMap).length;
-      logWithTimeInterval(`# ${getLineNumber()} Sheet map initialized with ${sheetCount} entries.`);
-
+      
       sheet = sheetMap[sheetName];
-      logWithTimeInterval(`# ${getLineNumber()} Retrieved sheet: ${sheetName}`);
-
+      
       if (!sheet) {
-        // Logger.log(`Sheet not found: ${sheetName}`);
         return null; // Explicitly return null for missing sheets
       }
     } catch (error) {
-      // Logger.log(`Error accessing sheet "${sheetName}": ${error.message}`);
       return null; // Return null in case of errors
     }
 
-    logWithTimeInterval(`# ${getLineNumber()} Successfully retrieved sheet: ${sheetName}`);
     return sheet;
   }
 
@@ -1532,9 +1419,7 @@ class Spreadsheet {
 
   getSheets() {
     if (!this._sheets) {
-      logWithTimeInterval(`# ${getLineNumber()}\tFetching sheets...`);
       this._sheets = this.getGasSheets().map(sheet => new Sheet(sheet));
-      logWithTimeInterval(`# ${getLineNumber()}\tRetrieved ${this._sheets.length} sheets.`);
     }
     return this._sheets;
   }
@@ -1592,7 +1477,6 @@ class SpreadsheetSummary {
   }
 
   constructor() {
-    Logger.log("SpreadsheetSummary:constructor")
     this.sheet = new Sheet(SpreadsheetSummary.SHEET.NAME);
     this.data = this.sheet.getDataRange().offset(1, 0).getValues();
   }
@@ -1679,11 +1563,9 @@ class Transactions {
     const sheet = this.sheet;
     const dataRange = sheet.getDataRange(); // Adjust the range as needed
     const a1range = `Transactions!${dataRange.getA1Notation()}`;
-    // Logger.log(a1range);
 
     // Construct the QUERY formula
     const formula = `=IFNA(QUERY(${a1range}, "${queryString}"), 0.0)`;
-    // Logger.log(formula);
 
     // Add the formula to a temporary cell to evaluate it
     const tempCell = sheet.getRange("Z1");
@@ -1700,9 +1582,7 @@ class Transactions {
 
   getTotalByYear(where, taxYear) {
     const queryString = `SELECT SUM(I) WHERE J='${taxYear}' AND ${where} LABEL SUM(I) ''`;
-    // Logger.log(queryString);
     const result = this.evaluateQueryFunction(queryString);
-    // Logger.log(result); // Outputs the result of the query
   }
 
   updateBuilderFormulas(transactionFormulas) {
@@ -1727,10 +1607,9 @@ class Transactions {
         [`=${safeKeyFormula}`, `=${safeValuesFormula}`]
       ]);
 
-      // Logger.log(`Formulas updated successfully: ${safeKeyFormula}, ${safeValuesFormula}`);
+      
     } catch (error) {
-      // Logger.log(`Error updating builder formulas: ${error.message}`);
-      throw error; // Re-throw after logging
+      throw error;
     }
   }
 }
@@ -1761,16 +1640,13 @@ class TransactionsBuilder {
       const keyFormula = keyFormulaRow[0];
       const valuesFormula = valuesFormulaRow[0];
 
-      // Log both formulas for debugging
-      // Logger.log(`Retrieved Formulas:\n  Key Formula: =${keyFormula}\n  Values Formula: =${valuesFormula}`);
 
       return {
         keyFormula,
         valuesFormula
       };
     } catch (error) {
-      // Logger.log(`Error in getTransactionFormulas: ${error.message}`);
-      throw error; // Re-throw error after logging
+      throw error;
     }
   }
 }
@@ -1835,13 +1711,11 @@ function allAccounts() {
 }
 
 function applyDescriptionReplacements() {
-  // Logger.log(`applyDescriptionReplacements started`);
   const activeSheet = activeSpreadsheet.getActiveSheet();
   const accountSheet = new AccountSheet(activeSheet);
   if (accountSheet) {
     accountSheet.applyDescriptionReplacements();
   }
-  // Logger.log(`applyDescriptionReplacements finished`);
 }
 
 function balanceSheet() {
@@ -1929,7 +1803,6 @@ function createAccountsMenu() {
 }
 
 function createGasMenu() {
-  // Logger.log('createGasMenu started')
   const itemArray = [
     ['All accounts', 'allAccounts'],
     ['Apply Description replacements', 'applyDescriptionReplacements'],
@@ -1946,7 +1819,6 @@ function createGasMenu() {
     ['Update spreadsheet summary', 'updateSpreadsheetSummary'],
   ]
   createUiMenu('GAS Menu', itemArray)
-  // Logger.log('createGasMenu finished')
 }
 
 function createSectionsMenu() {
@@ -2060,39 +1932,24 @@ function dynamicQuery(rangeString, queryString) {
   }
 }
 
-function emailLogs() {
-  const body = Logger.getLog();
-  if (body.length) {
-    // Email logs to the person who ran the script.
-    const recipient = Session.getActiveUser().getEmail();
-    const subject = 'Logs from Our Finances';
-    const body = Logger.getLog();
-    MailApp.sendEmail(recipient, subject, body);
-  }
-}
-
 function emailUpcomingPayments() {
   const ourFinances = new OurFinances();
   ourFinances.emailUpcomingPayments();
 }
 
 function examineObject(object, name = 'anonymous value') {
-  Logger.log(`${name} has type ${getType(object)}`);
 
   if (typeof object === 'object' && object !== null) {
     const keys = Object.keys(object);
-    // Logger.log('Object.keys: ' + JSON.stringify(keys));
 
     const ownPropertyNames = Object.getOwnPropertyNames(object);
-    // Logger.log('Object.getOwnPropertyNames: ' + JSON.stringify(ownPropertyNames));
 
     // Get own properties
     const ownDescriptors = Object.getOwnPropertyDescriptors(object);
-    // Logger.log('Object.getOwnPropertyDescriptors: ' + JSON.stringify(ownDescriptors));
 
     // Get prototype properties (including greet)
     const prototypeDescriptors = Object.getOwnPropertyDescriptors(Object.getPrototypeOf(object));
-    // Logger.log('Prototype descriptors: ' + JSON.stringify(prototypeDescriptors));
+
   }
 }
 
@@ -2102,7 +1959,6 @@ function findAllNamedRangeUsage() {
   const rangeUsage = [];
 
   if (!namedRanges.length) {
-    // Logger.log('No named ranges found in this spreadsheet.');
     return;
   }
 
@@ -2126,13 +1982,6 @@ function findAllNamedRangeUsage() {
       });
     });
   });
-
-  if (rangeUsage.length > 0) {
-    // Logger.log('Named range(s) found in the following cells:');
-    // Logger.log(rangeUsage.join('\n'));
-  } else {
-    // Logger.log('No named ranges found in any formulas.');
-  }
 }
 
 function findNamedRangeUsage() {
@@ -2163,28 +2012,18 @@ function findUsageByNamedRange(namedRange) {
       });
     });
   });
-
-  if (rangeUsage.length > 0) {
-    // Logger.log(`Named range '${namedRange}' found in the following cells:`);
-    // Logger.log(rangeUsage.join("\n"));
-  } else {
-    // Logger.log(`Named range '${namedRange}' not found in any formulas.`);
-  }
 }
 
 function formatSheet() {
   const activeSheet = activeSpreadsheet.getActiveSheet();
 
   if (!activeSheet) {
-    // Logger.log("No active sheet found.");
     return;
   }
 
   try {
     const accountSheet = new AccountSheet(activeSheet);
     accountSheet.formatSheet();
-  } catch (error) {
-    // Logger.log(`${activeSheet.sheetName}: ${error.message}`);
   }
 }
 
@@ -2218,8 +2057,8 @@ function getDtf() {
 }
 
 function getFirstRowRange(sheet) {
-  const lastColumn = sheet.getLastColumn(); //// Logger.log(lastColumn);
-  const firstRowRange = sheet.getRange(1, 1, 1, lastColumn); // Logger.log(firstRowRange);
+  const lastColumn = sheet.getLastColumn();
+  const firstRowRange = sheet.getRange(1, 1, 1, lastColumn); 
   return firstRowRange;
 }
 
@@ -2281,7 +2120,6 @@ function getMyEmailAddress() {
 
   // Check if the email address exists and log accordingly
   if (myEmailAddress) {
-    // Logger.log(`myEmailAddress: ${myEmailAddress}`);
     return myEmailAddress;
   } else {
     console.error('MY_EMAIL_ADDRESS not found in private data');
@@ -2325,13 +2163,11 @@ function getOrdinalDate(date) {
 }
 
 function getPrivateData() {
-  // Logger.log('listPrivateData started');
 
   const privateDataId = '1hxcINN1seSzn-sLPI25KmV9t4kxLvZlievc0X3EgMhs';
   const sheet = gasSpreadsheetApp.openById(privateDataId);
 
   if (!sheet) {
-    // Logger.log("Sheet 'Private Data' not found");
     return;
   }
 
@@ -2339,7 +2175,6 @@ function getPrivateData() {
   const values = sheet.getDataRange().getValues().slice(1);
 
   if (values.length === 0) {
-    // Logger.log('Sheet is empty');
     return;
   }
 
@@ -2347,17 +2182,11 @@ function getPrivateData() {
 
   values.forEach(([key, value]) => {
     if (key && value) {
-      // Logger.log(`key: ${key}, value: ${value}`);
       if (key && value) {
         keyValuePairs[key] = value; // Store the key-value pair in the object
       }
-    } else {
-      // Logger.log(`Invalid key-value pair: key=${key}, value=${value}`);
     }
   });
-  // Logger.log(keyValuePairs);
-
-  // Logger.log('listPrivateData finished');
 
   return keyValuePairs;
 }
@@ -2390,7 +2219,7 @@ function getSeasonName(date) {
 
 function getSheetNamesByType(sheetNameType) {
   let sheetNames;
-  logWithTimeInterval(`# ${getLineNumber()}`);
+  
   const spreadsheetSummary = new SpreadsheetSummary();
   // Process based on sheetNameType
   switch (sheetNameType) {
@@ -2404,8 +2233,6 @@ function getSheetNamesByType(sheetNameType) {
     default:
       throw new Error(`Unexpected sheetNameType: ${sheetNameType}`);
   }
-  // Logger.log(`There are ${sheetNames.length} sheets with sheetNameType = '${sheetNameType}'.`);
-
   return sheetNames;
 }
 
@@ -2417,7 +2244,6 @@ function getToday(options = { weekday: 'long', year: 'numeric', month: 'long', d
     const dtf = new Intl.DateTimeFormat(locale, options);
     today = dtf.format(date);
   } catch (error) {
-    // Logger.log(`Error formatting date: ${error.message}`);
     today = date.toLocaleDateString(locale, options); // Fallback to toLocaleDateString
   }
 
@@ -2467,8 +2293,6 @@ function goToSheet(sheetName) {
   // Check if the sheet exists before trying to activate it.
   if (sheet) {
     sheet.activate();
-  } else {
-    // Logger.log('Sheet not found: ' + sheetName);
   }
 }
 
@@ -2568,10 +2392,8 @@ function isCellAccountBalance(sheet, column) {
   const values = firstRowRange.getValues()
   for (const row in values) {
     const cell = values[row][column - 1];
-    // Logger.log(cell);
 
     newCell = cell.replace(/\n/g, " ");
-    // Logger.log(newCell);
 
     if (newCell == accountBalance) {
       isCellAccountBalance = true;
@@ -2588,10 +2410,10 @@ function isCellADate(cell) {
 
   // Check if the value is a Date object
   if (Object.prototype.toString.call(cellValue) === '[object Date]' && !isNaN(cellValue.getTime())) {
-    // Logger.log("Cell contains a valid date.");
+
     return true;
   } else {
-    // Logger.log("Cell does NOT contain a date.");
+
     return false;
   }
 }
@@ -2610,12 +2432,7 @@ function isSingleCell(range) {
   return range.getNumColumns() === 1 && range.getNumRows() === 1;
 }
 
-function logWithTimeInterval(message) {
-  const time = new Date().getTime();
-  const timeDiffMs = time - previousTime;
-  // Logger.log(`After ${timeDiffMs} milleseconds - ${message}`);
-  previousTime = time;
-}
+
 
 function mergeTransactions() {
   const transactions = new Transactions();
@@ -2639,22 +2456,17 @@ function onDateChange() {
 }
 
 function onEdit(event) {
-  Logger.log('onEdit started');
-  // Logger.log(JSON.stringify(event));
   const trigger = new Trigger(event);
   const sheet = trigger.getSheet();
   const sheetName = trigger.getSheetName();
 
   if (sheetName == HMRC_S.SHEET.NAME) {
-    // Logger.log(`sheetName: ${sheetName}`);
     const hmrcS = new HMRC_S();
     hmrcS.handleEdit(trigger);
   }
 
   const bankAccounts = new BankAccounts();
   bankAccounts.updateLastUpdatedBySheet(sheet);
-
-  Logger.log('onEdit finished');
 }
 
 function onOpen() {
@@ -2701,8 +2513,6 @@ function sendDailyEmail() {
     emailBody += `\n\n`;
   }
 
-  // Logger.log(`Email Body: ${emailBody}`);
-
   // Append the spreadsheet URL
   emailBody += `\n\nSent from (sendDailyEmail): ${ourFinances.spreadsheet.getUrl()}\n`;
 
@@ -2724,7 +2534,6 @@ function setLastUpdatedOnAccountBalanceChange(sheet) {
     const bankAccounts = new BankAccounts();
 
     const key = sheet.getSheetName().slice(1);
-    // logWithTimeInterval(`key: ${key}`);
 
     bankAccounts.updateLastUpdatedByKey(key);
   }
@@ -2824,7 +2633,6 @@ function trimGoogleSheets() {
 }
 
 function updateSpreadsheetSummary() {
-  Logger.log("updateSpreadsheetSummary")
   const spreadsheetSummary = new SpreadsheetSummary();
   const sheets = activeSpreadsheet.getSheets();
   const sheetData = sheets.map(sheet => [
@@ -2882,7 +2690,6 @@ function xLookup(searchValue, sheet, searchCol, resultCol, exactMatch = true) {
     }
   }
 
-  // Logger.log(`Value '${searchValue}' not found in column ${searchCol}`);
   return null;  // Return null if no match is found
 }
 
@@ -2890,16 +2697,9 @@ function xLookup(searchValue, sheet, searchCol, resultCol, exactMatch = true) {
 
 const locale = 'en-GB';
 
-logWithTimeInterval(`# ${getLineNumber()} Main program started`);
-
 const activeSpreadsheet = new Spreadsheet();
-logWithTimeInterval(`# ${getLineNumber()}`);
 
 const gasSpreadsheetApp = SpreadsheetApp;
-
-// logWithTimeInterval(getLineNumber());
-
-logWithTimeInterval(`# ${getLineNumber()}`);
 
 const accountSheetNames = getSheetNamesByType('account');
 const dynamicFunctions = accountSheetNames.reduce((acc, sheetName) => {
@@ -2908,11 +2708,4 @@ const dynamicFunctions = accountSheetNames.reduce((acc, sheetName) => {
   return acc;
 }, {});
 
-logWithTimeInterval(`# ${getLineNumber()}`);
-
-// Logger.log('Assigning dynamic functions');
-
 Object.assign(this, dynamicFunctions);
-
-logWithTimeInterval(`# ${getLineNumber()}`);
-
