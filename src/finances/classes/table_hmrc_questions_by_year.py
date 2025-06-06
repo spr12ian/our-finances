@@ -1,8 +1,7 @@
-
-from sqlalchemy_helper import valid_sqlalchemy_name
-from sqlalchemy_helper import validate_sqlalchemy_name
-from our_finances.classes.sqlite_table import SQLiteTable
 import our_finances.util.financial_helpers as uf
+from sqlalchemy_helper import valid_sqlalchemy_name, validate_sqlalchemy_name
+
+from finances.classes.sqlite_table import SQLiteTable
 
 
 class HMRC_QuestionsByYear(SQLiteTable):

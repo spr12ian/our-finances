@@ -1,13 +1,12 @@
-from typing import List, Tuple
 
 # table_name, column_name, is_primary_key
-database_keys: List[Tuple[str, str, bool]] = [
+database_keys: list[tuple[str, str, bool]] = [
     ("account_balances", "key", True),
     ("bank_accounts", "key", True),
 ]
 
 
-def get_primary_key_columns(table_name: str) -> List[str]:
+def get_primary_key_columns(table_name: str) -> list[str]:
     """
     Get column_name(s) where the first item equals the given table_name,
     and is_primary_key is True.
@@ -18,7 +17,7 @@ def get_primary_key_columns(table_name: str) -> List[str]:
     Returns:
         columns: The primary key column(s).
     """
-    columns:list[str] = []
+    columns: list[str] = []
     for table, column, is_primary_key in database_keys:
         if table == table_name and is_primary_key:
             columns.append(column)

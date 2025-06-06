@@ -1,16 +1,10 @@
-from sqlalchemy import (
-    create_engine,
-    MetaData,
-    Table,
-    Column,
-    Integer,
-    String,
-    Date,
-    Float,
-)
-from sqlalchemy.ext.automap import automap_base
 from our_finances.util.financial_helpers import to_camel_case
 from spreadsheet_fields import get_sqlalchemy_type
+from sqlalchemy import (
+    MetaData,
+    create_engine,
+)
+from sqlalchemy.ext.automap import automap_base
 
 
 def add_comment(string):
@@ -76,17 +70,18 @@ for table_name in metadata.tables.keys():
             column_args = ", ".join(column_parts)
             add_line(f"    {column.name} = mapped_column({column_args})")
 
-            
             if col_type_str == "DECIMAL":
-                add_line(f'    @property')
-                add_line(f'    def {column.name}_amount(self) -> Decimal:')
-                add_line(f'        """Convert stored TEXT to Decimal."""')
-                add_line(f'        return Decimal(self.{column.name}) if self.{column.name} else Decimal("0.00")')
-            
-                add_line(f'    @{column.name}_amount.setter')
-                add_line(f'    def {column.name}_amount(self, value: Decimal):')
-                add_line(f'        """Ensure Decimal values are stored as TEXT."""')
-                add_line(f'        self.{column.name} = str(value)')
+                add_line("    @property")
+                add_line(f"    def {column.name}_amount(self) -> Decimal:")
+                add_line('        """Convert stored TEXT to Decimal."""')
+                add_line(
+                    f'        return Decimal(self.{column.name}) if self.{column.name} else Decimal("0.00")'
+                )
+
+                add_line(f"    @{column.name}_amount.setter")
+                add_line(f"    def {column.name}_amount(self, value: Decimal):")
+                add_line('        """Ensure Decimal values are stored as TEXT."""')
+                add_line(f"        self.{column.name} = str(value)")
 
         add_line("")
     except KeyError:

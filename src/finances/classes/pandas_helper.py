@@ -1,4 +1,5 @@
 from typing import Any
+
 import pandas as pd
 
 
@@ -11,7 +12,7 @@ class PandasHelper:
         columns = values
         return pd.DataFrame(columns=columns)
 
-    def infer_dtype(self, series):        
+    def infer_dtype(self, series):
         return pd.api.types.infer_dtype(series)
 
     def worksheet_values_to_dataframe(self, worksheet_values):

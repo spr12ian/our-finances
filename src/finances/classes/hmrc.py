@@ -1,18 +1,20 @@
 # standard imports
-from functools import lru_cache
 from decimal import Decimal
-# local imports
-from our_finances.classes.sql_helper import SQL_Helper
-from our_finances.classes.sqlalchemy_helper import valid_sqlalchemy_name
-from our_finances.classes.hmrc_calculation import HMRC_Calculation
-from our_finances.classes.hmrc_people import HMRC_People
+from functools import cache
+
 from our_finances.util import boolean_helpers, financial_helpers
 from tables import *
-from our_finances.classes.hmrc_output import HMRC_Output
+
+from finances.classes.hmrc_calculation import HMRC_Calculation
+from finances.classes.hmrc_output import HMRC_Output
+from finances.classes.hmrc_people import HMRC_People
+
+# local imports
+from finances.classes.sql_helper import SQL_Helper
+from finances.classes.sqlalchemy_helper import valid_sqlalchemy_name
 
 
 class HMRC:
-
     def __init__(self, person_code: str, tax_year: str):
         self.l = LogHelper("HMRC")
         self.l.set_level_debug()
@@ -318,7 +320,7 @@ class HMRC:
         self.l.debug("deduct_trading_expenses")
         try:
             return self.deduct_trading_expenses_override()
-        except ValueError as v:
+        except ValueError:
             trading_allowance = self.get_trading_allowance_actual()
             trading_expenses = self.get_trading_expenses_actual()
             return trading_allowance < trading_expenses
@@ -505,18 +507,18 @@ class HMRC:
     def format_breakdown(self, breakdown) -> str:
         fields = [line.split("|") for line in breakdown]
         max_widths = [
-            max((len(field.strip()) for field in col)) for col in zip(*fields)
+            max(len(field.strip()) for field in col) for col in zip(*fields)
         ]
         formatted_lines = [
             " | ".join(
-                (
+                
                     (
                         field.strip().ljust(width)
                         if index != 4
                         else field.strip().rjust(width)
                     )
                     for (index, (field, width)) in enumerate(zip(line, max_widths))
-                )
+                
             )
             for line in fields
         ]
@@ -1352,25 +1354,25 @@ class HMRC:
         return self.gbpb(0)
 
     def get_loss_brought_forward_against_this_year_s_profits_gbp(self):
-        return self.gbpb(0)    
+        return self.gbpb(0)
 
     def get_loss_brought_forward_set_off_against_profits_gbp(self):
-        return self.gbpb(0)    
+        return self.gbpb(0)
 
     def get_loss_carried_back_prior_years_set_off_income_cg_gbp(self):
-        return self.gbpb(0)    
+        return self.gbpb(0)
 
     def get_loss_set_off_against_other_income_this_tax_year_gbp(self):
-        return self.gbpb(0)    
+        return self.gbpb(0)
 
     def get_loss_to_take_forward_post_set_offs_unused_losses_gbp(self):
-        return self.gbpb(0)    
+        return self.gbpb(0)
 
     def get_loss_to_carry_forward__inc_unused_losses_gbp(self):
-        return self.gbpb(0)    
+        return self.gbpb(0)
 
     def get_losses_brought_forward_and_set_off_gbp(self):
-        return self.gbpb(0)    
+        return self.gbpb(0)
 
     def get_lump_sum_pension___available_lifetime_allowance(self):
         return self.gbpb(0)
@@ -1427,7 +1429,7 @@ class HMRC:
     def get_marriage_allowance_donor_amount_gbp(self) -> str:
         return self.gbpb(self.get_marriage_allowance_donor_amount())
 
-    @lru_cache(maxsize=None)
+    @cache
     def get_marriage_allowance_recipient_amount(self) -> Decimal:
         self.l.debug("get_marriage_allowance_recipient_amount")
         if not self.is_married():
@@ -1787,7 +1789,7 @@ class HMRC:
     def get_property_income_gbp(self) -> str:
         return self.gbpb(self.get_property_income())
 
-    @lru_cache(maxsize=None)
+    @cache
     def get_property_profit(self):
         self.l.debug("get_property_profit")
         property_allowance = self.get_property_allowance_actual()
@@ -2016,7 +2018,7 @@ class HMRC:
             return ""
         return self.person.get_spouse_code()
 
-    @lru_cache(maxsize=None)
+    @cache
     def get_spouse_hmrc(self):
         spouse_code = self.get_spouse_code()
         tax_year = self.tax_year
@@ -2024,7 +2026,7 @@ class HMRC:
         spouse_hmrc = HMRC(spouse_code, tax_year)
         return spouse_hmrc
 
-    @lru_cache(maxsize=None)
+    @cache
     def get_spouse_total_income_received(self) -> Decimal:
         spouse_hmrc = self.get_spouse_hmrc()
         spouse_total_income_received = spouse_hmrc.get_hmrc_total_income_received()
@@ -2236,7 +2238,7 @@ class HMRC:
 
     def get_total_of_any__one_off__payments_in_box_5(self):
         return self.gbpb(0)
-    
+
     def get_total_of_any_other_taxable_state_pensions_and_benefits_gbp(self):
         return self.gbpb(self.get_taxable_benefits_income())
 
@@ -2482,7 +2484,7 @@ class HMRC:
 
         return trading_outgo
 
-    @lru_cache(maxsize=None)
+    @cache
     def get_trading_profit(self):
         self.l.debug("get_trading_profit")
         trading_income = self.get_trading_income()

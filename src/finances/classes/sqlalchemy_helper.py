@@ -1,16 +1,12 @@
 # standard imports
-from pathlib import Path
 
 # pip imports
+from our_finances.util.string_helpers import to_valid_method_name
 from sqlalchemy import create_engine, text
-from sqlalchemy.orm import Session
-from sqlalchemy.orm import sessionmaker
+from sqlalchemy.orm import Session, sessionmaker
 
 # local imports
-from our_finances.classes.config import Config
-
-
-from our_finances.util.string_helpers import to_valid_method_name
+from finances.classes.config import Config
 
 
 class SQLAlchemyHelper:

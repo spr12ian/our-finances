@@ -1,10 +1,10 @@
 # standard imports
 from datetime import datetime
 from decimal import Decimal
-from typing import Optional, TYPE_CHECKING
+from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from our_finances.classes.hmrc import HMRC
+    from finances.classes.hmrc import HMRC
 
 
 class HMRC_Calculation:
@@ -36,7 +36,7 @@ class HMRC_Calculation:
 
         self.add_hmrc_part(extra_info)
 
-    def add_hmrc_part(self, key: str, amount: Optional[Decimal] = None) -> None:
+    def add_hmrc_part(self, key: str, amount: Decimal | None = None) -> None:
         self.l.debug("add_hmrc_part")
         if amount is None:
             self.append(key)
@@ -95,7 +95,9 @@ class HMRC_Calculation:
 
             basic_tax = taxable_amount * dividends_basic_rate / 100
             taxable_amount_gbp = hmrc.gbp(taxable_amount)
-            label = f"Dividends basic rate {taxable_amount_gbp} x{dividends_basic_rate}%"
+            label = (
+                f"Dividends basic rate {taxable_amount_gbp} x{dividends_basic_rate}%"
+            )
             self.add_hmrc_part(label, basic_tax)
 
             unused_allowance = max(0, unused_allowance - dividends_income)
@@ -170,7 +172,7 @@ class HMRC_Calculation:
             savings_income = hmrc.get_savings_income()
             taxable_amount = max(0, savings_income - savings_nil_band)
 
-            basic_tax = taxable_amount * savings_basic_rate  / 100
+            basic_tax = taxable_amount * savings_basic_rate / 100
             taxable_amount_gbp = hmrc.gbp(taxable_amount)
             label = f"Basic rate {taxable_amount_gbp} x{savings_basic_rate}%"
             self.add_hmrc_part(label, basic_tax)

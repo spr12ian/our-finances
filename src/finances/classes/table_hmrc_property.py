@@ -1,9 +1,7 @@
-
-from our_finances.classes.sqlite_table import SQLiteTable
+from finances.classes.sqlite_table import SQLiteTable
 
 
 class HMRC_Property(SQLiteTable):
-
     def _get_value_by_postcode_column(self, column_name):
 
         postcode = self.postcode

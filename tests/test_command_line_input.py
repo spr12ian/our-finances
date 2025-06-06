@@ -1,5 +1,6 @@
 import sys
 
+
 def main():
     # Check if the correct number of arguments is provided
     if len(sys.argv) < 2:
@@ -13,6 +14,7 @@ def main():
     # Example usage of the arguments
     for arg in args:
         print(f"Processing argument: {arg}")
+
 
 if __name__ == "__main__":
     main()

@@ -1,7 +1,8 @@
 from sqlalchemy_helper import validate_sqlalchemy_name
 
+
 class QueryBuilder:
-    def __init__(self, table_name:str):
+    def __init__(self, table_name: str):
         self.table_name = table_name
         self.columns = []
         self.conditions = []
@@ -14,11 +15,11 @@ class QueryBuilder:
         self.columns = [f'"{col}"' for col in columns]
         return self
 
-    def select_raw(self, select_str:str):
+    def select_raw(self, select_str: str):
         self.columns = [select_str]
         return self
 
-    def total(self, column:str):
+    def total(self, column: str):
         validate_sqlalchemy_name(column)
         self.columns = [f'COALESCE(SUM("{column}"), 0)']
         return self
@@ -27,7 +28,7 @@ class QueryBuilder:
         self.conditions.append(condition)
         return self
 
-    def order(self, column:str, direction:str="ASC"):
+    def order(self, column: str, direction: str = "ASC"):
         validate_sqlalchemy_name(column)
         self.order_by = f'"{column}" {direction}'
         return self
@@ -36,7 +37,7 @@ class QueryBuilder:
         self.limit = limit
         return self
 
-    def build(self)-> str:
+    def build(self) -> str:
         columns = ", ".join(self.columns) if self.columns else "*"
 
         query = f"SELECT {columns} FROM {self.table_name}"

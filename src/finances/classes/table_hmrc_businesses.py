@@ -1,8 +1,8 @@
-from our_finances.classes.sqlite_table import SQLiteTable
+from finances.classes.sqlite_table import SQLiteTable
 
 
 class HMRC_Businesses(SQLiteTable):
-    def __init__(self, business_name:str):
+    def __init__(self, business_name: str):
         super().__init__("hmrc_businesses")
         self.business_name = business_name
 

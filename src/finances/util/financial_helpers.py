@@ -1,7 +1,7 @@
-from decimal import Decimal, InvalidOperation, ROUND_DOWN, ROUND_UP, ROUND_HALF_EVEN
 import locale
 import math
 import re
+from decimal import ROUND_DOWN, ROUND_HALF_EVEN, ROUND_UP, Decimal, InvalidOperation
 
 
 def format_as_gbp(amount: Decimal, field_width: int = 0) -> str:

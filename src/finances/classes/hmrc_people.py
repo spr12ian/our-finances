@@ -1,8 +1,11 @@
 # standard imports
 from decimal import Decimal
-# local imports
-from our_finances.classes.people import People
+
 from tables import *
+
+# local imports
+from finances.classes.people import People
+
 
 class HMRC_People(People):
     def __init__(self, code):

@@ -1,7 +1,7 @@
-from sqlalchemy_helper import SQLAlchemyHelper
 from sqlalchemy import text
+from sqlalchemy_helper import SQLAlchemyHelper
 
-with open("queries.sql", "r") as file:
+with open("queries.sql") as file:
     queries = file.read().split(";")
 
 sql = SQLAlchemyHelper()

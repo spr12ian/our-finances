@@ -1,12 +1,13 @@
-import sys
 import importlib
+import sys
 from pathlib import Path
 
-PACKAGE="our_finances"
+PACKAGE = "our_finances"
+
 
 def list_commands():
     commands_dir = Path(__file__).parent / "commands"
-    commands:list[str] = []
+    commands: list[str] = []
 
     for file in commands_dir.glob("*.py"):
         if file.name == "__init__.py":
@@ -16,6 +17,7 @@ def list_commands():
     print("Available commands:")
     for cmd in sorted(commands):
         print(f"  {cmd}")
+
 
 def main():
     if len(sys.argv) < 2:
@@ -42,6 +44,7 @@ def main():
         sys.exit(1)
 
     module.main(args)
+
 
 if __name__ == "__main__":
     main()

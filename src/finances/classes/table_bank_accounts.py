@@ -1,8 +1,8 @@
-from our_finances.classes.sqlite_table import SQLiteTable
+from finances.classes.sqlite_table import SQLiteTable
 
 
 class BankAccounts(SQLiteTable):
-    def __init__(self, key:str=None):
+    def __init__(self, key: str = None):
         super().__init__("bank_accounts")
         self.key = key
 

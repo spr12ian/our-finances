@@ -1,19 +1,17 @@
 # import standard files
-from pathlib import Path
 import time
-from typing import Any, List
+from pathlib import Path
+from typing import Any
 
 # import pip files
 from gspread.worksheet import Worksheet
+from our_finances.util.string_helpers import crop
 
 # import local files
-
-from our_finances.classes.file_helper import FileHelper
-from our_finances.classes.google_helper import GoogleHelper
-from our_finances.classes.pandas_helper import PandasHelper
-from our_finances.classes.sqlalchemy_helper import valid_sqlalchemy_name
-
-from our_finances.util.string_helpers import crop
+from finances.classes.file_helper import FileHelper
+from finances.classes.google_helper import GoogleHelper
+from finances.classes.pandas_helper import PandasHelper
+from finances.classes.sqlalchemy_helper import valid_sqlalchemy_name
 
 TYPE_MAPPING = {
     " (£)": {
@@ -64,11 +62,11 @@ class SpreadsheetAnalyzer:
         self.pdh = PandasHelper()
 
         # List of list items which are table_name, column_name
-        self.fields: List[List[str]] = []
+        self.fields: list[list[str]] = []
 
-        self.account_sheet_names: List[str] = []
+        self.account_sheet_names: list[str] = []
 
-        self.all_sheet_names: List[str] = []
+        self.all_sheet_names: list[str] = []
 
     def analyze_spreadsheet(self) -> None:
         """
@@ -99,7 +97,7 @@ class SpreadsheetAnalyzer:
 
     def get_column_types(
         self, table_name: str, spreadsheet_column_name: str
-    ) -> List[str]:
+    ) -> list[str]:
 
         # sqlite_type is used to write the spreadsheet column value to the database
         # The sqlite_type may cause the spreadsheet string to be transformed
@@ -249,4 +247,4 @@ def main(args: Any = None) -> None:
 
     f = FileHelper()
     f.set_output_from_file(Path(__file__))
-    f.append(f"Analyzed Google Sheets spreadsheet")
+    f.append("Analyzed Google Sheets spreadsheet")

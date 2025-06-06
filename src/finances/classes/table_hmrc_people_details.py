@@ -1,10 +1,10 @@
-from our_finances.classes.date_time_helper import DateTimeHelper
-from our_finances.classes.sqlite_table import SQLiteTable
 from decimal import Decimal
+
+from finances.classes.date_time_helper import DateTimeHelper
+from finances.classes.sqlite_table import SQLiteTable
 
 
 class HMRC_PeopleDetails(SQLiteTable):
-
     def __init__(self, code=None):
         super().__init__("hmrc_people_details")
         self.code = code

@@ -1,13 +1,12 @@
+from functools import cache
 
 from sqlalchemy_helper import valid_sqlalchemy_name
-from our_finances.classes.sqlite_table import SQLiteTable
-from our_finances.util.financial_helpers import string_to_float
-from functools import lru_cache
+
+from finances.classes.sqlite_table import SQLiteTable
 
 
 class HMRC_OverridesByYear(SQLiteTable):
-
-    def __init__(self, person_code:str, tax_year:str) -> None:
+    def __init__(self, person_code: str, tax_year: str) -> None:
 
         super().__init__("hmrc_overrides_by_year")
         self.person_code = person_code
@@ -35,19 +34,17 @@ class HMRC_OverridesByYear(SQLiteTable):
 
         return result
 
-    @lru_cache(maxsize=None)
+    @cache
     def deduct_trading_expenses(self) -> bool:
-        deduct_trading_expenses = self._get_value_by_override(
-            "Deduct trading expenses"
-        )
+        deduct_trading_expenses = self._get_value_by_override("Deduct trading expenses")
 
         return deduct_trading_expenses == "Yes"
 
-    @lru_cache(maxsize=None)
+    @cache
     def use_trading_allowance(self) -> bool:
         try:
             value = self._get_value_by_override("Use trading allowance")
-        except ValueError as e:
+        except ValueError:
             raise
 
         use_trading_allowance = value.lower() == "yes"

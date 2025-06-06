@@ -6,7 +6,7 @@ class DateTimeHelper:
     UK_DATE_FORMAT = "%d/%m/%Y"
 
     # Function to convert UK date strings (DD/MM/YYYY) to ISO date strings YYYY-MM-DD
-    def ISO_to_UK(self, date_str:str) -> str:
+    def ISO_to_UK(self, date_str: str) -> str:
         return self.reformat_date_str(
             date_str, DateTimeHelper.ISO_DATE_FORMAT, DateTimeHelper.UK_DATE_FORMAT
         )
@@ -23,7 +23,7 @@ class DateTimeHelper:
         suffix = self.get_ordinal_suffix(day)
         return date.strftime(f"%A, %B {day}{suffix}, %Y")
 
-    def get_date_today(self)->str:
+    def get_date_today(self) -> str:
         now = datetime.now()
         return self.format_date_with_ordinal(now)
 

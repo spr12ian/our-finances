@@ -1,14 +1,14 @@
-from our_finances.classes.config import Config
-from our_finances.classes.os_helper import OsHelper
 from pathlib import Path
-from typing import Optional
+
+from finances.classes.config import Config
+from finances.classes.os_helper import OsHelper
 
 
 class FileHelper:
-    def __init__(self, file_path: Optional[Path] = None):
+    def __init__(self, file_path: Path | None = None) -> None:
         self.file_path = file_path
 
-    def overwrite(self):
+    def overwrite(self) -> None:
         if file_path := self.file_path:
             with open(file_path, "w"):
                 pass
@@ -27,7 +27,7 @@ class FileHelper:
         self.overwrite()
 
     def get_output_path(
-        self, file_path: Path, output_directory: Optional[Path] = None
+        self, file_path: Path, output_directory: Path | None = None
     ) -> Path:
         """
         Get the output path for a file based on the output directory.

@@ -1,6 +1,7 @@
 import os
 from pathlib import Path
-from typing import Any, Optional
+from typing import Any
+
 import yaml
 
 
@@ -12,20 +13,20 @@ class ConfigNode:
             f"'{self.__class__.__name__}' object has no attribute '{name}'"
         )
 
-    def __init__(self, data: dict[str, Any], path: Optional[list[str]] = None):
+    def __init__(self, data: dict[str, Any], path: list[str] | None = None):
         self._data = data or {}
         self._path = path or []
 
         for key, value in self._data.items():
             if isinstance(value, dict):
                 # Recursively nest sub-configs
-                setattr(self, key, ConfigNode(value, self._path + [key])) # type: ignore
+                setattr(self, key, ConfigNode(value, self._path + [key]))  # type: ignore
             else:
                 # Set terminal values with environment override
                 setattr(self, key, self._get_value_with_override(key, value))
 
     def _get_value_with_override(self, key: str, original_value: Any) -> Any:
-        env_key = "_".join((self._path + [key])).upper()
+        env_key = "_".join(self._path + [key]).upper()
         env_value = os.getenv(env_key)
         if env_value is not None:
             return self._cast_type(env_value, original_value)
@@ -62,6 +63,6 @@ class ConfigNode:
 
 class Config(ConfigNode):
     def __init__(self, yaml_path: Path = Path("config.yaml")):
-        with open(yaml_path, "r") as f:
+        with open(yaml_path) as f:
             data = yaml.safe_load(f)
         super().__init__(data)

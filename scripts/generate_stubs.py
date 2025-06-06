@@ -1,11 +1,10 @@
+
 import libcst as cst
-from pathlib import Path
-from typing import List
 
 
 class StubGenerator(cst.CSTVisitor):
     def __init__(self, class_name: str) -> None:
-        self.stubs: List[str] = []
+        self.stubs: list[str] = []
         self.class_name = class_name
 
     def visit_ClassDef(self, node: cst.ClassDef) -> None:
@@ -32,7 +31,7 @@ class StubGenerator(cst.CSTVisitor):
 
 
 def generate_stubs(class_name: str, file_path: str, output_path: str) -> None:
-    with open(file_path, "r") as source:
+    with open(file_path) as source:
         code = source.read()
         module = cst.parse_module(code)
         generator = StubGenerator(class_name)

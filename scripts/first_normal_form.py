@@ -1,20 +1,21 @@
-import sqlite3
-from typing import List, Dict, Tuple, Any
 import re
-from our_finances.classes.log_helper import LogHelper
+import sqlite3
+from typing import Any
+
+from finances.classes.log_helper import LogHelper
 
 l = LogHelper(__file__)
 l.set_level_debug()
 l.debug(__file__)
 
 
-def analyze_1nf(db_path: str) -> Dict[str, List[Dict[str, Any]]]:
+def analyze_1nf(db_path: str) -> dict[str, list[dict[str, Any]]]:
     """
     Analyzes an SQLite database for potential First Normal Form violations.
 
     Returns a dictionary with analysis results for each type of violation.
     """
-    violations: Dict[str, List[Dict[str, Any]]] = {
+    violations: dict[str, list[dict[str, Any]]] = {
         "composite_values": [],
         "array_patterns": [],
         "repeating_columns": [],
@@ -63,7 +64,7 @@ def analyze_1nf(db_path: str) -> Dict[str, List[Dict[str, Any]]]:
 
 
 def check_repeating_columns(
-    table_name: str, column_names: List[str], violations: Dict
+    table_name: str, column_names: list[str], violations: dict
 ) -> None:
     """
     Identifies potential repeating column patterns like field1, field2, etc.
@@ -89,7 +90,7 @@ def check_repeating_columns(
 
 
 def check_composite_values(
-    table_name: str, column_name: str, values: List[Any], violations: Dict
+    table_name: str, column_name: str, values: list[Any], violations: dict
 ) -> None:
     """
     Checks for potential composite values (comma-separated lists, JSON-like strings, etc.)
@@ -123,7 +124,7 @@ def check_composite_values(
 
 
 def check_data_type_consistency(
-    table_name: str, column_name: str, values: List[Any], violations: Dict
+    table_name: str, column_name: str, values: list[Any], violations: dict
 ) -> None:
     """
     Checks for mixed data types within a column
@@ -146,7 +147,7 @@ def check_data_type_consistency(
                 return
 
 
-def print_analysis_results(violations: Dict[str, List[Dict[str, Any]]]) -> None:
+def print_analysis_results(violations: dict[str, list[dict[str, Any]]]) -> None:
     """
     Prints the analysis results in a readable format
     """

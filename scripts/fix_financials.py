@@ -1,10 +1,12 @@
-from our_finances.classes.google_helper import GoogleHelper
+import re
+from decimal import Decimal, InvalidOperation
+
 from pandas_helper import PandasHelper
 from sql_helper import SQL_Helper
 from sqlalchemy_helper import valid_sqlalchemy_name
-from our_finances.classes.log_helper import LogHelper
-from decimal import Decimal, InvalidOperation
-import re
+
+from finances.classes.google_helper import GoogleHelper
+from finances.classes.log_helper import LogHelper
 
 l = LogHelper(__file__)
 l.set_level_debug()

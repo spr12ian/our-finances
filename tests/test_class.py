@@ -1,6 +1,6 @@
-import database_to_spreadsheet
-import finances.commands.key_check as key_check
 import pytest
+import scripts.key_check as key_check
+
 import finances.commands.google_sheets_to_sqlite as google_sheets_to_sqlite
 
 

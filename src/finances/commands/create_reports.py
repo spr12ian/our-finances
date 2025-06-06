@@ -1,6 +1,7 @@
+from datetime import datetime
+
 from hmrc import HMRC
 from table_hmrc_questions_by_year import HMRC_QuestionsByYear
-from datetime import datetime
 
 
 def check_questions(tax_year: str) -> None:

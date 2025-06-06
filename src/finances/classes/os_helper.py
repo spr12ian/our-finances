@@ -1,6 +1,7 @@
 import os
 from pathlib import Path
 
+
 class OsHelper:
     def file_exists(self, path: Path) -> bool:
         return os.path.isfile(path)

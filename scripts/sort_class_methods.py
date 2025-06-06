@@ -1,8 +1,6 @@
 from method_sorter import MethodSorter
 
 
-
-
 def main():
     directory = "/home/probity/projects/download-our-finances/"
     classes = [

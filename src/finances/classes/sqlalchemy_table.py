@@ -1,6 +1,6 @@
-from sqlalchemy_helper import SQLAlchemyHelper
-from sqlalchemy_helper import validate_sqlalchemy_name
-from our_finances.classes.query_builder import QueryBuilder
+from sqlalchemy_helper import SQLAlchemyHelper, validate_sqlalchemy_name
+
+from finances.classes.query_builder import QueryBuilder
 
 
 class SQLiteTable:
@@ -16,5 +16,5 @@ class SQLiteTable:
     def get_how_many(self):
         return self.sql.get_how_many(self.table_name)
 
-    def query_builder(self)-> QueryBuilder:
+    def query_builder(self) -> QueryBuilder:
         return QueryBuilder(self.table_name)

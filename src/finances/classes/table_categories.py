@@ -1,9 +1,9 @@
-from typing import Optional
-from our_finances.classes.sqlite_table import SQLiteTable
+
+from finances.classes.sqlite_table import SQLiteTable
 
 
 class Categories(SQLiteTable):
-    def __init__(self, category:Optional[str]=None):
+    def __init__(self, category: str | None = None):
         super().__init__("categories")
         self.category = category
 

@@ -1,10 +1,8 @@
 """Helper script to update language list from the frontend source."""
 
 import json
-from pathlib import Path
 import sys
-
-
+from pathlib import Path
 
 from .hassfest.serializer import format_python_namespace
 

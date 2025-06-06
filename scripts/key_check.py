@@ -1,15 +1,15 @@
-from our_finances.classes.file_helper import FileHelper
-from our_finances.classes.google_helper import GoogleHelper
-from our_finances.classes.log_helper import debug_function_call
+# ruff: noqa: E402
+from scripts.bootstrap import setup_path
+
+setup_path()
+
 from pathlib import Path
-from typing import Any
+
+from finances.classes.file_helper import FileHelper
+from finances.classes.google_helper import GoogleHelper
 
 
-@debug_function_call
-def main(args: Any = None) -> None:
-    if len(args) > 0:
-        print("This command does not accept any arguments.")
-        return
+def main() -> None:
 
     goo = GoogleHelper()
 
@@ -27,3 +27,7 @@ def main(args: Any = None) -> None:
     f.append(
         f'Successfully connected to "{spreadsheet.title}" Google Sheets spreadsheet'
     )
+
+
+if __name__ == "__main__":
+    main()

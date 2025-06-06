@@ -1,11 +1,11 @@
-#standard library imports
-from decimal import Decimal
-from typing import Any, Optional
-#pip install imports
+# standard library imports
+# pip install imports
 import sqlite3
-#local imports
-from our_finances.classes.config import Config
+from decimal import Decimal
+from typing import Any
 
+# local imports
+from finances.classes.config import Config
 
 
 class SQLiteHelper:
@@ -96,7 +96,7 @@ class SQLiteHelper:
 
         return Decimal(value)
 
-    def fetch_one_value_float(self, query:str) -> float:
+    def fetch_one_value_float(self, query: str) -> float:
         row = self.fetch_one_row(query)
         if row:
             value = row[0]  # Accessing the first element of the tuple
@@ -105,7 +105,7 @@ class SQLiteHelper:
 
         return float(value)
 
-    def get_column_info(self, table_name:str, column_name:str):
+    def get_column_info(self, table_name: str, column_name: str):
         table_info = self.get_table_info(table_name)
         column_info = None
         for column in table_info:
@@ -114,7 +114,7 @@ class SQLiteHelper:
 
         return column_info
 
-    def get_how_many(self, table_name:str, where:Optional[str]=None)-> int:
+    def get_how_many(self, table_name: str, where: str | None = None) -> int:
         self.open_connection()
         query = f"""
 SELECT COUNT(*)
@@ -131,7 +131,7 @@ FROM {table_name}
 
         return how_many
 
-    def get_table_info(self, table_name: str)-> list[Any]:
+    def get_table_info(self, table_name: str) -> list[Any]:
         query = f"PRAGMA table_info('{table_name}')"
         self.open_connection()
 
@@ -147,7 +147,9 @@ FROM {table_name}
         # Connect to SQLite database
         self.db_connection = sqlite3.connect(self.db_path)
 
-    def rename_column(self, table_name:str, old_column_name:str, new_column_name:str):        
+    def rename_column(
+        self, table_name: str, old_column_name: str, new_column_name: str
+    ):
 
         self.open_connection()
 
@@ -184,7 +186,7 @@ FROM {table_name}
 
         self.close_connection()
 
-    def text_to_real(self, table_name:str, column_name:str):
+    def text_to_real(self, table_name: str, column_name: str):
         table_info = self.get_table_info(table_name)
 
         column_type = None

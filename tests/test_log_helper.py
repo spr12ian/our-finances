@@ -1,5 +1,6 @@
-from finances.classes.log_helper import LogHelper
 import logging
+
+from finances.classes.log_helper import LogHelper
 
 l = LogHelper(__name__)
 # l.set_level_debug()

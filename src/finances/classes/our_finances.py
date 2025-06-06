@@ -1,5 +1,6 @@
 from tables import *
-from our_finances.classes.sqlite_helper import SQLiteHelper
+
+from finances.classes.sqlite_helper import SQLiteHelper
 
 
 class OurFinances:

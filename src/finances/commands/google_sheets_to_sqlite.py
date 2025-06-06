@@ -1,16 +1,17 @@
 import time
-from pandas import DataFrame
 from typing import Any
 
-from gspread import Worksheet
-from our_finances.classes.config import Config
-from our_finances.classes.google_helper import GoogleHelper
-from our_finances.classes.pandas_helper import PandasHelper
-from our_finances.classes.sql_helper import SQL_Helper
-from our_finances.classes.sqlalchemy_helper import valid_sqlalchemy_name
-from our_finances.util.string_helpers import crop
-from database_keys import get_primary_key_columns, has_primary_key
 import spreadsheet_fields
+from database_keys import get_primary_key_columns, has_primary_key
+from gspread import Worksheet
+from our_finances.util.string_helpers import crop
+from pandas import DataFrame
+
+from finances.classes.config import Config
+from finances.classes.google_helper import GoogleHelper
+from finances.classes.pandas_helper import PandasHelper
+from finances.classes.sql_helper import SQL_Helper
+from finances.classes.sqlalchemy_helper import valid_sqlalchemy_name
 
 
 class SpreadsheetToSqliteDb:
@@ -85,7 +86,7 @@ class SpreadsheetToSqliteDb:
 
         self.sql.close_connection()
 
-    def convert_worksheet(self, worksheet:Worksheet):
+    def convert_worksheet(self, worksheet: Worksheet):
         table_name = valid_sqlalchemy_name(worksheet.title)
 
         pdh = self.pdh
@@ -141,15 +142,15 @@ def main(args: Any = None) -> None:
     if len(args) > 0:
         print("This command does not accept any arguments.")
         return
-    
-    print(f"Converting Google Sheets spreadsheet to SQLite database\n")
+
+    print("Converting Google Sheets spreadsheet to SQLite database\n")
 
     converter = SpreadsheetToSqliteDb()
 
     # Convert spreadsheet to SQLite
     converter.convert_to_sqlite()
 
-    print(f"Converted Google Sheets spreadsheet to SQLite database")
+    print("Converted Google Sheets spreadsheet to SQLite database")
 
 
 if __name__ == "__main__":
