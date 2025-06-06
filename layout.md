@@ -33,7 +33,7 @@ our-finances/
 ├── pyproject.toml                  # Formatting, linting, tool config
 └── README.md                       # Project overview and usage
 
-# Example content for key files
+
 
 # .vscode/settings.json
 {
@@ -43,33 +43,6 @@ our-finances/
   "python.testing.pytestEnabled": true
 }
 
-# config/accounts.yaml
-BMOXYZ:
-  name: "Barclays Main Account"
-  owner: "Ian"
-  active: true
-
-# config/categories.yaml
-Rent:
-  - "rent received"
-  - "tenant payment"
-Interest:
-  - "interest"
-  - "savings income"
-
-# scripts/download_from_sheets.py
-from src.finances.loader import download_sheet_data
-
-def main():
-    download_sheet_data("Our Finances")
-
-if __name__ == "__main__":
-    main()
-
-# src/finances/loader.py
-def download_sheet_data(spreadsheet_name):
-    print(f"Downloading data from {spreadsheet_name}...")
-    # Stub for gspread logic
 
 # src/finances/categories.py
 def classify_transaction(note, rules):
@@ -78,40 +51,8 @@ def classify_transaction(note, rules):
             return category
     return "Uncategorised"
 
-# tests/test_categories.py
-from src.finances.categories import classify_transaction
 
-def test_classify_transaction():
-    rules = {"Rent": ["rent", "tenant"], "Interest": ["interest"]}
-    assert classify_transaction("Tenant Payment", rules) == "Rent"
-    assert classify_transaction("Bank Interest", rules) == "Interest"
-    assert classify_transaction("Other", rules) == "Uncategorised"
 
-# requirements.txt
-gspread
-pandas
-pyyaml
-jinja2
-pytest
-
-# pyproject.toml
-[tool.black]
-line-length = 88
-
-[tool.isort]
-profile = "black"
-
-# README.md
-# Our Finances
-
-Personal finance management and HMRC self-assessment toolchain for a multi-account Google Sheets setup.
-
-Includes:
-- Google Sheets sync (via gspread)
-- Transaction categorisation
-- Local SQLite storage
-- Tax and finance reports
-- GAS menu helpers
 
 ## 🧩 Layout Diagram
 You can generate visual diagrams using VS Code extensions like:
@@ -121,12 +62,4 @@ You can generate visual diagrams using VS Code extensions like:
 
 Example Mermaid diagram (put in README.md or a `.md` file):
 
-```mermaid
-graph TD
-    GoogleSheets -->|gspread| download_from_sheets.py
-    download_from_sheets.py --> update_local_db.py
-    update_local_db.py -->|SQLite| LocalDB
-    LocalDB --> generate_reports.py
-    generate_reports.py -->|PDF| SelfAssessmentReports
-    categorise.gs --> GoogleSheets
-```
+

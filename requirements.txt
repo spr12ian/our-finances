@@ -1,0 +1,10 @@
+gspread
+jinja2
+libcst
+pandas
+pytest
+pyyaml
+#google-auth
+#mypy
+#sqlalchemy
+#types-PyYAML
