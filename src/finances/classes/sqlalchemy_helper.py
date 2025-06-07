@@ -1,27 +1,28 @@
 # standard imports
+from typing import Any
 
 # pip imports
-from our_finances.util.string_helpers import to_valid_method_name
 from sqlalchemy import create_engine, text
 from sqlalchemy.orm import Session, sessionmaker
 
 # local imports
 from finances.classes.config import Config
+from finances.util.string_helpers import to_valid_method_name
 
 
 class SQLAlchemyHelper:
-    def __init__(self):
+    def __init__(self) -> None:
         database_url, is_echo_enabled = self.read_config()
 
         self.engine = create_engine(database_url, echo=is_echo_enabled)
         self.Session = sessionmaker(bind=self.engine)
 
-    def read_config(self):
+    def read_config(self) -> Any:
         config = Config()
 
         return config.SQLAlchemy.database_url, config.SQLAlchemy.echo
 
-    def fetch_one_value(self, query):
+    def fetch_one_value(self, query:str)->Any:
         query = text(query)
 
         # Open a session
@@ -36,10 +37,10 @@ class SQLAlchemyHelper:
 
         return value
 
-    def get_db_filename(self):
+    def get_db_filename(self) -> Any:
         return self.engine.url.database
 
-    def get_session(self):
+    def get_session(self) -> Any:
         return Session(self.engine)
 
     def get_table_info(self, table_name):

@@ -4,17 +4,17 @@ from sqlalchemy import create_engine
 engine = create_engine("sqlite:///our_finances.sqlite", echo=True)
 
 
-def get_engine():
+def get_engine() -> sqlalchemy.engine.Engine:
     from sqlalchemy import create_engine
 
     return create_engine("sqlite:///our_finances.sqlite", echo=True)
 
 
-def print_version():
+def print_version() -> None:
     print(sqlalchemy.__version__)
 
 
-def test_text():
+def test_text() -> None:
     from sqlalchemy import text
 
     with get_engine().connect() as conn:
@@ -57,7 +57,7 @@ def test_text():
             print(f"Code: {Code}  Person: {Person}")
 
 
-def create_some_table():
+def create_some_table() -> None:
     from sqlalchemy import text
 
     with get_engine().begin() as conn:
@@ -72,7 +72,7 @@ def create_some_table():
         )
 
 
-def test_session():
+def test_session() -> None:
     from sqlalchemy import text
     from sqlalchemy.orm import Session
 

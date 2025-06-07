@@ -1,4 +1,4 @@
-from our_finances.util.financial_helpers import to_camel_case
+from finances.util.financial_helpers import to_camel_case
 from spreadsheet_fields import get_sqlalchemy_type
 from sqlalchemy import (
     MetaData,

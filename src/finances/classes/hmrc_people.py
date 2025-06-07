@@ -16,34 +16,34 @@ class HMRC_People(People):
     def are_nics_needed_to_acheive_max_state_pension(self) -> bool:
         return self.hmrc_person_details.are_nics_needed_to_acheive_max_state_pension()
 
-    def get_bank_account_number(self):
+    def get_bank_account_number(self) -> Any:
         refunds_to = self.hmrc_person_details.get_refunds_to()
         return BankAccounts(refunds_to).get_account_number()
 
-    def get_bank_name(self):
+    def get_bank_name(self) -> Any:
         refunds_to = self.hmrc_person_details.get_refunds_to()
         return BankAccounts(refunds_to).get_bank_name()
 
-    def get_branch_sort_code(self):
+    def get_branch_sort_code(self) -> Any:
         refunds_to = self.hmrc_person_details.get_refunds_to()
         return BankAccounts(refunds_to).get_sort_code()
 
-    def get_marital_status(self):
+    def get_marital_status(self) -> Any:
         return self.hmrc_person_details.get_marital_status()
 
-    def get_national_insurance_number(self):
+    def get_national_insurance_number(self) -> Any:
         return self.hmrc_person_details.get_national_insurance_number()
 
-    def get_refunds_to(self):
+    def get_refunds_to(self) -> Any:
         return self.hmrc_person_details.get_refunds_to()
 
-    def get_spouse_code(self):
+    def get_spouse_code(self) -> Any:
         return self.hmrc_person_details.get_spouse_code()
 
-    def get_taxpayer_residency_status(self):
+    def get_taxpayer_residency_status(self) -> Any:
         return self.hmrc_person_details.get_taxpayer_residency_status()
 
-    def get_uk_marriage_date(self):
+    def get_uk_marriage_date(self) -> Any:
         marriage_date = self.hmrc_person_details.get_marriage_date()
         return marriage_date
 

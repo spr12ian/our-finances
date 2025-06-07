@@ -1,10 +1,11 @@
+from scripts.bootstrap import setup_path
+
+setup_path()
 import time
-from typing import Any
 
 import spreadsheet_fields
 from database_keys import get_primary_key_columns, has_primary_key
 from gspread import Worksheet
-from our_finances.util.string_helpers import crop
 from pandas import DataFrame
 
 from finances.classes.config import Config
@@ -12,10 +13,13 @@ from finances.classes.google_helper import GoogleHelper
 from finances.classes.pandas_helper import PandasHelper
 from finances.classes.sql_helper import SQL_Helper
 from finances.classes.sqlalchemy_helper import valid_sqlalchemy_name
+from finances.util.boolean_helpers import boolean_string_to_int
+from finances.util.date_helpers import UK_to_ISO
+from finances.util.string_helpers import crop, remove_non_numeric
 
 
 class SpreadsheetToSqliteDb:
-    def __init__(self):
+    def __init__(self) -> None:
         """
         Initialize the converter with Google Sheets credentials and spreadsheet name
 
@@ -24,9 +28,7 @@ class SpreadsheetToSqliteDb:
             spreadsheet_name (str): Name of the Google Spreadsheet
         """
 
-        config = Config()
-
-        self.convert_account_tables = config.get("CONVERT_ACCOUNT_TABLES")
+        self.read_config()
 
         self.pdh = PandasHelper()
 
@@ -39,6 +41,11 @@ class SpreadsheetToSqliteDb:
         self.spreadsheet = GoogleHelper().get_spreadsheet(scopes)
 
         self.sql = SQL_Helper().select_sql_helper("SQLite")
+
+    def read_config(self) -> None:
+        config = Config()
+
+        self.convert_account_tables = config.get("CONVERT_ACCOUNT_TABLES", True)
 
     def convert_column_name(self, spreadsheet_column_name: str) -> str:
         sqlite_column_name = valid_sqlalchemy_name(spreadsheet_column_name)
@@ -59,11 +66,11 @@ class SpreadsheetToSqliteDb:
         to_db = self.get_to_db(table_name, column_name)
         match to_db:
             case "to_boolean_integer":
-                df[column_name] = df[column_name].apply(uf.boolean_string_to_int)
+                df[column_name] = df[column_name].apply(boolean_string_to_int)
             case "to_date":
-                df[column_name] = df[column_name].apply(uf.UK_to_ISO)
+                df[column_name] = df[column_name].apply(UK_to_ISO)
             case "to_numeric_str":
-                df[column_name] = df[column_name].apply(uf.remove_non_numeric)
+                df[column_name] = df[column_name].apply(remove_non_numeric)
             case "to_str":
                 pass
             case _:
@@ -71,7 +78,7 @@ class SpreadsheetToSqliteDb:
 
         return df
 
-    def convert_to_sqlite(self):
+    def convert_to_sqlite(self) -> None:
         """
         Convert all sheets in the Google Spreadsheet to SQLite tables
         """
@@ -79,47 +86,44 @@ class SpreadsheetToSqliteDb:
 
         # Iterate through all worksheets
         for worksheet in self.spreadsheet.worksheets():
-            if self.convert_underscore_tables or not worksheet.title.startswith("_"):
+            if self.convert_account_tables or not worksheet.title.startswith("_"):
                 self.convert_worksheet(worksheet)
 
                 time.sleep(1.1)  # Prevent Google API rate limiting
 
         self.sql.close_connection()
 
-    def convert_worksheet(self, worksheet: Worksheet):
+    def convert_worksheet(self, worksheet: Worksheet) -> None:
         table_name = valid_sqlalchemy_name(worksheet.title)
+        print(table_name)
 
         pdh = self.pdh
 
         # Get worksheet data as a DataFrame
         data = worksheet.get_all_values()
 
-        try:
-            # Split columns and rows
-            df = pdh.worksheet_values_to_dataframe(data)
 
-            df.columns = [self.convert_column_name(col) for col in df.columns]
+        # Split columns and rows
+        df = pdh.worksheet_values_to_dataframe(data)
 
-            for col in df.columns:
-                df = self.convert_df_col(df, table_name, col)
+        df.columns = [self.convert_column_name(col) for col in df.columns]
 
-            if has_primary_key(table_name):
-                primary_key_columns = get_primary_key_columns(table_name)
-                key_column = primary_key_columns[0]
-                if key_column not in df.columns:
-                    raise ValueError(
-                        f"Primary key column '{key_column}' not found in worksheet '{worksheet.title}'"
-                    )
-                sqlite_type = self.get_sqlite_type(table_name, key_column)
-                dtype = {key_column: f"{sqlite_type} PRIMARY KEY"}
-            else:
-                # Add 'id' column and populate with values
-                df.insert(0, "id", range(1, len(df) + 1))
-                dtype = {"id": "INTEGER PRIMARY KEY AUTOINCREMENT"}
+        for col in df.columns:
+            df = self.convert_df_col(df, table_name, col)
 
-        except Exception as e:
-            self.l.error(f"Error converting worksheet {worksheet.title}: {e}")
-            raise
+        if has_primary_key(table_name):
+            primary_key_columns = get_primary_key_columns(table_name)
+            key_column = primary_key_columns[0]
+            if key_column not in df.columns:
+                raise ValueError(
+                    f"Primary key column '{key_column}' not found in worksheet '{worksheet.title}'"
+                )
+            sqlite_type = self.get_sqlite_type(table_name, key_column)
+            dtype = {key_column: f"{sqlite_type} PRIMARY KEY"}
+        else:
+            # Add 'id' column and populate with values
+            df.insert(0, "id", range(1, len(df) + 1))
+            dtype = {"id": "INTEGER PRIMARY KEY AUTOINCREMENT"}
 
         # Write DataFrame to SQLite table (sheet name becomes table name)
         df.to_sql(
@@ -131,17 +135,14 @@ class SpreadsheetToSqliteDb:
         )
         # self.l.debug(f'Written {table_name}')
 
-    def get_sqlite_type(self, table_name, column_name):
+    def get_sqlite_type(self, table_name:str, column_name:str) -> str:
         return spreadsheet_fields.get_sqlite_type(table_name, column_name)
 
-    def get_to_db(self, table_name, column_name):
+    def get_to_db(self, table_name:str, column_name:str) -> str:
         return spreadsheet_fields.get_to_db(table_name, column_name)
 
 
-def main(args: Any = None) -> None:
-    if len(args) > 0:
-        print("This command does not accept any arguments.")
-        return
+def main() -> None:
 
     print("Converting Google Sheets spreadsheet to SQLite database\n")
 

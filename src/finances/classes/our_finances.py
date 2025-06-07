@@ -4,10 +4,10 @@ from finances.classes.sqlite_helper import SQLiteHelper
 
 
 class OurFinances:
-    def __init__(self):
+    def __init__(self) -> None:
         self.sql = SQLiteHelper()
 
-    def account_balances(self):
+    def account_balances(self) -> Any:
         query = """
             SELECT key, balance 
             FROM account_balances
@@ -18,7 +18,7 @@ class OurFinances:
             print(row)
         print("XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX")
 
-    def people(self):
+    def people(self) -> Any:
         query = """
             SELECT * 
             FROM people
@@ -28,7 +28,7 @@ class OurFinances:
             print(row)
         print("XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX")
 
-    def transactions(self):
+    def transactions(self) -> Any:
         query = """
             SELECT category, SUM(nett) 
             FROM transactions

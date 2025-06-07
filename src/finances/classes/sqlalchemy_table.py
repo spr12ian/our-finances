@@ -9,11 +9,11 @@ class SQLiteTable:
         self.sql = SQLAlchemyHelper()
         self.table_name = table_name
 
-    def fetch_all(self):
+    def fetch_all(self) -> Any:
         query = f"SELECT * FROM {self.table_name}"
         return self.sql.fetch_all(query)
 
-    def get_how_many(self):
+    def get_how_many(self) -> Any:
         return self.sql.get_how_many(self.table_name)
 
     def query_builder(self) -> QueryBuilder:

@@ -1,7 +1,7 @@
 from src.finances.loader import download_sheet_data
 
 
-def main():
+def main() -> None:
     download_sheet_data("Our Finances")
 
 

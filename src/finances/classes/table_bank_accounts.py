@@ -6,13 +6,13 @@ class BankAccounts(SQLiteTable):
         super().__init__("bank_accounts")
         self.key = key
 
-    def get_account_number(self):
+    def get_account_number(self) -> Any:
         return self.get_value_by_key_column("account_number")
 
-    def get_bank_name(self):
+    def get_bank_name(self) -> Any:
         return self.get_value_by_key_column("institution")
 
-    def get_sort_code(self):
+    def get_sort_code(self) -> Any:
         return self.get_value_by_key_column("sort_code")
 
     def get_value_by_key_column(self, column_name):

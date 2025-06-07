@@ -9,16 +9,25 @@ from finances.classes.config import Config
 
 
 class SQLiteHelper:
-    def __init__(self):
+    def __init__(self) -> None:
+        self.read_config()
+
+    def read_config(self) -> None:
         config = Config()
 
-        self.db_path = config.get("SQLite.database_name")
+        db_path = config.get("SQLITE_DATABASE_NAME")
+        if not db_path:
+            raise ValueError(
+                "SQLITE_DATABASE_NAME is not set in the configuration."
+            )
 
-    def close_connection(self):
+        self.db_path = db_path
+
+    def close_connection(self) -> None:
         if self.db_connection:
             self.db_connection.close()
 
-    def drop_column(self, table_name: str, column_to_drop: str):
+    def drop_column(self, table_name: str, column_to_drop: str) -> None:
         temp_table_name = f"temp_{table_name}"
         self.open_connection()
 
@@ -49,7 +58,7 @@ class SQLiteHelper:
 
         self.close_connection()
 
-    def executeAndCommit(self, sql_statement: str):
+    def executeAndCommit(self, sql_statement: str) -> None:
         self.open_connection()
 
         cursor = self.db_connection.cursor()
@@ -58,7 +67,7 @@ class SQLiteHelper:
 
         self.close_connection()
 
-    def fetch_all(self, query: str):
+    def fetch_all(self, query: str) -> list[Any]:
         self.open_connection()
 
         cursor = self.db_connection.cursor()
@@ -69,7 +78,7 @@ class SQLiteHelper:
 
         return fetch_all
 
-    def fetch_one_row(self, query: str):
+    def fetch_one_row(self, query: str) -> Any:
         self.open_connection()
         cursor = self.db_connection.cursor()
         cursor.execute(query)
@@ -105,7 +114,7 @@ class SQLiteHelper:
 
         return float(value)
 
-    def get_column_info(self, table_name: str, column_name: str):
+    def get_column_info(self, table_name: str, column_name: str) -> Any:
         table_info = self.get_table_info(table_name)
         column_info = None
         for column in table_info:
@@ -125,7 +134,7 @@ FROM {table_name}
         if where:
             query += where
 
-        how_many = self.fetch_one_value(query)
+        how_many = int(self.fetch_one_value(query))
 
         self.close_connection()
 
@@ -143,13 +152,13 @@ FROM {table_name}
 
         return table_info
 
-    def open_connection(self):
+    def open_connection(self) -> None:
         # Connect to SQLite database
         self.db_connection = sqlite3.connect(self.db_path)
 
     def rename_column(
         self, table_name: str, old_column_name: str, new_column_name: str
-    ):
+    ) -> None:
 
         self.open_connection()
 
@@ -186,7 +195,7 @@ FROM {table_name}
 
         self.close_connection()
 
-    def text_to_real(self, table_name: str, column_name: str):
+    def text_to_real(self, table_name: str, column_name: str) -> None:
         table_info = self.get_table_info(table_name)
 
         column_type = None

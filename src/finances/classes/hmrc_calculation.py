@@ -276,7 +276,7 @@ class HMRC_Calculation:
         basic_rate_limit = basic_rate_threshold - personal_allowance
         return basic_rate_limit
 
-    def get_current_tax_year_dates(self):
+    def get_current_tax_year_dates(self) -> Any:
         today = datetime.today()
         current_year = today.year
         tax_year_start = datetime(current_year, 4, 6)

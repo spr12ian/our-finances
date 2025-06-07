@@ -12,7 +12,7 @@ class MethodSorter:
         if not self.file_path.is_file():
             raise FileNotFoundError(f"File not found: {self.file_path}")
 
-    def sort_methods_in_class(self):
+    def sort_methods_in_class(self) -> Any:
         """Sorts top-level methods in the specified class alphabetically."""
         # Read the source file
         try:
@@ -75,7 +75,7 @@ class ClassFinder(cst.CSTVisitor):
 
 
 class MethodCollector(cst.CSTVisitor):
-    def __init__(self):
+    def __init__(self) -> None:
         self.methods = []
 
     def visit_FunctionDef(self, node):

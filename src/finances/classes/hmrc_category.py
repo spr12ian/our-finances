@@ -13,8 +13,8 @@ class HMRC_Category(Categories):
         else:
             return f"HMRC {person_code} {category}"
 
-    def get_hmrc_page(self):
+    def get_hmrc_page(self) -> Any:
         return self.get_value_by_category("hmrc_page")
 
-    def get_hmrc_question_id(self):
+    def get_hmrc_question_id(self) -> Any:
         return self.get_value_by_category("hmrc_question_id")

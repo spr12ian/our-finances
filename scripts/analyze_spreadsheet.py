@@ -1,17 +1,19 @@
+from scripts.bootstrap import setup_path
+
+setup_path()
+
 # import standard files
 import time
 from pathlib import Path
-from typing import Any
 
 # import pip files
 from gspread.worksheet import Worksheet
-from our_finances.util.string_helpers import crop
 
 # import local files
-from finances.classes.file_helper import FileHelper
 from finances.classes.google_helper import GoogleHelper
 from finances.classes.pandas_helper import PandasHelper
 from finances.classes.sqlalchemy_helper import valid_sqlalchemy_name
+from finances.util.string_helpers import crop
 
 TYPE_MAPPING = {
     " (£)": {
@@ -43,6 +45,8 @@ TYPE_MAPPING = {
         "sqlalchemy_type": "Date",
     },
 }
+
+GENERATED_DIR = "src/finances/generated/"
 
 
 class SpreadsheetAnalyzer:
@@ -153,87 +157,89 @@ class SpreadsheetAnalyzer:
             sqlalchemy_type,
         ]
 
+    def write_lines(self, file_name:str, lines: list[str]) -> None:
+        output_str = "\n".join(lines)
+        output_file = f"{GENERATED_DIR}{file_name}"
+        Path(output_file).write_text(output_str)
+        print(f"Code at {output_file} should be checked")
+
     def write_get_account_sheet_names_js(self) -> None:
         lines = ["function getAccountSheetNames() {"]
         lines.append("  return" + str(self.account_sheet_names))
         lines.append("}")
-        output_str = "\n".join(lines)
-        Path("get_account_sheet_names.js").write_text(output_str)
+        self.write_lines("get_account_sheet_names.js", lines)
 
     def write_account_sheet_names_py(self) -> None:
-        lines = ["ACCOUNT_SHEET_NAMES=" + str(self.account_sheet_names)]
-        output_str = "\n".join(lines)
-        Path("account_sheet_names.py").write_text(output_str)
+        lines = ["ACCOUNT_SHEET_NAMES = ["]
+        for sheet_name in self.account_sheet_names:
+            lines.append(f'    "{sheet_name}",')
+        lines.append("]")
+        self.write_lines("account_sheet_names.py", lines)
 
     def write_get_all_sheet_names_js(self) -> None:
         lines = ["function getAllSheetNames() {"]
         lines.append("  return" + str(self.all_sheet_names))
         lines.append("}")
-        output_str = "\n".join(lines)
-        Path("get_all_sheet_names.js").write_text(output_str)
+        self.write_lines("get_all_sheet_names.js", lines)
 
     def write_spreadsheet_fields_py(self) -> None:
-        prefix = self.get_prefix()
-        fields_output = self.get_fields_output()
-        output_str = prefix + fields_output
-        Path("spreadsheet_fields.py").write_text(output_str)
-
-    def get_fields_output(self) -> str:
-        return str(self.fields)
+        lines = [self.get_prefix()]
+        for field in self.fields:
+            lines.append(str(field))
+        self.write_lines("spreadsheet_fields.py", lines)
 
     def get_prefix(self) -> str:
         prefix = """# spreadsheet_fields.py
-def get_field_by_spreadsheet_column_name(table_name:str, spreadsheet_column_name:str):
+def get_field_by_spreadsheet_column_name(
+    table_name: str, spreadsheet_column_name: str
+) -> list[str]:
     for field in fields:
         if field[1] == spreadsheet_column_name and field[0] == table_name:
             return field
-    return None
+    raise KeyError(f"field not found for {table_name}, {spreadsheet_column_name}")
 
-def get_field_by_sqlite_column_name(table_name:str, sqlite_column_name:str):
+
+def get_field_by_sqlite_column_name(
+    table_name: str, sqlite_column_name: str
+) -> list[str]:
     for field in fields:
         if field[2] == sqlite_column_name and field[0] == table_name:
             return field
-    return None
+    raise KeyError(f"field not found for {table_name}, {sqlite_column_name}")
 
-def get_from_db(table_name:str, column_name:str):
-    field = get_field_by_sqlite_column_name(
-        table_name, column_name
-    )
-    return field[5] # from_db
 
-def get_python_type(table_name:str, column_name:str):
-    field = get_field_by_sqlite_column_name(
-        table_name, column_name
-    )
-    return field[6] # python_type
+def get_from_db(table_name: str, column_name: str) -> str:
+    field = get_field_by_sqlite_column_name(table_name, column_name)
+    return field[5]  # from_db
 
-def get_sqlalchemy_type(table_name:str, column_name:str):
-    field = get_field_by_sqlite_column_name(
-        table_name, column_name
-    )
-    return field[7] # sqlalchemy_type
 
-def get_sqlite_type(table_name:str, column_name:str):
-    field = get_field_by_sqlite_column_name(
-        table_name, column_name
-    )
-    return field[4] # sqlite_type
+def get_python_type(table_name: str, column_name: str) -> str:
+    field = get_field_by_sqlite_column_name(table_name, column_name)
+    return field[6]  # python_type
 
-def get_to_db(table_name:str, column_name:str):
-    field = get_field_by_sqlite_column_name(
-        table_name, column_name
-    )
-    return field[3] # to_db
 
-# table_name, spreadsheet_column_name, sqlite_column_name, to_db, sqlite_type, from_db, python_type, sqlalchemy_type
+def get_sqlalchemy_type(table_name: str, column_name: str) -> str:
+    field = get_field_by_sqlite_column_name(table_name, column_name)
+    return field[7]  # sqlalchemy_type
+
+
+def get_sqlite_type(table_name: str, column_name: str) -> str:
+    field = get_field_by_sqlite_column_name(table_name, column_name)
+    return field[4]  # sqlite_type
+
+
+def get_to_db(table_name: str, column_name: str) -> str:
+    field = get_field_by_sqlite_column_name(table_name, column_name)
+    return field[3]  # to_db
+
+
+# table_name, spreadsheet_column_name, sqlite_column_name, to_db, sqlite_type, from_db,
+# python_type, sqlalchemy_type
 fields = """
         return prefix
 
 
-def main(args: Any = None) -> None:
-    if len(args) > 0:
-        print("This command does not accept any arguments.")
-        return
+def main() -> None:
 
     analyzer = SpreadsheetAnalyzer()
 
@@ -245,6 +251,8 @@ def main(args: Any = None) -> None:
     analyzer.write_get_all_sheet_names_js()
     analyzer.write_spreadsheet_fields_py()
 
-    f = FileHelper()
-    f.set_output_from_file(Path(__file__))
-    f.append("Analyzed Google Sheets spreadsheet")
+    print("Analyzed Google Sheets spreadsheet")
+
+
+if __name__ == "__main__":
+    main()

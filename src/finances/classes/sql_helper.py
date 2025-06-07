@@ -1,5 +1,8 @@
+from typing import Any
+
+
 class SQL_Helper:
-    def select_sql_helper(self, preferred_helper: str):
+    def select_sql_helper(self, preferred_helper: str)->Any:
         match preferred_helper:
             case "SQLAlchemy":
                 from sqlalchemy_helper import SQLAlchemyHelper

@@ -22,7 +22,7 @@ target-version = "py310"
 
 [tool.ruff.lint]
 select = ["E", "F", "I", "UP", "ANN"]  # Style, bugs, import order, upgrades, annotations
-ignore = ["E402"]  # Allow non-top-level imports (e.g., bootstrap.py)
+ignore = ["ANN401","E402"]  # Allow non-top-level imports (e.g., bootstrap.py)
 fixable = ["ALL"]
 
 [tool.ruff.format]
@@ -35,4 +35,4 @@ ignore_missing_imports = true
 allow_redefinition = true
 show_error_codes = true
 namespace_packages = true
-mypy_path = "src"
+pretty = true

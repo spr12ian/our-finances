@@ -1,25 +1,26 @@
 our-finances/
-├── .vscode/                         # VS Code settings and config
-│   └── settings.json               # Python interpreter and linting setup
-├── config/                         # Metadata and rule definitions
-│   ├── accounts.yaml              # Mapping account codes to owners
-│   └── categories.yaml            # Categorisation rules
-├── data/                           # Data inputs and outputs
-│   ├── raw/                       # Optional cached Google Sheets exports
-│   └── processed/                 # Cleaned data or local SQLite database
-├── notebooks/                      # Jupyter notebooks for ad hoc exploration
+├── .vscode/                      # VS Code settings and config
+│   └── settings.json             # Python interpreter and linting setup
+├── config/                       # Metadata and rule definitions
+│   ├── accounts.yaml             # Mapping account codes to owners
+│   └── categories.yaml           # Categorisation rules
+├── data/                         # Data inputs and outputs
+│   ├── raw/                      # Optional cached Google Sheets exports
+│   └── processed/                # Cleaned data or local SQLite database
+├── notebooks/                    # Jupyter notebooks for ad hoc exploration
 │   └── analysis.ipynb            # Data insights, charts, etc.
-├── reports/                        # Generated tax and finance reports
+├── reports/                      # Generated tax and finance reports
 │   └── README.md
-├── scripts/                        # CLI-level scripts for operations
+├── scripts/                      # CLI-level scripts for operations
+│   ├── key_check.py              # Checks we have authority to connect to the spreadsheet
 │   ├── download_from_sheets.py   # Google Sheets to local
 │   ├── update_local_db.py        # Populate SQLite from downloaded data
 │   ├── generate_reports.py       # Build PDFs for tax, spending
 │   └── sync_counterparties.py    # Reconcile inter-account transactions
-├── sheets/                         # Apps Script code for menu and automation
+├── sheets/                       # Apps Script code for menu and automation
 │   ├── menu.gs                   # Custom menu entries
 │   └── categorise.gs             # Optional rule-based categorisation
-├── src/                            # Python source logic (importable as package)
+├── src/                          # Python source logic (importable as package)
 │   └── finances/
 │       ├── __init__.py
 │       ├── loader.py             # Data fetching/parsing logic

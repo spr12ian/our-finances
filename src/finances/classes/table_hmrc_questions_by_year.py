@@ -76,14 +76,14 @@ class HMRC_QuestionsByYear(SQLiteTable):
     def convert_columns_to_string(self, columns):
         return ", ".join([f'q1."{column}"' for column in columns])
 
-    def check_questions(self):
+    def check_questions(self) -> Any:
         self.l.debug("check_questions")
 
         self.list_unused_questions()
 
         self.list_online_questions_not_in_printed_form()
 
-    def list_online_questions_not_in_printed_form(self):
+    def list_online_questions_not_in_printed_form(self) -> Any:
         self.l.debug("list_online_questions_not_in_printed_form")
         table_name = self.table_name
         query = (
@@ -101,7 +101,7 @@ class HMRC_QuestionsByYear(SQLiteTable):
             for row in rows:
                 self.l.debug(row)
 
-    def list_unused_questions(self):
+    def list_unused_questions(self) -> Any:
         self.l.debug("list_unused_questions")
         table_name = self.table_name
         core_questions = "hmrc_questions"
@@ -119,7 +119,7 @@ class HMRC_QuestionsByYear(SQLiteTable):
             for row in rows:
                 self.l.info(row)
 
-    def get_hmrc_calculation_questions(self):
+    def get_hmrc_calculation_questions(self) -> Any:
         questions = [
             [
                 "",  # question
@@ -132,7 +132,7 @@ class HMRC_QuestionsByYear(SQLiteTable):
         ]
         return questions
 
-    def get_online_questions(self):
+    def get_online_questions(self) -> Any:
         columns = [
             "question",
             "online_section",
@@ -142,7 +142,7 @@ class HMRC_QuestionsByYear(SQLiteTable):
         order_column = "online_order"
         return self._get_questions(columns, order_column)
 
-    def get_printed_form_questions(self):
+    def get_printed_form_questions(self) -> Any:
         self.l.debug("get_printed_form_questions")
         columns = ["question", "printed_section", "printed_header", "printed_box"]
         order_column = "printed_order"

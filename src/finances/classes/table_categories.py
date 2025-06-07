@@ -1,4 +1,3 @@
-
 from finances.classes.sqlite_table import SQLiteTable
 
 
@@ -22,10 +21,10 @@ class Categories(SQLiteTable):
         )
         return self.sql.fetch_one_value(query)
 
-    def get_description(self):
+    def get_description(self) -> Any:
         return self.get_value_by_category("description")
 
-    def get_category_group(self):
+    def get_category_group(self) -> Any:
         return self.get_value_by_category("category_group")
 
     def get_value_by_category(self, column_name):

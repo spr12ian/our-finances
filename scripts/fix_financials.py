@@ -62,7 +62,7 @@ def get_financial_columns():
 
 
 class SpreadsheetToSqliteDb:
-    def __init__(self):
+    def __init__(self) -> None:
         """
         Initialize the converter with Google Sheets credentials and spreadsheet name
 
@@ -86,7 +86,7 @@ class SpreadsheetToSqliteDb:
 
         self.sql = SQL_Helper().select_sql_helper("SQLite")
 
-    def convert_to_sqlite(self):
+    def convert_to_sqlite(self) -> Any:
         """
         Convert sheet in the Google Spreadsheet to SQLite table
         """

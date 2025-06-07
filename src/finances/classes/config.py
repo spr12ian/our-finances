@@ -62,7 +62,7 @@ class ConfigNode:
 
 
 class Config(ConfigNode):
-    def __init__(self, yaml_path: Path = Path("config.yaml")):
+    def __init__(self, yaml_path: Path = Path("config.yaml")) -> None:
         with open(yaml_path) as f:
             data = yaml.safe_load(f)
         super().__init__(data)

@@ -6,15 +6,15 @@ class HMRC_Businesses(SQLiteTable):
         super().__init__("hmrc_businesses")
         self.business_name = business_name
 
-    def get_business_description(self):
+    def get_business_description(self) -> Any:
         business_description = self._get_value_by_business_name("business_description")
 
         return business_description
 
-    def get_business_name(self):
+    def get_business_name(self) -> Any:
         return self.business_name
 
-    def get_business_postcode(self):
+    def get_business_postcode(self) -> Any:
         business_description = self._get_value_by_business_name("business_postcode")
 
         return business_description

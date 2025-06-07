@@ -50,7 +50,7 @@ class HMRC_PeopleDetails(SQLiteTable):
     def get_taxpayer_residency_status(self) -> str:
         return self._get_value_by_code_column("taxpayer_residency_status")
 
-    def get_uk_marriage_date(self):
+    def get_uk_marriage_date(self) -> Any:
         marriage_date = self.get_marriage_date()
         if marriage_date is None:
             return None

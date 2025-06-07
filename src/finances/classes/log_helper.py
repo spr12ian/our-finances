@@ -46,7 +46,7 @@ class LogHelper:
 
         self.dt = DateTimeHelper()
 
-    def clear_debug_log(self):
+    def clear_debug_log(self) -> Any:
         with open(DEBUG_FILE, "w") as file:
             pass
 
@@ -56,11 +56,11 @@ class LogHelper:
     def debug(self, msg):
         self.logger.debug(msg)
 
-    def disable(self):
+    def disable(self) -> Any:
         self.saved_level = self.get_level()
         self.logger.setLevel(logging.CRITICAL)
 
-    def enable(self):
+    def enable(self) -> Any:
         self.logger.setLevel(self.saved_level)
 
     def error(self, msg):
@@ -69,15 +69,15 @@ class LogHelper:
     def exception(self, msg):
         self.logger.exception(msg)
 
-    def get_date_today(self):
+    def get_date_today(self) -> Any:
         dt = self.dt
         return dt.get_date_today()
 
-    def get_level(self):
+    def get_level(self) -> Any:
         return self.logger.getEffectiveLevel()
 
     # Function to get the effective logging level as a string
-    def get_level_as_string(self):
+    def get_level_as_string(self) -> Any:
         level = self.get_level()
         level_name = LogHelper.LOG_LEVELS.get(level, "UNKNOWN")
         return level_name
@@ -85,16 +85,16 @@ class LogHelper:
     def info(self, msg):
         self.logger.info(msg)
 
-    def is_debug_enabled(self):
+    def is_debug_enabled(self) -> Any:
         return self.get_level() == logging.DEBUG
 
-    def log_date_today(self):
+    def log_date_today(self) -> Any:
         self.info(f"{self.get_date_today()}")
 
-    def log_debug_level(self):
+    def log_debug_level(self) -> Any:
         self.info(f"{self.get_level_as_string()}: {self.get_level()}")
 
-    def log_time(self):
+    def log_time(self) -> Any:
         dt = self.dt
 
         time_now = dt.get_time_now()
@@ -113,7 +113,7 @@ class LogHelper:
         else:
             raise ValueError(f"Unexpected level type: {type(level)} for level: {level}")
 
-    def set_level_debug(self):
+    def set_level_debug(self) -> Any:
         self.logger.setLevel(logging.DEBUG)
 
     def set_level_int(self, level):

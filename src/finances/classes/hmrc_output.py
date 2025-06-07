@@ -18,7 +18,7 @@ class HMRC_Output:
         self.previous_section = ""
         self.previous_header = ""
 
-    def get_title(self):
+    def get_title(self) -> Any:
         unique_tax_reference = self.unique_tax_reference
         person_name = self.person_name
         report_type = self.report_type
@@ -42,7 +42,7 @@ class HMRC_Output:
         with open(report_file_name, "a") as file:
             print(txt, file=file)
 
-    def print_end_of_tax_return(self):
+    def print_end_of_tax_return(self) -> Any:
         title = self.get_title()
         self.print(f"\nEnd of {title}")
 
@@ -79,7 +79,7 @@ class HMRC_Output:
             self.print(information)
         self.print(formatted_answer)
 
-    def print_report(self):
+    def print_report(self) -> Any:
         report_type = self.report_type
         if not isinstance(report_type, str) or not report_type:
             raise ValueError("Invalid report type provided.")
@@ -108,7 +108,7 @@ class HMRC_Output:
         self.previous_section = ""
         self.previous_header = ""
 
-    def set_report_name(self):
+    def set_report_name(self) -> Any:
         """
         Sets the report file name based on the person's name, report type, and tax year,
         and creates an empty file with the generated name, overwriting if it already exists.

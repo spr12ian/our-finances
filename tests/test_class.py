@@ -1,7 +1,7 @@
 import pytest
 import scripts.key_check as key_check
 
-import finances.commands.google_sheets_to_sqlite as google_sheets_to_sqlite
+import scripts.download_sheets_to_sqlite as download_sheets_to_sqlite
 
 
 def f():
@@ -36,7 +36,7 @@ def test_one():
 
 
 def test_spreadsheet_to_database():
-    google_sheets_to_sqlite.main()
+    download_sheets_to_sqlite.main()
 
 
 def test_two():

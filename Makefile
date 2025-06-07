@@ -32,7 +32,7 @@ TOP_LEVEL_PACKAGES := \
 	ci \
 	clean \
 	freeze \
-	google_sheets_to_sqlite \
+	download_sheets_to_sqlite \
 	info \
 	install_tools \
 	key_check \
@@ -122,7 +122,7 @@ info:
 		cat "$(GOOGLE_SERVICE_ACCOUNT_KEY_FILE)" | jq .; \
 	fi
 
-clean:
+clean: logs
 	@echo "🧹 Removing virtual environment..."
 	@rm -rf $(VENV_DIR)
 	@echo "🧹 Removing all __pycache__ directories..."
@@ -130,7 +130,7 @@ clean:
 	@echo "🧹 Removing .mypy_cache directory..."
 	@rm -rf .mypy_cache
 	@echo "🧹 Removing log files..."
-	@rm -rf *.log
+	@find . -type f -name '*.log' -print | tee logs/deleted_logs.txt | xargs -r rm -f
 	@echo "🧹 Removing requirements.txt ..."
 	@rm -rf $(REQUIREMENTS)
 	@echo "✅ Cleaned all caches and virtual environment."
@@ -139,28 +139,27 @@ clean:
 # Scripts
 # ============================
 
-analyze_spreadsheet: check_env requirements
-	@$(VPYTHON) -m scripts.analyze_spreadsheet
-	@echo "✅ Spreadsheet analysed."
+key_check: check_env venv
+	@$(MAKE) run_with_log ACTION=key_check COMMAND="$(VPYTHON) -m scripts.key_check"
 
-google_sheets_to_sqlite: check_env requirements
-	@$(VPYTHON) -m scripts.google_sheets_to_sqlite
+analyze_spreadsheet: check_env venv
+	@$(MAKE) run_with_log ACTION=analyze_spreadsheet COMMAND="$(VPYTHON) -m scripts.analyze_spreadsheet"
 
-key_check: check_env requirements
-	@$(VPYTHON) -m scripts.key_check
+download_sheets_to_sqlite: check_env venv
+	@$(MAKE) run_with_log ACTION=download_sheets_to_sqlite COMMAND="$(VPYTHON) -m scripts.download_sheets_to_sqlite"
 
 # ============================
 # Testing & Batching
 # ============================
 
-ci: lint format-check types test-only
+ci: lint format_check types test_only
 	@echo "✅ CI checks passed."
 
-test: lint format types test-only
+test: lint format types test_only
 	@echo "Running tests..."
 	@$(MAKE) key_check
 	@$(MAKE) analyze_spreadsheet
-	@$(MAKE) google_sheets_to_sqlite
+	@$(MAKE) download_sheets_to_sqlite
 	@$(MAKE) vacuum_sqlite_database
 	@echo "✅ Tests completed."
 
@@ -168,34 +167,39 @@ test: lint format types test-only
 # Linting & Formatting
 # ============================
 
-lint: install_tools
-	@echo "🔍 Linting with ruff..."
-	@$(VENV_DIR)/bin/ruff check src scripts tests
+lint: logs
+	@log_file="logs/lint.log"; \
+	echo "🔍 Linting with ruff..." | tee "$$log_file"; \
+	ruff check src scripts tests | tee -a "$$log_file"
 
-format: install_tools
-	@echo "🎨 Formatting with black..."
-	@$(VENV_DIR)/bin/black src scripts tests
 
-format-check: install_tools
-	@echo "🎨 Checking formatting with black (check mode)..."
-	@$(VENV_DIR)/bin/black --check --diff src scripts tests
+format: logs
+	@log_file="logs/format.log"; \
+	echo "🎨 Formatting with black..." | tee "$$log_file"; \
+	black src scripts tests | tee -a "$$log_file"
 
-test-all: requirements
+format_check: logs
+	@log_file="logs/format_check.log"; \
+	echo "🎨 Checking formatting with black (check mode)..." | tee "$$log_file"; \
+	black --check --diff src scripts tests | tee -a "$$log_file"
+
+test-all: venv
 	@echo "🧪 Running pytest..."
-	@$(VENV_DIR)/bin/pytest --maxfail=1 --disable-warnings -q
+	@$(VPYTHON) -m pytest --maxfail=1 --disable-warnings -q
 
-test-only: requirements
-	@echo "🧪 Running isolated unit tests..."
-	@$(VPYTHON) -m pytest tests --maxfail=1 --disable-warnings -q
-	@echo "✅ Unit tests complete."
+test_only: venv logs
+	@log_file="logs/test_only.log"; \
+	@echo "🧪 Running isolated unit tests..." | tee "$$log_file"; \
+	$(VPYTHON) -m pytest tests --maxfail=1 --disable-warnings -q | tee -a "$$log_file"
+	echo "✅ Unit tests complete." | tee -a "$$log_file"
 
-types: 
-	@echo "🔎 Type checking with mypy..."
-	@$(VPYTHON) -m mypy src scripts tests
-
+types: logs
+	@log_file="logs/types.log"; \
+	echo "🔎 Type checking with mypy..." | tee "$$log_file"; \
+	mypy --explicit-package-bases src scripts tests | tee -a "$$log_file"
 
 check_env:
-	@vars="GOOGLE_DRIVE_OUR_FINANCES_KEY GOOGLE_SERVICE_ACCOUNT_KEY_FILE"; \
+	@vars="GOOGLE_DRIVE_OUR_FINANCES_KEY GOOGLE_SERVICE_ACCOUNT_KEY_FILE SQLITE_DATABASE_NAME"; \
 	for var in $$vars; do \
 		if [ -z "$${!var}" ]; then \
 			echo "❌ Environment variable $$var is not set."; \
@@ -204,4 +208,13 @@ check_env:
 			echo "✅ $$var is set."; \
 		fi; \
 	done
+
+logs:
+	@mkdir -p logs
+
+run_with_log: logs
+	@log_file="logs/$(ACTION).log"; \
+	echo "🔧 Starting $(ACTION)..." | tee "$$log_file"; \
+	eval $(COMMAND) 2>&1 | tee -a "$$log_file"; \
+	echo "✅ $(ACTION) finished." | tee -a "$$log_file"
 
