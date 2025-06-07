@@ -1,11 +1,16 @@
-from finances.classes.spreadsheet_field import SpreadsheetField
+from __future__ import annotations
+
+from collections.abc import Callable
+from typing import Final
+
+from finances.classes.spreadsheet_field import SpreadsheetField as SF
 
 
 class FieldRegistry:
-    def __init__(self, field_list: list[SpreadsheetField]) -> None:
-        self._fields: list[SpreadsheetField] = field_list
-        self._by_spreadsheet: dict[tuple[str, str], SpreadsheetField] = {}
-        self._by_sqlite: dict[tuple[str, str], SpreadsheetField] = {}
+    def __init__(self, field_list: list[SF]) -> None:
+        self._fields: list[SF] = field_list
+        self._by_spreadsheet: dict[tuple[str, str], SF] = {}
+        self._by_sqlite: dict[tuple[str, str], SF] = {}
 
         for field in field_list:
             self._by_spreadsheet[(field.table_name, field.spreadsheet_column_name)] = (
@@ -13,15 +18,22 @@ class FieldRegistry:
             )
             self._by_sqlite[(field.table_name, field.sqlite_column_name)] = field
 
-    def get_by_spreadsheet(self, table: str, spreadsheet_col: str) -> SpreadsheetField:
+    def __repr__(self) -> str:
+        return f"<FieldRegistry {len(self._fields)} fields>"
+
+    def __contains__(self, key: tuple[str, str]) -> bool:
+        return key in self._by_spreadsheet or key in self._by_sqlite
+
+    def get_by_spreadsheet(self, table: str, spreadsheet_col: str) -> SF:
         try:
             return self._by_spreadsheet[(table, spreadsheet_col)]
         except KeyError:
-            raise KeyError(
-                f"Field not found for table '{table}', spreadsheet column '{spreadsheet_col}'"
-            )
+            raise KeyError(self.missing(table, spreadsheet_col))
 
-    def get_by_sqlite(self, table: str, sqlite_col: str) -> SpreadsheetField:
+    def missing(self, table: str, spreadsheet_col: str) -> str:
+        return f"Field not found for table '{table}', spreadsheet column '{spreadsheet_col}'"
+
+    def get_by_sqlite(self, table: str, sqlite_col: str) -> SF:
         try:
             return self._by_sqlite[(table, sqlite_col)]
         except KeyError:
@@ -43,3 +55,6 @@ class FieldRegistry:
 
     def get_to_db(self, table: str, col: str) -> str:
         return self.get_by_sqlite(table, col).to_db
+
+
+get_field_class: Callable[[], type[SF]] = lambda: SF  # noqa: E731

@@ -1,4 +1,4 @@
-from scripts.bootstrap import setup_path
+from script.bootstrap import setup_path
 
 setup_path()
 
@@ -18,9 +18,6 @@ from finances.util.financial_helpers import string_to_financial
 def convert(df: DataFrame, financial_column: str) -> DataFrame:
     df[financial_column] = df[financial_column].apply(string_to_financial)  # type: ignore
     return df
-
-
-
 
 
 class SpreadsheetToSqliteDb:

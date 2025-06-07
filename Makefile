@@ -136,17 +136,17 @@ clean: logs
 	@echo "✅ Cleaned all caches and virtual environment."
 
 # ============================
-# Scripts
+# script
 # ============================
 
 key_check: check_env venv
-	@$(MAKE) run_with_log ACTION=key_check COMMAND="$(VPYTHON) -m scripts.key_check"
+	@$(MAKE) run_with_log ACTION=key_check COMMAND="$(VPYTHON) -m script.key_check"
 
 analyze_spreadsheet: check_env venv
-	@$(MAKE) run_with_log ACTION=analyze_spreadsheet COMMAND="$(VPYTHON) -m scripts.analyze_spreadsheet"
+	@$(MAKE) run_with_log ACTION=analyze_spreadsheet COMMAND="$(VPYTHON) -m script.analyze_spreadsheet"
 
 download_sheets_to_sqlite: check_env venv
-	@$(MAKE) run_with_log ACTION=download_sheets_to_sqlite COMMAND="$(VPYTHON) -m scripts.download_sheets_to_sqlite" \
+	@$(MAKE) run_with_log ACTION=download_sheets_to_sqlite COMMAND="$(VPYTHON) -m script.download_sheets_to_sqlite" \
 	echo "sqlitebrowser SQLITE_DATABASE"
 
 # ============================
@@ -176,18 +176,18 @@ test: lint format types test_only
 lint: logs
 	@log_file="logs/lint.log"; \
 	echo "🔍 Linting with ruff..." | tee "$$log_file"; \
-	ruff check src scripts tests | tee -a "$$log_file"
+	ruff check src script tests | tee -a "$$log_file"
 
 
 format: logs
 	@log_file="logs/format.log"; \
 	echo "🎨 Formatting with black..." | tee "$$log_file"; \
-	black src scripts tests | tee -a "$$log_file"
+	black src script tests | tee -a "$$log_file"
 
 format_check: logs
 	@log_file="logs/format_check.log"; \
 	echo "🎨 Checking formatting with black (check mode)..." | tee "$$log_file"; \
-	black --check --diff src scripts tests | tee -a "$$log_file"
+	black --check --diff src script tests | tee -a "$$log_file"
 
 test-all: venv
 	@echo "🧪 Running pytest..."
@@ -202,7 +202,7 @@ test_only: venv logs
 types: logs
 	@log_file="logs/types.log"; \
 	echo "🔎 Type checking with mypy..." | tee "$$log_file"; \
-	mypy --explicit-package-bases src scripts tests | tee -a "$$log_file"
+	mypy --explicit-package-bases src script tests | tee -a "$$log_file"
 
 check_env:
 	@vars="GOOGLE_DRIVE_OUR_FINANCES_KEY GOOGLE_SERVICE_ACCOUNT_KEY_FILE SQLITE_DATABASE_NAME"; \

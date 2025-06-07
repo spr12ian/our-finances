@@ -1,4 +1,4 @@
-from scripts.bootstrap import setup_path
+from script.bootstrap import setup_path
 
 setup_path()
 
@@ -79,6 +79,7 @@ class SpreadsheetAnalyzer:
 
         # Iterate through all worksheets
         for worksheet in self.spreadsheet.worksheets():
+            print(f"Analyzing {worksheet.title}")
             self.analyze_worksheet(worksheet)
 
             time.sleep(1.1)  # Prevent Google API rate limiting
@@ -167,12 +168,12 @@ class SpreadsheetAnalyzer:
     def write_field_registry_py(self) -> None:
         prefix = Path("data/raw/field_registry_prefix.py").read_text()
         lines = [prefix]
-        lines.append("FIELDS: list[Field] = [")
+        lines.append("SPREADSHEET_FIELDS: Final[list[SF]] = [")
         for field in self.fields:
-            lines.append(f"    {field!r}),")
+            lines.append(f"    {field.short()},")
         lines.append("]")
         lines.append("")
-        lines.append("field_registry = FieldRegistry(FIELDS)")
+        lines.append("field_registry = FieldRegistry(SPREADSHEET_FIELDS)")
         self.write_lines("field_registry.py", lines)
 
     def write_files(self) -> None:
@@ -198,3 +199,11 @@ class SpreadsheetAnalyzer:
         output_file = f"{GENERATED_DIR}{file_name}"
         Path(output_file).write_text(output_str)
         print(f"Code at {output_file} should be checked")
+
+    def pre_pre_prefix(self) -> str:
+        return (
+            '"""Automatically generated file.\n\n'
+            'To update, run python3 -m script.analyze_spreadsheet\n\n'
+            '"""\n'
+        )
+

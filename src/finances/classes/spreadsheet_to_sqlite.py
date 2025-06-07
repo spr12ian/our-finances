@@ -8,11 +8,11 @@ from pandas import DataFrame
 from pandas._typing import AggFuncType  # type: ignore
 
 from finances.classes.config import Config
-from finances.classes.field_registry import FieldRegistry
 from finances.classes.google_helper import GoogleHelper
 from finances.classes.pandas_helper import PandasHelper
 from finances.classes.sql_helper import SQL_Helper
 from finances.classes.sqlalchemy_helper import valid_sqlalchemy_name
+from finances.generated.field_registry import field_registry
 from finances.util.boolean_helpers import boolean_string_to_int
 from finances.util.date_helpers import UK_to_ISO
 from finances.util.financial_helpers import string_to_financial
@@ -153,7 +153,7 @@ class SpreadSheetToSqlite:
         # self.l.debug(f'Written {table_name}')
 
     def get_sqlite_type(self, table_name: str, column_name: str) -> str:
-        return spreadsheet_fields.get_sqlite_type(table_name, column_name)
+        return field_registry.get_sqlite_type(table_name, column_name)
 
     def get_to_db(self, table_name: str, column_name: str) -> str:
-        return spreadsheet_fields.get_to_db(table_name, column_name)
+        return field_registry.get_to_db(table_name, column_name)

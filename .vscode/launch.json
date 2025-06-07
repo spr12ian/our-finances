@@ -3,10 +3,10 @@
   "configurations": [
     {"name":"Python Debugger: Current File","type":"debugpy","request":"launch","program":"${file}","console":"integratedTerminal"},
     {
-      "name": "Python: Debug download_sheets_to_sqlite",
+      "name": "Python: Debug analyze_spreadsheet",
       "type": "debugpy",
       "request": "launch",
-      "program": "${workspaceFolder}/scripts/download_sheets_to_sqlite.py",
+      "program": "${workspaceFolder}/scripts/analyze_spreadsheet.py",
       "env": {
         "PYTHONPATH": "${workspaceFolder}"
       },

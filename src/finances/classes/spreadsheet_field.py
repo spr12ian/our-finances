@@ -11,15 +11,11 @@ class SpreadsheetField(NamedTuple):
     python_type: str
     sqlalchemy_type: str
 
-    def __repr__(self) -> str:
+    def short(self) -> str:
         return (
-            f"SpreadsheetField("
+            f"SF("
             f"{self.table_name!r}, {self.spreadsheet_column_name!r}, "
             f"{self.sqlite_column_name!r}, {self.to_db!r}, "
             f"{self.sqlite_type!r}, {self.from_db!r}, "
             f"{self.python_type!r}, {self.sqlalchemy_type!r})"
         )
-    
-f=SpreadsheetField('a','b','c','d','e','f','g','h')
-print(f"{f!r}")
-
