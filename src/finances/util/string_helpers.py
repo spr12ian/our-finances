@@ -14,8 +14,8 @@ def remove_non_numeric(string: str) -> str:
     return re.sub(r"[^\d.]", "", string)
 
 
-def to_camel_case(text: str):
-    if type(text) != str:
+def to_camel_case(text: str) -> str:
+    if type(text) is not str:
         raise ValueError(f"Only strings allowed, not {type(text)}")
 
     words = re.split(r"[^a-zA-Z0-9]", text)  # Split on non-alphanumeric characters
@@ -31,7 +31,7 @@ def to_valid_method_name(s: str) -> str:
     - Prefix with an underscore if the resulting string starts with a number.
     - Ensure the result is all lowercase.
     """
-    if type(s) != str:
+    if type(s) is not str:
         raise ValueError(f"Only strings allowed, not {type(s)}")
 
     # Remove invalid characters and ensure lowercase

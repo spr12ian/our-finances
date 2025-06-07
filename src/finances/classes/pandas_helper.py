@@ -1,22 +1,20 @@
 from typing import Any
 
-import pandas as pd
+from pandas import DataFrame, api
 
 
 class PandasHelper:
-    def pd(self) -> Any:
-        return pd
 
-    def header_to_dataframe(self, values: Any):
+    def header_to_dataframe(self, values: Any) -> DataFrame:
         # Create a DataFrame
         columns = values
-        return pd.DataFrame(columns=columns)
+        return DataFrame(columns=columns)
 
-    def infer_dtype(self, series):
-        return pd.api.types.infer_dtype(series)
+    def infer_dtype(self, series: bool) -> str:
+        return api.types.infer_dtype(series)
 
-    def worksheet_values_to_dataframe(self, worksheet_values):
+    def worksheet_values_to_dataframe(self, worksheet_values: list[Any]) -> DataFrame:
         # Create a DataFrame
         columns = worksheet_values[0]  # Assume the first row contains headers
         rows = worksheet_values[1:]  # Remaining rows are the data
-        return pd.DataFrame(rows, columns=columns)
+        return DataFrame(rows, columns=columns)

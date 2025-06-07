@@ -146,7 +146,8 @@ analyze_spreadsheet: check_env venv
 	@$(MAKE) run_with_log ACTION=analyze_spreadsheet COMMAND="$(VPYTHON) -m scripts.analyze_spreadsheet"
 
 download_sheets_to_sqlite: check_env venv
-	@$(MAKE) run_with_log ACTION=download_sheets_to_sqlite COMMAND="$(VPYTHON) -m scripts.download_sheets_to_sqlite"
+	@$(MAKE) run_with_log ACTION=download_sheets_to_sqlite COMMAND="$(VPYTHON) -m scripts.download_sheets_to_sqlite" \
+	echo "sqlitebrowser SQLITE_DATABASE"
 
 # ============================
 # Testing & Batching
@@ -161,6 +162,11 @@ test: lint format types test_only
 	@$(MAKE) analyze_spreadsheet
 	@$(MAKE) download_sheets_to_sqlite
 	@$(MAKE) vacuum_sqlite_database
+	@$(MAKE) create_reports
+	@$(MAKE) first_normal_form
+	@$(MAKE) execute_sqlite_queries
+	@$(MAKE) generate_sqlalchemy_models
+	@$(MAKE) execute_sqlalchemy_queries
 	@echo "✅ Tests completed."
 
 # ============================
