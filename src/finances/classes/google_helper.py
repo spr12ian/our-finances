@@ -1,15 +1,37 @@
+import json
 from collections.abc import Sequence
+from pathlib import Path
 
 import gspread
 from google.oauth2.service_account import Credentials
 
 from finances.classes.config import Config
-from finances.classes.os_helper import OsHelper
 
 
 class GoogleHelper:
     def __init__(self) -> None:
         self.read_config()
+        self.check_config_values()
+
+    def check_config_values(self) -> None:
+        service_account_key_file = Path(self.service_account_key_file)
+        if not service_account_key_file.exists():
+            raise FileNotFoundError(
+                f"Credentials file '{service_account_key_file}' does not exist."
+            )
+
+        try:
+            with open(service_account_key_file, encoding="utf-8") as f:
+                json.load(f)
+        except json.JSONDecodeError as e:
+            raise ValueError(
+                f"{service_account_key_file}: Invalid JSON: {e}"
+            ) from e
+        except OSError as e:
+            raise OSError(
+                f"Error reading service account file '{service_account_key_file}': {e}"
+            ) from e
+
 
     def get_authorized_client(self, scopes: Sequence[str]) -> gspread.Client:
         # from_service_account_file requires scopes to be passed as a keyword arguement
@@ -22,16 +44,11 @@ class GoogleHelper:
         return client
 
     def get_credentials(self, scopes: Sequence[str]) -> Credentials:
-        service_account_file: str = self.get_credentials_path()
+        service_account_file: str = self.service_account_key_file
         credentials: Credentials = Credentials.from_service_account_file(  # type: ignore
             service_account_file, scopes=scopes
         )
         return credentials
-
-    def get_credentials_path(self) -> str:
-        credentials_path = f"{self.service_account_key_file}"
-
-        return credentials_path
 
     def get_spreadsheet(self, scopes: list[str]) -> gspread.Spreadsheet:
         client: gspread.Client = self.get_authorized_client(scopes)
@@ -47,24 +64,7 @@ class GoogleHelper:
 
         # Google Cloud Service credentials
         service_account_key_file = config.GOOGLE_SERVICE_ACCOUNT_KEY_FILE
-        print(service_account_key_file)
-        spreadsheet_key = config.OUR_FINANCES_DRIVE_KEY
-        print(spreadsheet_key)
-        if not service_account_key_file:
-            raise AttributeError(
-                "GOOGLE_SERVICE_ACCOUNT_KEY_FILE is not set in the configuration."
-            )
-        
-        if not service_account_key_file.endswith(".json"):
-            raise ValueError(
-                f"GOOGLE_SERVICE_ACCOUNT_KEY_FILE: {service_account_key_file} must be a JSON file."
-            )
-        if not OsHelper().file_exists(service_account_key_file):
-            raise FileNotFoundError(
-                f"Credentials file '{service_account_key_file}' does not exist."
-            )
-        if not spreadsheet_key:
-            raise ValueError("OUR_FINANCES_DRIVE_KEY is not set in the configuration.")
-
         self.service_account_key_file = service_account_key_file
+
+        spreadsheet_key = config.OUR_FINANCES_DRIVE_KEY
         self.spreadsheet_key = spreadsheet_key

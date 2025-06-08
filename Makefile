@@ -159,8 +159,8 @@ analyze_spreadsheet: check_env venv
 	@$(MAKE) run_with_log ACTION=analyze_spreadsheet COMMAND="$(VPYTHON) -m script.analyze_spreadsheet"
 
 download_sheets_to_sqlite: check_env venv
-	@$(MAKE) run_with_log ACTION=download_sheets_to_sqlite COMMAND="$(VPYTHON) -m script.download_sheets_to_sqlite" \
-	echo "sqlitebrowser SQLITE_DATABASE"
+	@$(MAKE) run_with_log ACTION=download_sheets_to_sqlite COMMAND="$(VPYTHON) -m script.download_sheets_to_sqlite"
+	@echo "sqlitebrowser SQLITE_DATABASE"
 
 # ============================
 # Testing & Batching
