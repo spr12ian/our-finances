@@ -12,17 +12,6 @@ class SQLiteHelper:
     def __init__(self) -> None:
         self.read_config()
 
-    def read_config(self) -> None:
-        config = Config()
-
-        db_path = config.get("SQLITE_DATABASE_NAME")
-        if not db_path:
-            raise ValueError(
-                "SQLITE_DATABASE_NAME is not set in the configuration."
-            )
-
-        self.db_path = db_path
-
     def close_connection(self) -> None:
         if self.db_connection:
             self.db_connection.close()
@@ -155,6 +144,17 @@ FROM {table_name}
     def open_connection(self) -> None:
         # Connect to SQLite database
         self.db_connection = sqlite3.connect(self.db_path)
+
+    def read_config(self) -> None:
+        config = Config()
+
+        db_path = config.get("OUR_FINANCES_SQLITE_DB_NAME")
+        if not db_path:
+            raise ValueError(
+                "OUR_FINANCES_SQLITE_DB_NAME is not set in the configuration."
+            )
+
+        self.db_path = db_path
 
     def rename_column(
         self, table_name: str, old_column_name: str, new_column_name: str

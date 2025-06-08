@@ -33,7 +33,7 @@ db_filename="our_finances.sqlite"
 if [ -f "${db_filename}" ]; then
     stop_if_module_has_errors vacuum_sqlite_database
 
-    stop_if_module_has_errors create_reports
+    stop_if_module_has_errors generate_reports
 
     sqlitebrowser "${db_filename}" &
 

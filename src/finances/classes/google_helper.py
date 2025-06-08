@@ -46,22 +46,25 @@ class GoogleHelper:
         config = Config()
 
         # Google Cloud Service credentials
-        service_account_key_file = config.get("GOOGLE_SERVICE_ACCOUNT_KEY_FILE")
+        service_account_key_file = config.GOOGLE_SERVICE_ACCOUNT_KEY_FILE
+        print(service_account_key_file)
+        spreadsheet_key = config.OUR_FINANCES_DRIVE_KEY
+        print(spreadsheet_key)
         if not service_account_key_file:
-            raise ValueError(
+            raise AttributeError(
                 "GOOGLE_SERVICE_ACCOUNT_KEY_FILE is not set in the configuration."
             )
+        
         if not service_account_key_file.endswith(".json"):
-            raise ValueError("GOOGLE_SERVICE_ACCOUNT_KEY_FILE must be a JSON file.")
+            raise ValueError(
+                f"GOOGLE_SERVICE_ACCOUNT_KEY_FILE: {service_account_key_file} must be a JSON file."
+            )
         if not OsHelper().file_exists(service_account_key_file):
             raise FileNotFoundError(
                 f"Credentials file '{service_account_key_file}' does not exist."
             )
-        spreadsheet_key = config.get("GOOGLE_DRIVE_OUR_FINANCES_KEY")
         if not spreadsheet_key:
-            raise ValueError(
-                "GOOGLE_DRIVE_OUR_FINANCES_KEY is not set in the configuration."
-            )
+            raise ValueError("OUR_FINANCES_DRIVE_KEY is not set in the configuration.")
 
         self.service_account_key_file = service_account_key_file
         self.spreadsheet_key = spreadsheet_key

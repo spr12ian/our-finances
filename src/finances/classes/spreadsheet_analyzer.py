@@ -158,6 +158,13 @@ class SpreadsheetAnalyzer:
             sqlalchemy_type,
         )
 
+    def get_pre_pre_prefix(self) -> str:
+        return (
+            '"""Automatically generated file.\n\n'
+            "To update, run python3 -m script.analyze_spreadsheet\n\n"
+            '"""\n'
+        )
+
     def write_account_sheet_names_py(self) -> None:
         lines = ["ACCOUNT_SHEET_NAMES = ["]
         for sheet_name in self.account_sheet_names:
@@ -166,8 +173,10 @@ class SpreadsheetAnalyzer:
         self.write_lines("account_sheet_names.py", lines)
 
     def write_field_registry_py(self) -> None:
+        pre_pre_prefix=self.get_pre_pre_prefix()
+        lines = [pre_pre_prefix]
         prefix = Path("data/raw/field_registry_prefix.py").read_text()
-        lines = [prefix]
+        lines.append(prefix)
         lines.append("SPREADSHEET_FIELDS: Final[list[SF]] = [")
         for field in self.fields:
             lines.append(f"    {field.short()},")
@@ -199,11 +208,3 @@ class SpreadsheetAnalyzer:
         output_file = f"{GENERATED_DIR}{file_name}"
         Path(output_file).write_text(output_str)
         print(f"Code at {output_file} should be checked")
-
-    def pre_pre_prefix(self) -> str:
-        return (
-            '"""Automatically generated file.\n\n'
-            'To update, run python3 -m script.analyze_spreadsheet\n\n'
-            '"""\n'
-        )
-

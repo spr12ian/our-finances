@@ -1,7 +1,6 @@
 import pytest
-import scripts.key_check as key_check
-
 import scripts.download_sheets_to_sqlite as download_sheets_to_sqlite
+import scripts.key_check as key_check
 
 
 def f():

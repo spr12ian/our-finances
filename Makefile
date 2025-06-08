@@ -1,3 +1,7 @@
+ifeq ("$(wildcard $(HOME)/.env)","")
+$(warning ⚠️  No ~/.env file found. Environment variables may not be set.)
+endif
+
 # ============================
 # Configuration
 # ============================
@@ -22,6 +26,13 @@ TOP_LEVEL_PACKAGES := \
 	sqlalchemy \
 	types-PyYAML
 
+REQUIRED_VARS := \
+  OUR_FINANCES_DRIVE_KEY \
+	GOOGLE_SERVICE_ACCOUNT_KEY_FILE \
+	OUR_FINANCES_SQLITE_DB_NAME \
+	OUR_FINANCES_SQLITE_ECHO_ENABLED
+export $(REQUIRED_VARS)
+
 .DEFAULT_GOAL := all
 
 .PHONY: \
@@ -29,18 +40,25 @@ TOP_LEVEL_PACKAGES := \
 	all \
 	analyze_spreadsheet \
 	batch \
+	check_env \
 	ci \
 	clean \
 	freeze \
 	download_sheets_to_sqlite \
+	format \
+	format_check \
 	info \
 	install_tools \
 	key_check \
+	lint \
+	logs \
 	pipx \
 	requirements \
+	run_with_log \
 	setup \
-	test \
+	test_all \
 	test_only \
+	types \
 	venv
 
 # ============================
@@ -53,7 +71,7 @@ activate: venv
 	@echo "Run this to activate the virtual environment:"
 	@echo "source $(VENV_DIR)/bin/activate"
 
-setup: requirements install_tools
+setup: requirements install_tools ## Set up the environment and tools
 	@echo "✅ Setup complete."
 
 # ============================
@@ -114,13 +132,8 @@ freeze:
 # ============================
 
 info:
-	@echo "$GOOGLE_DRIVE_OUR_FINANCES_KEY=$(GOOGLE_SERVICE_ACCOUNT_KEY_FILE)"
-	@echo "GOOGLE_SERVICE_ACCOUNT_KEY_FILE:"
-	@if echo '$(GOOGLE_SERVICE_ACCOUNT_KEY_FILE)' | grep -q '^{'; then \
-		echo '$(GOOGLE_SERVICE_ACCOUNT_KEY_FILE)' | jq .; \
-	else \
-		cat "$(GOOGLE_SERVICE_ACCOUNT_KEY_FILE)" | jq .; \
-	fi
+	@echo "OUR_FINANCES_DRIVE_KEY=$(OUR_FINANCES_DRIVE_KEY)"
+	@echo "GOOGLE_SERVICE_ACCOUNT_KEY_FILE=$(GOOGLE_SERVICE_ACCOUNT_KEY_FILE)"
 
 clean: logs
 	@echo "🧹 Removing virtual environment..."
@@ -162,7 +175,7 @@ test: lint format types test_only
 	@$(MAKE) analyze_spreadsheet
 	@$(MAKE) download_sheets_to_sqlite
 	@$(MAKE) vacuum_sqlite_database
-	@$(MAKE) create_reports
+	@$(MAKE) generate_reports
 	@$(MAKE) first_normal_form
 	@$(MAKE) execute_sqlite_queries
 	@$(MAKE) generate_sqlalchemy_models
@@ -189,7 +202,7 @@ format_check: logs
 	echo "🎨 Checking formatting with black (check mode)..." | tee "$$log_file"; \
 	black --check --diff src script tests | tee -a "$$log_file"
 
-test-all: venv
+test_all: venv
 	@echo "🧪 Running pytest..."
 	@$(VPYTHON) -m pytest --maxfail=1 --disable-warnings -q
 
@@ -205,8 +218,7 @@ types: logs
 	mypy --explicit-package-bases src script tests | tee -a "$$log_file"
 
 check_env:
-	@vars="GOOGLE_DRIVE_OUR_FINANCES_KEY GOOGLE_SERVICE_ACCOUNT_KEY_FILE SQLITE_DATABASE_NAME"; \
-	for var in $$vars; do \
+	@for var in $$REQUIRED_VARS; do \
 		if [ -z "$${!var}" ]; then \
 			echo "❌ Environment variable $$var is not set."; \
 			exit 1; \
@@ -216,11 +228,18 @@ check_env:
 	done
 
 logs:
-	@mkdir -p logs
+	@install -d logs
 
 run_with_log: logs
 	@log_file="logs/$(ACTION).log"; \
 	echo "🔧 Starting $(ACTION)..." | tee "$$log_file"; \
 	eval $(COMMAND) 2>&1 | tee -a "$$log_file"; \
 	echo "✅ $(ACTION) finished." | tee -a "$$log_file"
+
+help:
+	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | \
+		awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-30s\033[0m %s\n", $$1, $$2}'
+
+run:
+	@$(MAKE) run_with_log ACTION=$(ACTION) COMMAND=$(COMMAND)
 

@@ -2,8 +2,6 @@ from script.bootstrap import setup_path
 
 setup_path()
 
-import re
-from decimal import Decimal, InvalidOperation
 
 from gspread.worksheet import Worksheet
 from pandas import DataFrame

@@ -16,5 +16,6 @@ def main():
     worksheet.clear()
     worksheet.update([list(data[0].keys())] + [list(row.values()) for row in data])
 
+
 if __name__ == "__main__":
     main()

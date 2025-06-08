@@ -13,8 +13,8 @@ our-finances/
 │   └── README.md
 ├── scripts/                      # CLI-level scripts for operations
 │   ├── key_check.py              # Checks we have authority to connect to the spreadsheet
-│   ├── download_from_sheets.py   # Google Sheets to local
-│   ├── update_local_db.py        # Populate SQLite from downloaded data
+│   ├── analyze_spreadsheet.py    # Get info about fields on spreadsheet
+│   ├── sheets_to_sqlite.py       # Google Sheets to local database from analyzed data
 │   ├── generate_reports.py       # Build PDFs for tax, spending
 │   └── sync_counterparties.py    # Reconcile inter-account transactions
 ├── sheets/                       # Apps Script code for menu and automation

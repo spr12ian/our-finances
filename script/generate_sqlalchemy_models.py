@@ -1,10 +1,11 @@
-from finances.util.financial_helpers import to_camel_case
 from spreadsheet_fields import get_sqlalchemy_type
 from sqlalchemy import (
     MetaData,
     create_engine,
 )
 from sqlalchemy.ext.automap import automap_base
+
+from finances.util.financial_helpers import to_camel_case
 
 
 def add_comment(string):

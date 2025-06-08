@@ -1,11 +1,10 @@
 import time
 from collections.abc import Callable
-from typing import Any
+from typing import Any, Final
 
 from database_keys import get_primary_key_columns, has_primary_key
 from gspread import Worksheet
-from pandas import DataFrame
-from pandas._typing import AggFuncType  # type: ignore
+from pandas import DataFrame, Series
 
 from finances.classes.config import Config
 from finances.classes.google_helper import GoogleHelper
@@ -20,6 +19,13 @@ from finances.util.string_helpers import crop, remove_non_numeric
 
 
 class SpreadSheetToSqlite:
+    _SCALARS: Final[dict[str, Callable[[str], Any] | None]] = {
+        "to_boolean_integer": boolean_string_to_int,
+        "to_date": UK_to_ISO,
+        "to_financial": string_to_financial,
+        "to_numeric_str": remove_non_numeric,
+        "to_str": None,
+    }
     def __init__(self) -> None:
         """
         Initialize the converter with Google Sheets credentials and spreadsheet name
@@ -43,13 +49,9 @@ class SpreadSheetToSqlite:
 
         self.sql = SQL_Helper().select_sql_helper("SQLite")
 
-    def apply(df: DataFrame, column_name: str, scalar: AggFuncType) -> None:  # type: ignore
-        return df[column_name].apply(scalar)  # type: ignore
-
-    def read_config(self) -> None:
-        config = Config()
-
-        self.convert_account_tables = config.get("CONVERT_ACCOUNT_TABLES", True)
+    @staticmethod
+    def apply(df: DataFrame, column_name: str, scalar: Callable[[Any], Any]) -> Series: # type: ignore
+        return df[column_name].apply(scalar) # type: ignore
 
     def convert_column_name(self, spreadsheet_column_name: str) -> str:
         sqlite_column_name = valid_sqlalchemy_name(spreadsheet_column_name)
@@ -66,19 +68,12 @@ class SpreadSheetToSqlite:
     def convert_df_col(
         self, df: DataFrame, table_name: str, column_name: str
     ) -> DataFrame:
-        scalars: dict[str, Callable[[str], Any] | None] = {
-            "to_boolean_integer": boolean_string_to_int,
-            "to_date": UK_to_ISO,
-            "to_financial": string_to_financial,
-            "to_numeric_str": remove_non_numeric,
-            "to_str": None,
-        }
 
         to_db = self.get_to_db(table_name, column_name)
-        if to_db not in scalars:
+        if to_db not in self._SCALARS:
             raise ValueError(f"Unexpected to_db value: {to_db}")
 
-        scalar = scalars[to_db]
+        scalar = self._SCALARS[to_db]
         if scalar:
             print(f"Transforming {table_name}.{column_name} using {to_db}")
 
@@ -146,14 +141,18 @@ class SpreadSheetToSqlite:
             "debit",
         ]
 
-    def key_column_not_found(self, sheet_name: str, key_column: str) -> str:
-        return (
-            f"Primary key column '{key_column}' not found in worksheet '{sheet_name}'"
-        )
-        # self.l.debug(f'Written {table_name}')
-
     def get_sqlite_type(self, table_name: str, column_name: str) -> str:
         return field_registry.get_sqlite_type(table_name, column_name)
 
     def get_to_db(self, table_name: str, column_name: str) -> str:
         return field_registry.get_to_db(table_name, column_name)
+
+    def key_column_not_found(self, sheet_name: str, key_column: str) -> str:
+        return (
+            f"Primary key column '{key_column}' not found in worksheet '{sheet_name}'"
+        )
+
+    def read_config(self) -> None:
+        config = Config()
+
+        self.convert_account_tables = config.get("CONVERT_ACCOUNT_TABLES", True)
