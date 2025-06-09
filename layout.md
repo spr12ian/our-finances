@@ -11,10 +11,10 @@ our-finances/
 │   └── analysis.ipynb            # Data insights, charts, etc.
 ├── reports/                      # Generated tax and finance reports
 │   └── README.md
-├── scripts/                      # CLI-level scripts for operations
+├── script/                       # CLI-level scripts for operations
 │   ├── key_check.py              # Checks we have authority to connect to the spreadsheet
 │   ├── analyze_spreadsheet.py    # Get info about fields on spreadsheet
-│   ├── sheets_to_sqlite.py       # Google Sheets to local database from analyzed data
+│   ├── download_sheets_to_sqlite.py  # Google Sheets to local database from analyzed data
 │   ├── generate_reports.py       # Build PDFs for tax, spending
 │   └── sync_counterparties.py    # Reconcile inter-account transactions
 ├── sheets/                       # Apps Script code for menu and automation

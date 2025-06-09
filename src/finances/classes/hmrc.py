@@ -79,7 +79,7 @@ class HMRC:
 
         return are_nics_needed_to_acheive_max_state_pension
 
-    def are_supplementary_pages_enclodsed(self) -> Any:
+    def are_supplementary_pages_enclosed(self) -> Any:
         return self.gbpb(0)
 
     def are_supplementary_pages_enclosed(self) -> Any:

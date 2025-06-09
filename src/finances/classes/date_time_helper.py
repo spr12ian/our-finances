@@ -5,7 +5,7 @@ class DateTimeHelper:
     ISO_DATE_FORMAT = "%Y-%m-%d"
     UK_DATE_FORMAT = "%d/%m/%Y"
 
-    # Function to convert UK date strings (DD/MM/YYYY) to ISO date strings YYYY-MM-DD
+    # Function to convert ISO date strings (YYYY-MM-DD) to UK date strings DD/MM/YYYY
     def ISO_to_UK(self, date_str: str) -> str:
         return self.reformat_date_str(
             date_str, DateTimeHelper.ISO_DATE_FORMAT, DateTimeHelper.UK_DATE_FORMAT

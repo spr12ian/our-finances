@@ -1,10 +1,14 @@
-from sqlalchemy_helper import SQLAlchemyHelper, validate_sqlalchemy_name
+from typing import Any
 
 from finances.classes.query_builder import QueryBuilder
+from finances.classes.sqlalchemy_helper import (
+    SQLAlchemyHelper,
+    validate_sqlalchemy_name,
+)
 
 
 class SQLiteTable:
-    def __init__(self, table_name: str):
+    def __init__(self, table_name: str)->None:
         validate_sqlalchemy_name(table_name)
         self.sql = SQLAlchemyHelper()
         self.table_name = table_name
