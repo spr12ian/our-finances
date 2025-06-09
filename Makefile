@@ -43,6 +43,7 @@ export $(REQUIRED_VARS)
 	check_env \
 	ci \
 	clean \
+	db \
 	freeze \
 	download_sheets_to_sqlite \
 	format \
@@ -157,6 +158,10 @@ key_check: check_env venv
 
 analyze_spreadsheet: check_env venv
 	@$(MAKE) run_with_log ACTION=analyze_spreadsheet COMMAND="$(VPYTHON) -m script.analyze_spreadsheet"
+
+db:
+	@$(MAKE) run_with_log ACTION=db COMMAND="sqlitebrowser $(OUR_FINANCES_SQLITE_DB_NAME) &"
+	@echo "sqlitebrowser $(OUR_FINANCES_SQLITE_DB_NAME) should be running in the background"
 
 download_sheets_to_sqlite: check_env venv
 	@$(MAKE) run_with_log ACTION=download_sheets_to_sqlite COMMAND="$(VPYTHON) -m script.download_sheets_to_sqlite"
