@@ -54,30 +54,33 @@ SELECT
   o.date, 
   UPPER(o.description), 
   UPPER(o.name),
-  o.amount,
+  amount,
   b.id, 
   b.date, 
-  b.description__39488204__bmonzo, 
-  b.cpty, 
-  b.note
+  description__39488204__bmonzo, 
+  cpty, 
+  note
 FROM bmonzo as o join _bmonzo as b
 WHERE o.id = b.id
-and o.date <> b.date;
+AND UPPER(o.description) <> description__39488204__bmonzo
+AND o.date <> b.date;
 
 SELECT 
   o.id, 
   o.date, 
   UPPER(o.description), 
   UPPER(o.name),
-  o.amount,
+  money_in,
   b.id, 
   b.date, 
-  b.description__39488204__bmonzo, 
-  b.cpty, 
-  b.note
+  description__39488204__bmonzo, 
+  cpty, 
+  note,
+  credit
 FROM bmonzo as o join _bmonzo as b
 WHERE o.id = b.id
-and UPPER(o.description) <> b.description__39488204__bmonzo;
+AND UPPER(o.description) <> description__39488204__bmonzo
+AND money_in <> credit;
 
 SELECT b.id, b.date, description__39488204__bmonzo, credit, debit, note, cpty, o.name, o.money_in
 FROM bmonzo as o join _bmonzo as b
