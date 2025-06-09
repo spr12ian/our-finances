@@ -24,6 +24,7 @@ TOP_LEVEL_PACKAGES := \
 	pytest \
 	pyyaml \
 	sqlalchemy \
+	sqlparse \
 	types-PyYAML
 
 REQUIRED_VARS := \
@@ -55,6 +56,7 @@ export $(REQUIRED_VARS)
 	logs \
 	pipx \
 	requirements \
+	run_queries \
 	run_with_log \
 	setup \
 	test_all \
@@ -247,4 +249,7 @@ help:
 
 run:
 	@$(MAKE) run_with_log ACTION=$(ACTION) COMMAND=$(COMMAND)
+
+run_queries: check_env venv
+	@$(MAKE) run_with_log ACTION=execute_sqlite_queries COMMAND="$(VPYTHON) -m script.execute_sqlite_queries $(FILE)"
 

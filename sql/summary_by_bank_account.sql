@@ -1,4 +1,4 @@
--- Query 2: 2025-01 by bank account
+-- Summary by bank account
 SELECT t.key, SUM(credit) as money_in, SUM(debit) as money_out, SUM(credit - debit)
 FROM bank_accounts b JOIN transactions t
 ON b.key = t.key

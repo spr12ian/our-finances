@@ -52,6 +52,9 @@ class SpreadSheetToSqlite:
     @staticmethod
     def apply(df: DataFrame, column_name: str, scalar: Callable[[Any], Any]) -> Series: # type: ignore
         return df[column_name].apply(scalar) # type: ignore
+    
+    def backup_bmonzo(self)->None:
+        pass
 
     def convert_column_name(self, spreadsheet_column_name: str) -> str:
         sqlite_column_name = valid_sqlalchemy_name(spreadsheet_column_name)
@@ -87,12 +90,16 @@ class SpreadSheetToSqlite:
         """
         self.sql.open_connection()
 
+        self.backup_bmonzo()
+
         # Iterate through all worksheets
         for worksheet in self.spreadsheet.worksheets():
             if self.convert_account_tables or not worksheet.title.startswith("_"):
                 self.convert_worksheet(worksheet)
 
                 time.sleep(1.1)  # Prevent Google API rate limiting
+
+        self.backup_bmonzo()
 
         self.sql.close_connection()
 

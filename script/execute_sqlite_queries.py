@@ -1,15 +1,55 @@
-from sqlalchemy import text
-from sqlalchemy_helper import SQLAlchemyHelper
+#!/usr/bin/env python3
 
-with open("queries.sql") as file:
-    queries = file.read().split(";")
+import sqlite3
+import sys
 
-sql = SQLAlchemyHelper()
-session = sql.get_session()
+import sqlparse  # type: ignore
+from script.bootstrap import setup_path
 
-for query in queries:
-    if query.strip():
-        print(query)
-        result = session.execute(text(query))
-        for row in result:
-            print(row)
+setup_path()
+
+from finances.classes.config import Config
+
+if len(sys.argv) < 2:
+    print("Usage: python script.py <filename.sql>")
+    sys.exit(1)
+
+filename = sys.argv[1]
+print(f"Input file: {filename}")
+with open(filename, encoding="utf-8") as file:
+    script = file.read()
+
+config = Config()
+
+conn = sqlite3.connect(config.OUR_FINANCES_SQLITE_DB_NAME)
+cursor = conn.cursor()
+
+# Split script into individual statements safely
+statements = sqlparse.split(script) # type: ignore
+
+for statement in statements:
+    stmt = statement.strip()
+    if not stmt:
+        continue
+    stmt = sqlparse.format( # type: ignore
+        stmt,
+        reindent=True,
+        keyword_case='upper',
+        strip_comments=True
+    )
+    print(f"Executing:\n{stmt}")
+    try:
+        cursor.execute(stmt)
+        if stmt.startswith("SELECT"):
+            rows = cursor.fetchall()
+            print(f"Returned {len(rows)} row(s):")
+            for row in rows:
+                print(row)
+        else:
+            conn.commit()
+    except Exception as e:
+        print(f"⚠️ Error: {e}")
+        conn.rollback()
+
+cursor.close()
+conn.close()
