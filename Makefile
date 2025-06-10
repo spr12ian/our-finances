@@ -167,7 +167,7 @@ db:
 
 download_sheets_to_sqlite: check_env venv
 	@$(MAKE) run_with_log ACTION=download_sheets_to_sqlite COMMAND="$(VPYTHON) -m script.download_sheets_to_sqlite"
-	@echo "sqlitebrowser SQLITE_DATABASE"
+	@echo "sqlitebrowser ${OUR_FINANCES_SQLITE_DB_NAME} or sqlite3 ${OUR_FINANCES_SQLITE_DB_NAME}"
 
 # ============================
 # Testing & Batching
