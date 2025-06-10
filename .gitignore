@@ -11,7 +11,8 @@ scratch.sql
 models.py
 spreadsheet_fields.py
 .logs/
-
+# Ignore VS Code settings by default
+.vscode/*
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
@@ -164,6 +165,9 @@ dmypy.json
 
 # pytype static type analyzer
 .pytype/
+
+# ruff
+.ruff_cache/
 
 # Cython debug symbols
 cython_debug/
