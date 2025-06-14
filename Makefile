@@ -94,18 +94,7 @@ venv:
 # Package installation
 # ============================
 
-pipx: venv
-	@if ! command -v pipx > /dev/null; then \
-		echo "📦 Installing pipx..."; \
-		$(PYTHON) -m pip install --user pipx; \
-		$(PYTHON) -m pipx ensurepath; \
-		echo "Please restart your shell or run 'source ~/.profile' to update PATH."; \
-		exit 1; \
-	else \
-		echo "✅ pipx already installed"; \
-	fi
-
-install_tools: pipx
+install_tools:
 	pipx install --force ruff
 	pipx install --force black
 	pipx install --force mypy

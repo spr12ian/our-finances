@@ -6,19 +6,23 @@ import gspread
 from google.oauth2.service_account import Credentials
 
 from finances.classes.config import Config
+from finances.classes.exception_helper import ExceptionHelper
 
+class GoogleHelperError(ExceptionHelper):
+    pass
 
 class GoogleHelper:
     def __init__(self) -> None:
         self.read_config()
         self.check_config_values()
 
+
     def check_config_values(self) -> None:
         service_account_key_file = Path(self.service_account_key_file)
         if not service_account_key_file.exists():
-            raise FileNotFoundError(
+            raise GoogleHelperError(
                 f"Credentials file '{service_account_key_file}' does not exist."
-            )
+            ) from FileNotFoundError(service_account_key_file)
 
         try:
             with open(service_account_key_file, encoding="utf-8") as f:
@@ -31,6 +35,12 @@ class GoogleHelper:
             raise OSError(
                 f"Error reading service account file '{service_account_key_file}': {e}"
             ) from e
+        
+        spreadsheet_key=self.spreadsheet_key
+        if not spreadsheet_key:
+            raise GoogleHelperError(
+                f"Missing spreadsheet key '{spreadsheet_key}'"
+            ) from OSError(spreadsheet_key)
 
 
     def get_authorized_client(self, scopes: Sequence[str]) -> gspread.Client:
