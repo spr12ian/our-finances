@@ -6,7 +6,10 @@ from typing import Any
 
 # local imports
 from finances.classes.config import Config
+from finances.classes.exception_helper import ExceptionHelper
 
+class SQLiteHelperError(ExceptionHelper):
+    pass
 
 class SQLiteHelper:
     def __init__(self) -> None:
@@ -133,7 +136,7 @@ FROM {table_name}
         query = f"PRAGMA table_info('{table_name}')"
         self.open_connection()
 
-        cursor = self.db_connection.cursor()
+        cursor:sqlite3.Cursor = self.db_connection.cursor()
         cursor.execute(query)
         table_info = cursor.fetchall()
 
@@ -143,14 +146,16 @@ FROM {table_name}
 
     def open_connection(self) -> None:
         # Connect to SQLite database
-        self.db_connection = sqlite3.connect(self.db_path)
+        self.db_connection:sqlite3.Connection = sqlite3.connect(self.db_path)
 
     def read_config(self) -> None:
         config = Config()
 
         db_path = config.get("OUR_FINANCES_SQLITE_DB_NAME")
         if not db_path:
-            raise ValueError(
+            raise SQLiteHelperError(
+                "OUR_FINANCES_SQLITE_DB_NAME is not set in the configuration."
+            ) from ValueError(
                 "OUR_FINANCES_SQLITE_DB_NAME is not set in the configuration."
             )
 

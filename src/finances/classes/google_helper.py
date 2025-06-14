@@ -5,7 +5,7 @@ from pathlib import Path
 import gspread
 from google.oauth2.service_account import Credentials
 
-from finances.classes.config import Config
+from finances.classes.config import Config, ConfigError
 from finances.classes.exception_helper import ExceptionHelper
 
 class GoogleHelperError(ExceptionHelper):
@@ -72,9 +72,11 @@ class GoogleHelper:
     def read_config(self) -> None:
         config = Config()
 
-        # Google Cloud Service credentials
-        service_account_key_file = config.GOOGLE_SERVICE_ACCOUNT_KEY_FILE
-        self.service_account_key_file = service_account_key_file
-
-        spreadsheet_key = config.OUR_FINANCES_DRIVE_KEY
-        self.spreadsheet_key = spreadsheet_key
+        try:
+            # Google Cloud Service credentials
+            self.service_account_key_file = config.GOOGLE_SERVICE_ACCOUNT_KEY_FILE
+            self.spreadsheet_key = config.GOOGLE_DRIVE_OUR_FINANCES_KEY
+        except ConfigError as e:            
+            raise GoogleHelperError(
+                f"Config error"
+            ) from e

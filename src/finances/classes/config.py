@@ -1,6 +1,10 @@
 import os
 from typing import Any
 
+from finances.classes.exception_helper import ExceptionHelper
+
+class ConfigError(ExceptionHelper):
+    pass
 
 class Config:
     def __init__(self) -> None:
@@ -9,9 +13,10 @@ class Config:
     def __getattr__(self, name: str) -> Any:
         if name in self._data:
             return self._data[name]
-        raise AttributeError(
-            f"'{self.__class__.__name__}' object has no attribute '{name}'"
-        )
+        raise ConfigError(f"Environment variable '{name}' not found")
+
+    def __repr__(self) -> str:
+        return f"<Config with {len(self._data)} environment variables>"
 
     def dump(self, prefix: str = "") -> None:
         for k, v in sorted(self._data.items()):
@@ -28,6 +33,10 @@ class Config:
         if default is not None:
             return default
 
-        raise AttributeError(
-            f"'{self.__class__.__name__}' object has no attribute '{name}'"
-        )
+        raise ConfigError(f"Environment variable '{name}' not found")
+    
+    def getOptional(self, name: str) -> Any:
+        return self.get(name, default=None)
+
+    def has(self, name: str) -> bool:
+        return name in self._data
