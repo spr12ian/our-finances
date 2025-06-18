@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 # Check if DEBUG is set to true
 if [ "$DEBUG" = "true" ]; then
