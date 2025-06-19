@@ -58,6 +58,7 @@ TOP_LEVEL_PACKAGES := \
 	download_sheets_to_sqlite \
 	format \
 	format_check \
+	generate_reports \
 	info \
 	install_tools \
 	key_check \
@@ -165,6 +166,9 @@ db:
 download_sheets_to_sqlite: check_env venv ## Download the spreadsheet into an SQLite database
 	@$(MAKE) run_with_log ACTION=download_sheets_to_sqlite COMMAND="$(VPYTHON) -m scripts.download_sheets_to_sqlite"
 	@echo "sqlitebrowser ${SQLITE_OUR_FINANCES_DB_NAME} or sqlite3 ${SQLITE_OUR_FINANCES_DB_NAME}"
+
+generate_reports: check_env venv ## Create reports from the database spreadsheet data
+	@$(MAKE) run_with_log ACTION=generate_reports COMMAND="$(VPYTHON) -m scripts.generate_reports"
 
 # ============================
 # Testing & Batching

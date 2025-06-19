@@ -1,7 +1,11 @@
+from scripts.bootstrap import setup_path
+
+setup_path()
+
 from datetime import datetime
 
-from hmrc import HMRC
-from table_hmrc_questions_by_year import HMRC_QuestionsByYear
+from finances.classes.hmrc import HMRC
+from finances.classes.table_hmrc_questions_by_year import HMRC_QuestionsByYear
 
 
 def check_questions(tax_year: str) -> None:
