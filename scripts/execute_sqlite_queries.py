@@ -4,7 +4,7 @@ import sqlite3
 import sys
 
 import sqlparse  # type: ignore
-from script.bootstrap import setup_path
+from scripts.bootstrap import setup_path
 
 setup_path()
 
@@ -25,17 +25,14 @@ conn = sqlite3.connect(config.OUR_FINANCES_SQLITE_DB_NAME)
 cursor = conn.cursor()
 
 # Split script into individual statements safely
-statements = sqlparse.split(script) # type: ignore
+statements = sqlparse.split(script)  # type: ignore
 
 for statement in statements:
     stmt = statement.strip()
     if not stmt:
         continue
-    stmt = sqlparse.format( # type: ignore
-        stmt,
-        reindent=True,
-        keyword_case='upper',
-        strip_comments=True
+    stmt = sqlparse.format(  # type: ignore
+        stmt, reindent=True, keyword_case="upper", strip_comments=True
     )
     print(f"Executing:\n{stmt}")
     try:

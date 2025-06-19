@@ -10,7 +10,8 @@ SHELL := /bin/bash
 ENV_FILE := $(HOME)/.env
 include_env = . $(ENV_FILE) >/dev/null 2>&1 &&
 
-GOOGLE_SERVICE_ACCOUNT_KEY ?= service-account.json
+GOOGLE_SERVICE_ACCOUNT_KEY_FILE ?= service-account.json
+SQLITE_DB_LOCATION ?= data/processed
 
 VENV_DIR := .venv
 PYTHON := python3
@@ -18,10 +19,10 @@ VPYTHON := $(VENV_DIR)/bin/python
 PIP := $(VENV_DIR)/bin/pip
 
 REQUIRED_VARS := \
-  OUR_FINANCES_DRIVE_KEY \
+  GOOGLE_DRIVE_OUR_FINANCES_KEY \
 	GOOGLE_SERVICE_ACCOUNT_KEY_FILE \
-	OUR_FINANCES_SQLITE_DB_NAME \
-	OUR_FINANCES_SQLITE_ECHO_ENABLED
+	SQLITE_DB_LOCATION \
+	SQLITE_OUR_FINANCES_DB_NAME
 export $(REQUIRED_VARS)
 
 REQUIREMENTS := requirements.txt
@@ -90,7 +91,7 @@ setup: clean requirements install_tools ## Set up the environment and tools
 # ============================
 
 venv: ## Create virtual environment if missing
-	@echo "🔧 Creating virtual environment in $(VENV_DIR) if it doesn't exist..." \
+	@echo "🔧 Creating virtual environment in $(VENV_DIR) if it doesn't exist..."; \
 	if [ ! -d "$(VENV_DIR)" ]; then \
 		$(PYTHON) -m venv $(VENV_DIR); \
 		echo "✅ Created virtual environment"; \
@@ -131,7 +132,7 @@ freeze:
 # ============================
 
 info:
-	@echo "OUR_FINANCES_DRIVE_KEY=$(OUR_FINANCES_DRIVE_KEY)"
+	@echo "GOOGLE_DRIVE_OUR_FINANCES_KEY=$(GOOGLE_DRIVE_OUR_FINANCES_KEY)"
 	@echo "GOOGLE_SERVICE_ACCOUNT_KEY_FILE=$(GOOGLE_SERVICE_ACCOUNT_KEY_FILE)"
 
 clean: logs ## Cleanup the directory
@@ -151,19 +152,19 @@ clean: logs ## Cleanup the directory
 # scripts
 # ============================
 
-key_check: check_env venv
+key_check: check_env venv ## Run key_check to test connection to the spreadsheet
 	@$(MAKE) run_with_log ACTION=key_check COMMAND="$(VPYTHON) -m scripts.key_check"
 
-analyze_spreadsheet: check_env venv
+analyze_spreadsheet: check_env venv ## Analyze the spreadsheet prior to downloading it
 	@$(MAKE) run_with_log ACTION=analyze_spreadsheet COMMAND="$(VPYTHON) -m scripts.analyze_spreadsheet"
 
 db:
-	@$(MAKE) run_with_log ACTION=db COMMAND="sqlitebrowser $(OUR_FINANCES_SQLITE_DB_NAME) &"
-	@echo "sqlitebrowser $(OUR_FINANCES_SQLITE_DB_NAME) should be running in the background"
+	@$(MAKE) run_with_log ACTION=db COMMAND="sqlitebrowser $(SQLITE_OUR_FINANCES_DB_NAME) &;" \
+	echo "sqlitebrowser $(SQLITE_OUR_FINANCES_DB_NAME) should be running in the background"
 
-download_sheets_to_sqlite: check_env venv
+download_sheets_to_sqlite: check_env venv ## Download the spreadsheet into an SQLite database
 	@$(MAKE) run_with_log ACTION=download_sheets_to_sqlite COMMAND="$(VPYTHON) -m scripts.download_sheets_to_sqlite"
-	@echo "sqlitebrowser ${OUR_FINANCES_SQLITE_DB_NAME} or sqlite3 ${OUR_FINANCES_SQLITE_DB_NAME}"
+	@echo "sqlitebrowser ${SQLITE_OUR_FINANCES_DB_NAME} or sqlite3 ${SQLITE_OUR_FINANCES_DB_NAME}"
 
 # ============================
 # Testing & Batching
@@ -222,15 +223,23 @@ types: logs ## Type check source code using Mypy
 	echo "🔎 Type checking with mypy..." | tee "$$log_file"; \
 	mypy --explicit-package-bases $(SRC) | tee -a "$$log_file"
 
-check_env:
-	@for var in $$REQUIRED_VARS; do \
+check_env: ## Check that required environment variables are set
+	@missing=0; \
+	for var in $(REQUIRED_VARS); do \
 		if [ -z "$${!var}" ]; then \
-			echo "❌ Environment variable $$var is not set."; \
-			exit 1; \
+			echo "❌ Environment variable '$$var' is not set."; \
+			missing=1; \
 		else \
 			echo "✅ $$var is set."; \
 		fi; \
-	done
+	done; \
+	if [ "$$missing" -eq 1 ]; then \
+		echo "⚠️  One or more required environment variables are missing."; \
+		exit 1; \
+	else \
+		echo "✅ All required environment variables are set."; \
+	fi
+
 
 logs:
 	@install -d logs

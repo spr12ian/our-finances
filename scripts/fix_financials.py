@@ -1,4 +1,4 @@
-from script.bootstrap import setup_path
+from scripts.bootstrap import setup_path
 
 setup_path()
 
@@ -53,7 +53,6 @@ class SpreadsheetToSqliteDb:
         self.sql.close_connection()
 
     def convert_worksheet(self, worksheet: Worksheet) -> None:
-
         table_name = valid_sqlalchemy_name(worksheet.title)
 
         pdh = self.pdh

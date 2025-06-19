@@ -1,4 +1,6 @@
 # standard library imports
+import os
+
 # pip install imports
 import sqlite3
 from decimal import Decimal
@@ -7,6 +9,7 @@ from typing import Any
 # local imports
 from finances.classes.config import Config
 from finances.classes.exception_helper import ExceptionHelper
+
 
 class SQLiteHelperError(ExceptionHelper):
     pass
@@ -151,15 +154,29 @@ FROM {table_name}
     def read_config(self) -> None:
         config = Config()
 
-        db_path = config.get("OUR_FINANCES_SQLITE_DB_NAME")
-        if not db_path:
+        db_name = config.get("SQLITE_OUR_FINANCES_DB_NAME")
+        if not db_name:
             raise SQLiteHelperError(
-                "OUR_FINANCES_SQLITE_DB_NAME is not set in the configuration."
+                "SQLITE_OUR_FINANCES_DB_NAME is not set in the configuration."
             ) from ValueError(
-                "OUR_FINANCES_SQLITE_DB_NAME is not set in the configuration."
+                "SQLITE_OUR_FINANCES_DB_NAME is not set in the configuration."
             )
 
-        self.db_path = db_path
+        self.db_name = db_name
+
+        db_location = config.get("SQLITE_DB_LOCATION")
+        if not db_location:
+            raise SQLiteHelperError(
+                "SQLITE_DB_LOCATION is not set in the configuration."
+            ) from ValueError(
+                "SQLITE_DB_LOCATION is not set in the configuration."
+            )
+
+        self.db_location = db_location
+
+        os.makedirs(db_location, exist_ok=True)
+
+        self.db_path = db_location + "/" + db_name + ".sqlite"
 
     def rename_column(
         self, table_name: str, old_column_name: str, new_column_name: str

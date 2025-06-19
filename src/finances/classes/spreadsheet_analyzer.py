@@ -1,4 +1,4 @@
-from script.bootstrap import setup_path
+from scripts.bootstrap import setup_path
 
 setup_path()
 
@@ -85,7 +85,6 @@ class SpreadsheetAnalyzer:
             time.sleep(1.1)  # Prevent Google API rate limiting
 
     def analyze_worksheet(self, worksheet: Worksheet) -> None:
-
         self.all_sheet_names.append(worksheet.title)
         if worksheet.title.startswith("_"):
             self.account_sheet_names.append(worksheet.title)
@@ -103,7 +102,6 @@ class SpreadsheetAnalyzer:
     def get_column_types(
         self, table_name: str, spreadsheet_column_name: str
     ) -> SpreadsheetField:
-
         # sqlite_type is used to write the spreadsheet column value to the database
         # The sqlite_type may cause the spreadsheet string to be transformed
 
@@ -173,7 +171,7 @@ class SpreadsheetAnalyzer:
         self.write_lines("account_sheet_names.py", lines)
 
     def write_field_registry_py(self) -> None:
-        pre_pre_prefix=self.get_pre_pre_prefix()
+        pre_pre_prefix = self.get_pre_pre_prefix()
         lines = [pre_pre_prefix]
         prefix = Path("data/raw/field_registry_prefix.py").read_text()
         lines.append(prefix)

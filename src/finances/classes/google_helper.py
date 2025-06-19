@@ -8,6 +8,7 @@ from google.oauth2.service_account import Credentials
 from finances.classes.config import Config, ConfigError
 from finances.classes.exception_helper import ExceptionHelper
 
+
 class GoogleHelperError(ExceptionHelper):
     pass
 
@@ -35,7 +36,7 @@ class GoogleHelper:
             raise OSError(
                 f"Error reading service account file '{service_account_key_file}': {e}"
             ) from e
-        
+
         spreadsheet_key=self.spreadsheet_key
         if not spreadsheet_key:
             raise GoogleHelperError(
@@ -76,7 +77,7 @@ class GoogleHelper:
             # Google Cloud Service credentials
             self.service_account_key_file = config.GOOGLE_SERVICE_ACCOUNT_KEY_FILE
             self.spreadsheet_key = config.GOOGLE_DRIVE_OUR_FINANCES_KEY
-        except ConfigError as e:            
+        except ConfigError as e:
             raise GoogleHelperError(
                 f"Config error"
             ) from e

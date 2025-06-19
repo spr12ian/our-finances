@@ -1,4 +1,4 @@
-from script.bootstrap import setup_path
+from scripts.bootstrap import setup_path
 
 setup_path()
 

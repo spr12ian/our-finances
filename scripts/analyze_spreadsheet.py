@@ -1,4 +1,4 @@
-from script.bootstrap import setup_path
+from scripts.bootstrap import setup_path
 
 setup_path()
 
@@ -8,7 +8,6 @@ from finances.classes.spreadsheet_analyzer import SpreadsheetAnalyzer
 
 
 def main() -> None:
-
     analyzer = SpreadsheetAnalyzer()
 
     # Analyze spreadsheet
