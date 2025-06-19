@@ -7,13 +7,27 @@ endif
 # ============================
 SHELL := /bin/bash
 
+ENV_FILE := $(HOME)/.env
+include_env = . $(ENV_FILE) >/dev/null 2>&1 &&
+
 GOOGLE_SERVICE_ACCOUNT_KEY ?= service-account.json
 
 VENV_DIR := .venv
 PYTHON := python3
 VPYTHON := $(VENV_DIR)/bin/python
 PIP := $(VENV_DIR)/bin/pip
+
+REQUIRED_VARS := \
+  OUR_FINANCES_DRIVE_KEY \
+	GOOGLE_SERVICE_ACCOUNT_KEY_FILE \
+	OUR_FINANCES_SQLITE_DB_NAME \
+	OUR_FINANCES_SQLITE_ECHO_ENABLED
+export $(REQUIRED_VARS)
+
 REQUIREMENTS := requirements.txt
+
+# Project source locations
+SRC := src scripts tests
 
 TOP_LEVEL_PACKAGES := \
 	google-auth \
@@ -27,20 +41,14 @@ TOP_LEVEL_PACKAGES := \
 	sqlparse \
 	types-PyYAML
 
-REQUIRED_VARS := \
-  OUR_FINANCES_DRIVE_KEY \
-	GOOGLE_SERVICE_ACCOUNT_KEY_FILE \
-	OUR_FINANCES_SQLITE_DB_NAME \
-	OUR_FINANCES_SQLITE_ECHO_ENABLED
-export $(REQUIRED_VARS)
-
-.DEFAULT_GOAL := all
+.DEFAULT_GOAL := help
 
 .PHONY: \
 	activate \
 	all \
 	analyze_spreadsheet \
 	batch \
+	check \
 	check_env \
 	ci \
 	clean \
@@ -71,19 +79,19 @@ export $(REQUIRED_VARS)
 all: setup test_only
 
 activate: venv
-	@echo "Run this to activate the virtual environment:"
-	@echo "source $(VENV_DIR)/bin/activate"
+	@echo "Run this to activate the virtual environment:" \
+	echo "source $(VENV_DIR)/bin/activate"
 
-setup: requirements install_tools ## Set up the environment and tools
+setup: clean requirements install_tools ## Set up the environment and tools
 	@echo "✅ Setup complete."
 
 # ============================
 # Virtual environment
 # ============================
 
-venv:
-	@echo "🔧 Creating virtual environment in $(VENV_DIR) if it doesn't exist..."
-	@if [ ! -d "$(VENV_DIR)" ]; then \
+venv: ## Create virtual environment if missing
+	@echo "🔧 Creating virtual environment in $(VENV_DIR) if it doesn't exist..." \
+	if [ ! -d "$(VENV_DIR)" ]; then \
 		$(PYTHON) -m venv $(VENV_DIR); \
 		echo "✅ Created virtual environment"; \
 	else \
@@ -96,7 +104,6 @@ venv:
 
 install_tools:
 	pipx install --force ruff
-	pipx install --force black
 	pipx install --force mypy
 
 requirements: venv
@@ -127,13 +134,13 @@ info:
 	@echo "OUR_FINANCES_DRIVE_KEY=$(OUR_FINANCES_DRIVE_KEY)"
 	@echo "GOOGLE_SERVICE_ACCOUNT_KEY_FILE=$(GOOGLE_SERVICE_ACCOUNT_KEY_FILE)"
 
-clean: logs
+clean: logs ## Cleanup the directory
 	@echo "🧹 Removing virtual environment..."
 	@rm -rf $(VENV_DIR)
 	@echo "🧹 Removing all __pycache__ directories..."
 	@find . -type d -name '__pycache__' -exec rm -rf {} +
 	@echo "🧹 Removing .mypy_cache directory..."
-	@rm -rf .mypy_cache
+	@rm -rf .mypy_cache .ruff_cache .pytest_cache
 	@echo "🧹 Removing log files..."
 	@find . -type f -name '*.log' -print | tee logs/deleted_logs.txt | xargs -r rm -f
 	@echo "🧹 Removing requirements.txt ..."
@@ -141,21 +148,21 @@ clean: logs
 	@echo "✅ Cleaned all caches and virtual environment."
 
 # ============================
-# script
+# scripts
 # ============================
 
 key_check: check_env venv
-	@$(MAKE) run_with_log ACTION=key_check COMMAND="$(VPYTHON) -m script.key_check"
+	@$(MAKE) run_with_log ACTION=key_check COMMAND="$(VPYTHON) -m scripts.key_check"
 
 analyze_spreadsheet: check_env venv
-	@$(MAKE) run_with_log ACTION=analyze_spreadsheet COMMAND="$(VPYTHON) -m script.analyze_spreadsheet"
+	@$(MAKE) run_with_log ACTION=analyze_spreadsheet COMMAND="$(VPYTHON) -m scripts.analyze_spreadsheet"
 
 db:
 	@$(MAKE) run_with_log ACTION=db COMMAND="sqlitebrowser $(OUR_FINANCES_SQLITE_DB_NAME) &"
 	@echo "sqlitebrowser $(OUR_FINANCES_SQLITE_DB_NAME) should be running in the background"
 
 download_sheets_to_sqlite: check_env venv
-	@$(MAKE) run_with_log ACTION=download_sheets_to_sqlite COMMAND="$(VPYTHON) -m script.download_sheets_to_sqlite"
+	@$(MAKE) run_with_log ACTION=download_sheets_to_sqlite COMMAND="$(VPYTHON) -m scripts.download_sheets_to_sqlite"
 	@echo "sqlitebrowser ${OUR_FINANCES_SQLITE_DB_NAME} or sqlite3 ${OUR_FINANCES_SQLITE_DB_NAME}"
 
 # ============================
@@ -182,36 +189,38 @@ test: lint format types test_only
 # Linting & Formatting
 # ============================
 
-lint: logs
+check: lint format_check types test_only ## Run all static analysis and tests
+	@echo "✅ All checks passed."
+
+lint: logs ## Lint Python code with Ruff
 	@log_file="logs/lint.log"; \
 	echo "🔍 Linting with ruff..." | tee "$$log_file"; \
-	ruff check src script tests | tee -a "$$log_file"
+	$(include_env) ruff check ${SRC} | tee -a "$$log_file"
 
-
-format: logs
+format: logs ## Format Python code with Ruff
 	@log_file="logs/format.log"; \
-	echo "🎨 Formatting with black..." | tee "$$log_file"; \
-	black src script tests | tee -a "$$log_file"
+	echo "🎨 Formatting with ruff..." | tee "$$log_file"; \
+	$(include_env) ruff format $(SRC) | tee -a "$$log_file"
 
-format_check: logs
+format_check: logs ## Check formatting with Ruff (no changes made)
 	@log_file="logs/format_check.log"; \
-	echo "🎨 Checking formatting with black (check mode)..." | tee "$$log_file"; \
-	black --check --diff src script tests | tee -a "$$log_file"
+	echo "🎨 Checking formatting with ruff (check mode)..." | tee "$$log_file"; \
+	$(include_env) ruff format --check --diff $(SRC) | tee -a "$$log_file"
 
 test_all: venv
 	@echo "🧪 Running pytest..."
 	@$(VPYTHON) -m pytest --maxfail=1 --disable-warnings -q
 
-test_only: venv logs
+test_only: venv logs ## Run only the test suite
 	@log_file="logs/test_only.log"; \
-	@echo "🧪 Running isolated unit tests..." | tee "$$log_file"; \
+	echo "🧪 Running isolated unit tests..." | tee "$$log_file"; \
 	$(VPYTHON) -m pytest tests --maxfail=1 --disable-warnings -q | tee -a "$$log_file"
 	echo "✅ Unit tests complete." | tee -a "$$log_file"
 
-types: logs
+types: logs ## Type check source code using Mypy
 	@log_file="logs/types.log"; \
 	echo "🔎 Type checking with mypy..." | tee "$$log_file"; \
-	mypy --explicit-package-bases src script tests | tee -a "$$log_file"
+	mypy --explicit-package-bases $(SRC) | tee -a "$$log_file"
 
 check_env:
 	@for var in $$REQUIRED_VARS; do \
@@ -234,11 +243,12 @@ run_with_log: logs
 
 help:
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | \
-		awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-30s\033[0m %s\n", $$1, $$2}'
+	sort | \
+	awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-30s\033[0m %s\n", $$1, $$2}'
 
 run:
 	@$(MAKE) run_with_log ACTION=$(ACTION) COMMAND=$(COMMAND)
 
 run_queries: check_env venv
-	@$(MAKE) run_with_log ACTION=execute_sqlite_queries COMMAND="$(VPYTHON) -m script.execute_sqlite_queries $(FILE)"
+	@$(MAKE) run_with_log ACTION=execute_sqlite_queries COMMAND="$(VPYTHON) -m scripts.execute_sqlite_queries $(FILE)"
 

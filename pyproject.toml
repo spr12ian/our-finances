@@ -1,24 +1,9 @@
-[tool.black]
-line-length = 88
-target-version = ["py310"]  # Black only accepts up to py310 for now
-include = '\.pyi?$'
-exclude = '''
-/(
-    \.venv
-  | __pycache__
-  | build
-  | dist
-)/
-'''
-
-[tool.isort]
-profile = "black"
-
 [tool.ruff]
+extend-select = ["I"]  # optional: enable import sorting (like isort)
 line-length = 88
 src = ["src", "scripts"]
 extend-exclude = ["tests/data", "scripts/old"]
-target-version = "py310"
+target-version = "py312"
 
 [tool.ruff.lint]
 select = ["E", "F", "I", "UP", "ANN"]  # Style, bugs, import order, upgrades, annotations
@@ -26,6 +11,8 @@ ignore = ["ANN401","E402"]  # Allow non-top-level imports (e.g., bootstrap.py)
 fixable = ["ALL"]
 
 [tool.ruff.format]
+indent-style = "space"
+line-ending = "auto"
 quote-style = "double"
 
 

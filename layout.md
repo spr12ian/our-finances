@@ -39,7 +39,7 @@ our-finances/
 # .vscode/settings.json
 {
   "python.pythonPath": "venv/bin/python",
-  "python.formatting.provider": "black",
+  "python.formatting.provider": "none",
   "python.linting.flake8Enabled": true,
   "python.testing.pytestEnabled": true
 }
