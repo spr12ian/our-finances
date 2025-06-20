@@ -1,5 +1,4 @@
-import our_finances.util.financial_helpers as uf
-from tables import *
+import finances.util.financial_helpers as uf
 
 
 class HMRC_Output:
@@ -130,7 +129,7 @@ class HMRC_Output:
         )
 
         # Log the generated file name
-        self.l.info(f"Generated report file name: {report_file_name}")
+        print(f"Generated report file name: {report_file_name}")
 
         # Create or overwrite the file to ensure it's empty
         try:

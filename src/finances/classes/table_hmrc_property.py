@@ -18,7 +18,6 @@ class HMRC_Property(SQLiteTable):
         return result
 
     def __init__(self, postcode):
-        self.l = LogHelper("HMRC_Property")
         self.l.set_level_debug()
         super().__init__("hmrc_property")
         self.postcode = postcode

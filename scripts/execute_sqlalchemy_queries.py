@@ -1,4 +1,4 @@
-import our_finances.util.financial_helpers as uf
+import finances.util.financial_helpers as uf
 from helper_date_time import DateTimeHelper
 from models import AccountBalances, BankAccounts, Transactions
 from sqlalchemy import DECIMAL, cast, func, not_

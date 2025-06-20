@@ -1,7 +1,6 @@
 from decimal import Decimal
 
-import our_finances.util.financial_helpers as uf
-
+import finances.util.financial_helpers as uf
 from finances.classes.sqlite_table import SQLiteTable
 
 

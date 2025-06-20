@@ -7,7 +7,7 @@ from sqlalchemy.orm import Session, sessionmaker
 
 # local imports
 from finances.classes.config import Config
-from finances.util.string_helpers import to_valid_method_name
+from finances.util.string_helpers import to_method_name
 
 
 class SQLAlchemyHelper:
@@ -19,15 +19,19 @@ class SQLAlchemyHelper:
 
     def read_config(self) -> None:
         config = Config()
-    
+
         database_url = config.get("OUR_FINANCES_SQLITE_DB_NAME")
         if not database_url:
-            raise ValueError("OUR_FINANCES_SQLITE_DB_NAME is not set in the configuration.")
+            raise ValueError(
+                "OUR_FINANCES_SQLITE_DB_NAME is not set in the configuration."
+            )
         self.database_url = database_url
 
         is_echo_enabled = config.get("OUR_FINANCES_SQLITE_ECHO_ENABLED")
         if not is_echo_enabled:
-            raise ValueError("OUR_FINANCES_SQLITE_ECHO_ENABLED is not set in the configuration.")
+            raise ValueError(
+                "OUR_FINANCES_SQLITE_ECHO_ENABLED is not set in the configuration."
+            )
         self.is_echo_enabled = is_echo_enabled
 
     def fetch_one_value(self, query: str) -> Any:
@@ -51,7 +55,7 @@ class SQLAlchemyHelper:
     def get_session(self) -> Any:
         return Session(self.engine)
 
-    def get_table_info(self, table_name:str)->Sequence[Row[Any]]:
+    def get_table_info(self, table_name: str) -> Sequence[Row[Any]]:
         text_clause = text(f"PRAGMA table_info('{table_name}')")
 
         # Open a session
@@ -66,7 +70,7 @@ class SQLAlchemyHelper:
 
         return table_info
 
-    def text_to_real(self, table_name:str, column_name:str)->None:
+    def text_to_real(self, table_name: str, column_name: str) -> None:
         table_info = self.get_table_info(table_name)
 
         column_type = None
@@ -88,7 +92,7 @@ class SQLAlchemyHelper:
 
 
 def valid_sqlalchemy_name(name: str) -> str:
-    valid_method_name = to_valid_method_name(name)
+    valid_method_name = to_method_name(name)
 
     return valid_method_name
 
@@ -99,7 +103,6 @@ def validate_sqlalchemy_name(name: str) -> None:
 
 
 def clean_column_names(df):
-
     df.columns = [valid_sqlalchemy_name(col) for col in df.columns]
     return df
 

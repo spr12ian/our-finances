@@ -12,6 +12,7 @@ include_env = . $(ENV_FILE) >/dev/null 2>&1 &&
 
 GOOGLE_SERVICE_ACCOUNT_KEY_FILE ?= service-account.json
 SQLITE_DB_LOCATION ?= data/processed
+SQLITE_OUR_FINANCES_DB_NAME ?= our_finances
 
 VENV_DIR := .venv
 PYTHON := python3

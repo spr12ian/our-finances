@@ -1,7 +1,7 @@
 # standard imports
 from datetime import datetime
 from decimal import Decimal
-from typing import TYPE_CHECKING
+from typing import Any, TYPE_CHECKING
 
 if TYPE_CHECKING:
     from finances.classes.hmrc import HMRC

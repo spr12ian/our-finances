@@ -1,6 +1,7 @@
 # standard imports
 from decimal import Decimal
 from functools import cache
+from typing import Any
 
 # local imports
 from finances.classes.hmrc_calculation import HMRC_Calculation
@@ -8,7 +9,7 @@ from finances.classes.hmrc_output import HMRC_Output
 from finances.classes.hmrc_people import HMRC_People
 from finances.classes.sql_helper import SQL_Helper
 from finances.classes.sqlalchemy_helper import valid_sqlalchemy_name
-from finances.generated.tables import *
+from finances.classes.table_categories import Categories
 from finances.util import boolean_helpers, financial_helpers
 
 
@@ -291,7 +292,7 @@ class HMRC:
         try:
             return self.overrides.deduct_trading_expenses()
         except ValueError as v:
-            self.l.info(v)
+            print(v)
             raise
 
     def did_business_details_change(self) -> Any:
@@ -801,8 +802,6 @@ class HMRC:
         category_like = "UKP expense: cost of replacing domestic items"
         cost_to_replace_residential_domestic_items = (
             self.get_total_transactions_by_category_like(category_like)
-        )
-            f"cost_to_replace_residential_domestic_items: {cost_to_replace_residential_domestic_items}"
         )
         return self.round_up(cost_to_replace_residential_domestic_items)
 
@@ -1334,8 +1333,7 @@ class HMRC:
             spouse_hmrc.get_marriage_allowance_donor_amount()
         )
         spouse_hmrc.enable_debug()
-            f"marriage_allowance_recipient_amount: {marriage_allowance_recipient_amount}"
-        )
+
         return marriage_allowance_recipient_amount
 
     def get_marriage_allowance_recipient_amount_gbp(self) -> str:
@@ -2616,7 +2614,6 @@ class HMRC:
             trading_allowance = self.get_trading_allowance_actual()
             trading_expenses = self.get_trading_expenses_actual()
             value = trading_allowance > trading_expenses
-        finally:
 
         return value
 
@@ -2624,7 +2621,7 @@ class HMRC:
         try:
             return self.overrides.use_trading_allowance()
         except ValueError as v:
-            self.l.info(v)
+            print(v)
             raise
 
     def were_any_repayments_claimed_for_next_year(self) -> Any:

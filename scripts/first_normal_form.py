@@ -2,12 +2,6 @@ import re
 import sqlite3
 from typing import Any
 
-from finances.classes.log_helper import LogHelper
-
-l = LogHelper(__file__)
-l.set_level_debug()
-l.debug(__file__)
-
 
 def analyze_1nf(db_path: str) -> dict[str, list[dict[str, Any]]]:
     """
@@ -95,9 +89,7 @@ def check_composite_values(
     """
     Checks for potential composite values (comma-separated lists, JSON-like strings, etc.)
     """
-    l.debug("check_composite_values")
-    l.debug(f"table-Name: {table_name}")
-    l.debug(f"column_name: {column_name}")
+
     ignore_composites_with = ["description", "note", "query"]
 
     for starts_with in ignore_composites_with:

@@ -28,7 +28,6 @@ class HMRC_ConstantAmountsByYear(SQLiteTable):
         return Decimal(result)
 
     def __init__(self, tax_year):
-        self.l = LogHelper("HMRC_ConstantAmountsByYear")
         self.l.set_level_debug()
         super().__init__("hmrc_constant_amounts_by_year")
         self.tax_year = tax_year

@@ -1,4 +1,4 @@
-import our_finances.util.financial_helpers as uf
+import finances.util.financial_helpers as uf
 from sqlalchemy_helper import valid_sqlalchemy_name, validate_sqlalchemy_name
 
 from finances.classes.sqlite_table import SQLiteTable
@@ -19,16 +19,14 @@ class HMRC_QuestionsByYear(SQLiteTable):
         "Were ",
     ]
 
-    def _get_table_name(self, tax_year):
+    def _get_table_name(self, tax_year:str)->str:
         sanitised_tax_year = valid_sqlalchemy_name(tax_year)
 
         table_name = f"hmrc_questions{sanitised_tax_year}"
 
         return table_name
 
-    def __init__(self, tax_year):
-        self.l = LogHelper("HMRC_QuestionsByYear")
-        # self.l.set_level_debug()
+    def __init__(self, tax_year:str)->None:
 
         table_name = self._get_table_name(tax_year)
 
@@ -66,7 +64,7 @@ class HMRC_QuestionsByYear(SQLiteTable):
     def convert_columns_to_string(self, columns):
         return ", ".join([f'q1."{column}"' for column in columns])
 
-    def check_questions(self) -> Any:
+    def check_questions(self) -> None:
 
         self.list_unused_questions()
 
@@ -86,7 +84,7 @@ class HMRC_QuestionsByYear(SQLiteTable):
         if how_many_rows > 0:
             for row in rows:
 
-    def list_unused_questions(self) -> Any:
+    def list_unused_questions(self) -> None:
         table_name = self.table_name
         core_questions = "hmrc_questions"
         query = (
@@ -98,9 +96,9 @@ class HMRC_QuestionsByYear(SQLiteTable):
         rows = self.sql.fetch_all(query)
         how_many_rows = len(rows)
         if how_many_rows > 0:
-            self.l.info(f"{how_many_rows} unused questions")
+            print(f"{how_many_rows} unused questions")
             for row in rows:
-                self.l.info(row)
+                print(row)
 
     def get_hmrc_calculation_questions(self) -> Any:
         questions = [
@@ -134,7 +132,7 @@ class HMRC_QuestionsByYear(SQLiteTable):
         return any(question.startswith(q) for q in self.yes_no_questions)
 
     def to_method_name(self, question):
-        reformatted_question = uf.to_valid_method_name(question)
+        reformatted_question = uf.to_method_name(question)
 
         if self.is_it_a_yes_no_question(question):
             method_name = reformatted_question
