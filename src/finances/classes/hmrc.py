@@ -5,7 +5,7 @@ from typing import Any
 
 # local imports
 from finances.classes.hmrc_calculation import HMRC_Calculation
-from finances.classes.hmrc_output import HMRC_Output
+from finances.classes.hmrc_output import HMRCOutput
 from finances.classes.hmrc_people import HMRC_People
 from finances.classes.sql_helper import SQL_Helper
 from finances.classes.sqlalchemy_helper import to_sqlalchemy_name
@@ -72,7 +72,7 @@ class HMRC:
     def are_supplementary_pages_enclosed(self) -> bool:
         return False
 
-    def are_there_digest_transactions(self, digest_type:str) -> bool:
+    def are_there_digest_transactions(self, digest_type: str) -> bool:
         digest_category_like = self.get_digest_type_categories()[digest_type]
         person_code = self.person.code
         tax_year = self.tax_year
@@ -295,10 +295,10 @@ class HMRC:
             print(v)
             raise
 
-    def did_business_details_change(self) -> Any:
+    def did_business_details_change(self) -> bool:
         return False
 
-    def did_none_of_these_apply__business_1_page_1__(self) -> Any:
+    def did_none_of_these_apply__business_1_page_1__(self) -> bool:
         conditions = [
             self.are_you_a_foster_carer(),
             self.do_you_wish_to_make_an_adjustment_to_your_profits(),
@@ -313,7 +313,7 @@ class HMRC:
         ]
         return boolean_helpers.all_conditions_are_false(conditions)
 
-    def did_none_of_these_apply__class_4_nics_(self) -> Any:
+    def did_none_of_these_apply__class_4_nics_(self) -> bool:
         conditions = [
             self.were_you_over_state_pension_age_at_tax_year_start(),
             self.were_you_under_16_at_tax_year_start(),
@@ -323,19 +323,19 @@ class HMRC:
         ]
         return boolean_helpers.all_conditions_are_false(conditions)
 
-    def did_property_rental_income_cease(self) -> Any:
+    def did_property_rental_income_cease(self) -> bool:
         return False
 
-    def did_you_get_any_foreign_income(self) -> Any:
+    def did_you_get_any_foreign_income(self) -> bool:
         return False
 
-    def did_you_get_any_income_tax_refund(self) -> Any:
+    def did_you_get_any_income_tax_refund(self) -> bool:
         return False
 
-    def did_you_get_child_benefit(self) -> Any:
+    def did_you_get_child_benefit(self) -> bool:
         return self.receives_child_benefit()
 
-    def did_you_get_dividends_income(self) -> Any:
+    def did_you_get_dividends_income(self) -> bool:
         person_code = self.person_code
         tax_year = self.tax_year
         category_like = f"HMRC {person_code} DIV income: "
@@ -344,10 +344,10 @@ class HMRC:
         )
         return total > 0
 
-    def did_you_get_eea_furnished_holiday_lettings_income(self) -> Any:
+    def did_you_get_eea_furnished_holiday_lettings_income(self) -> bool:
         return False
 
-    def did_you_get_income_from_property_let_jointly(self) -> Any:
+    def did_you_get_income_from_property_let_jointly(self) -> bool:
         how_many_properties_do_you_rent_out = (
             self.get_how_many_properties_do_you_rent_out()
         )
@@ -358,83 +358,80 @@ class HMRC:
         is_let_jointly = hmrc_property.is_let_jointly()
         return is_let_jointly
 
-    def did_you_get_other_taxable_income(self) -> Any:
+    def did_you_get_other_taxable_income(self) -> bool:
         return False
 
-    def did_you_get_pensions__annuities__or_state_benefits(self) -> Any:
+    def did_you_get_pensions__annuities__or_state_benefits(self) -> bool:
         total = self.get_private_pensions_income() + self.get_taxable_benefits_income()
         return total > 0
 
-    def did_you_get_student_loans_company_notification(self) -> Any:
+    def did_you_get_student_loans_company_notification(self) -> bool:
         return False
 
-    def did_you_get_trust_income(self) -> Any:
+    def did_you_get_trust_income(self) -> bool:
         return False
 
-    def did_you_get_uk_furnished_holiday_lettings_income(self) -> Any:
+    def did_you_get_uk_furnished_holiday_lettings_income(self) -> bool:
         return False
 
-    def did_you_get_uk_interest(self) -> Any:
+    def did_you_get_uk_interest(self) -> bool:
         taxed_uk_interest = self.get_taxed_uk_interest()
         untaxed_uk_interest = self.get_untaxed_uk_interest()
         total_interest = taxed_uk_interest + untaxed_uk_interest
         return total_interest > 0
 
-    def did_you_give_to_charity(self) -> Any:
+    def did_you_give_to_charity(self) -> bool:
         return False
 
-    def did_you_have_a_tax_advisor(self) -> Any:
+    def did_you_have_a_tax_advisor(self) -> bool:
         return False
 
-    def did_you_make_a_loss(self) -> Any:
+    def did_you_make_a_loss(self) -> bool:
         return False
 
-    def did_you_make_pension_contributions(self) -> Any:
+    def did_you_make_pension_contributions(self) -> bool:
         pension_contributions = self.get_pension_contributions()
         return pension_contributions > 0
 
-    def did_you_put_a_nominee_s_name_in_box_5(self) -> Any:
+    def did_you_put_a_nominee_s_name_in_box_5(self) -> bool:
         return False
 
-    def did_you_use_cash_basis(self) -> Any:
+    def did_you_use_cash_basis(self) -> bool:
         return True
 
-    def did_you_use_tax_avoidance_schemes(self) -> Any:
+    def did_you_use_tax_avoidance_schemes(self) -> bool:
         return False
 
-    def did_you_use_traditional_accounting(self) -> Any:
+    def did_you_use_traditional_accounting(self) -> bool:
         return False
 
-    def disable_debug(self) -> Any:
-        self.l.disable()
-
-    def do_you_need__additional_information__pages_tr(self) -> Any:
+    def do_you_need__additional_information__pages_tr(self) -> bool:
         return ""
 
-    def do_you_need_to_complete_the_capital_gains_section(self) -> Any:
+    def do_you_need_to_complete_the_capital_gains_section(self) -> bool:
         return False
 
-    def do_you_want_paye_for_small_amount_payments(self) -> Any:
+    def do_you_want_paye_for_small_amount_payments(self) -> bool:
         return False
 
-    def do_you_want_paye_for_tax_on_savings(self) -> Any:
+    def do_you_want_paye_for_tax_on_savings(self) -> bool:
         return False
 
-    def do_you_want_refunds_by_cheque(self) -> Any:
+    def do_you_want_refunds_by_cheque(self) -> bool:
         return False
 
-    def do_you_want_spouse_s_surplus_allowance(self) -> Any:
+    def do_you_want_spouse_s_surplus_allowance(self) -> bool:
         return "What is this"
 
-    def do_you_want_to_add_an_attachment_to_the_return(self) -> Any:
+    def do_you_want_to_add_an_attachment_to_the_return(self) -> bool:
         return False
 
-    def do_you_want_to_pay_class_2_nics_voluntarily(self) -> Any:
+    def do_you_want_to_pay_class_2_nics_voluntarily(self) -> bool:
         taxable_profits = self.get_total_taxable_profits_from_this_business()
         small_profits_threshold = self.get_small_profits_threshold()
         return taxable_profits < small_profits_threshold
 
-    def do_you_want_to_reduce_next_year_payments_on_account(self) -> Any:
+    def do_you_want_to_reduce_next_year_payments_on_account(self) -> bool:
         return False
 
     def do_you_wish_to_make_an_adjustment_to_your_profits(self) -> bool:
@@ -454,7 +451,7 @@ class HMRC:
         method = getattr(self, method_name, None)
         return method is not None
 
-    def does_this_return_contain_provisional_figures(self) -> Any:
+    def does_this_return_contain_provisional_figures(self) -> bool:
         return False
 
     def format_breakdown(self, breakdown: list[str]) -> str:
@@ -909,7 +906,7 @@ class HMRC:
         taxible = max(0, income - deductible)
         return self.gbp(taxible).strip()
 
-    def get_digest_type_categories(self) -> dict[str,str]:
+    def get_digest_type_categories(self) -> dict[str, str]:
         return {
             "savings": " INT ",
             "dividends": " DIV ",
@@ -1323,11 +1320,9 @@ class HMRC:
         if not self.is_married():
             return Decimal(0)
         spouse_hmrc = self.get_spouse_hmrc()
-        spouse_hmrc.disable_debug()
         marriage_allowance_recipient_amount = (
             spouse_hmrc.get_marriage_allowance_donor_amount()
         )
-        spouse_hmrc.enable_debug()
 
         return marriage_allowance_recipient_amount
 
@@ -1704,13 +1699,13 @@ class HMRC:
     def get_questions(self) -> Any:
         report_type = self.report_type
         match report_type:
-            case HMRC_Output.HMRC_CALCULATION:
+            case HMRCOutput.HMRC_CALCULATION:
                 questions = HMRC_QuestionsByYear(
                     self.tax_year
                 ).get_hmrc_calculation_questions()
-            case HMRC_Output.HMRC_ONLINE_ANSWERS:
+            case HMRCOutput.HMRC_ONLINE_ANSWERS:
                 questions = HMRC_QuestionsByYear(self.tax_year).get_online_questions()
-            case HMRC_Output.HMRC_TAX_RETURN:
+            case HMRCOutput.HMRC_TAX_RETURN:
                 questions = HMRC_QuestionsByYear(
                     self.tax_year
                 ).get_printed_form_questions()
@@ -2474,7 +2469,7 @@ class HMRC:
     def how_many_nic_weeks_in_year(self) -> int:
         return self.constants.how_many_nic_weeks_in_year()
 
-    def is_box_6_blank_as_tax_inc__in_box_2_of__employment_(self) -> Any:
+    def is_box_6_blank_as_tax_inc__in_box_2_of__employment_(self) -> bool:
         return self.gbpb(0)
 
     def is_married(self) -> bool:
@@ -2483,12 +2478,12 @@ class HMRC:
     def is_postgraduate_loan_repayment_due(self) -> bool:
         return False
 
-    def is_property_allowance_more_than_property_expenses(self) -> Any:
+    def is_property_allowance_more_than_property_expenses(self) -> bool:
         property_allowance = self.get_property_allowance()
         property_expenses = self.get_property_expenses()
         return property_allowance > property_expenses
 
-    def is_property_income_more_than_property_allowance(self) -> Any:
+    def is_property_income_more_than_property_allowance(self) -> bool:
         property_allowance = self.get_property_allowance()
         property_income = self.get_property_income()
         return property_income > property_allowance
@@ -2496,10 +2491,10 @@ class HMRC:
     def is_student_loan_repayment_due(self) -> bool:
         return False
 
-    def is_the_address_shown_above_correct(self) -> Any:
+    def is_the_address_shown_above_correct(self) -> bool:
         return True
 
-    def is_the_basis_period_different_to_the_accounting_period(self) -> Any:
+    def is_the_basis_period_different_to_the_accounting_period(self) -> bool:
         return False
 
     def is_the_estimated_underpaid_tax_amount_correct(self) -> bool:
@@ -2508,7 +2503,7 @@ class HMRC:
     def is_the_underpaid_tax_amount_for_earlier_years_correct(self) -> bool:
         return True
 
-    def is_total_property_income_more_than_property_allowance(self) -> Any:
+    def is_total_property_income_more_than_property_allowance(self) -> bool:
         property_income_allowance = self.get_property_income_allowance()
         property_income = self.get_property_income()
         gbp_income = self.gbpb(property_income)
@@ -2518,30 +2513,30 @@ class HMRC:
         else:
             return f"No: Income {gbp_income} <= {gbp_allowance} Allowance"
 
-    def is_total_trading_income_more_than_trading_allowance(self) -> Any:
+    def is_total_trading_income_more_than_trading_allowance(self) -> bool:
         trading_allowance = self.get_trading_allowance_actual()
         trading_income = self.get_trading_income()
         return trading_income > trading_allowance
 
-    def is_trading_allowance_more_than_trading_expenses(self) -> Any:
+    def is_trading_allowance_more_than_trading_expenses(self) -> bool:
         trading_allowance = self.get_trading_allowance_actual()
         trading_expenses = self.get_trading_expenses_actual()
         return trading_allowance > trading_expenses
 
-    def is_trading_income_more_than_trading_allowance(self) -> Any:
+    def is_trading_income_more_than_trading_allowance(self) -> bool:
         trading_allowance = self.get_trading_allowance_actual()
         trading_income = self.get_trading_income()
         return trading_income > trading_allowance
 
-    def is_trading_income_more_than_vat_registration_cusp(self) -> Any:
+    def is_trading_income_more_than_vat_registration_cusp(self) -> bool:
         trading_income = self.get_trading_income()
         vat_registration_cusp = self.get_vat_registration_threshold()
         return trading_income > vat_registration_cusp
 
-    def is_your_business_carried_on_abroad(self) -> Any:
+    def is_your_business_carried_on_abroad(self) -> bool:
         return False
 
-    def is_your_nominee_your_tax_advisor(self) -> Any:
+    def is_your_nominee_your_tax_advisor(self) -> bool:
         return self.gbpb(0)
 
     def list_categories(self) -> Any:
@@ -2558,7 +2553,7 @@ class HMRC:
             print(row[0])
 
     def print_reports(self) -> None:
-        for report_type in HMRC_Output.REPORT_TYPES:
+        for report_type in HMRCOutput.REPORT_TYPES:
             self.report_type = report_type
             output_details = {
                 "answers": self.get_answers(),
@@ -2567,8 +2562,8 @@ class HMRC:
                 "tax_year": self.tax_year,
                 "unique_tax_reference": self.get_unique_tax_reference(),
             }
-            hmrc_output = HMRC_Output(output_details)
-            hmrc_output.print_report()
+            HMRCOutput = HMRCOutput(output_details)
+            HMRCOutput.print_report()
 
     def receives_child_benefit(self) -> Any:
         return self.person.receives_child_benefit()
@@ -2618,13 +2613,13 @@ class HMRC:
             print(v)
             raise
 
-    def were_any_repayments_claimed_for_next_year(self) -> Any:
+    def were_any_repayments_claimed_for_next_year(self) -> bool:
         return False
 
-    def were_any_results_already_declared_on_a_previous_return(self) -> Any:
+    def were_any_results_already_declared_on_a_previous_return(self) -> bool:
         return False
 
-    def were_there_income_tax_losses(self) -> Any:
+    def were_there_income_tax_losses(self) -> bool:
         return False
 
     def were_you_employed_in_this_tax_year(self) -> bool:
@@ -2641,18 +2636,18 @@ class HMRC:
         how_many = self.sql.fetch_one_value(query)
         return how_many > 0
 
-    def were_you_in_partnership_s__this_tax_year(self) -> Any:
+    def were_you_in_partnership_s__this_tax_year(self) -> bool:
         return False
 
-    def were_you_not_resident_in_uk_during_the_tax_year(self) -> Any:
+    def were_you_not_resident_in_uk_during_the_tax_year(self) -> bool:
         return False
 
-    def were_you_over_state_pension_age_at_tax_year_start(self) -> Any:
+    def were_you_over_state_pension_age_at_tax_year_start(self) -> bool:
         return False
 
     def were_you_self_employed_in_this_tax_year(self) -> bool:
         how_many = self.get_how_many_businesses()
         return how_many > 0
 
-    def were_you_under_16_at_tax_year_start(self) -> Any:
+    def were_you_under_16_at_tax_year_start(self) -> bool:
         return False

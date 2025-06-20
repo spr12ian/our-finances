@@ -1,15 +1,19 @@
 from typing import Any
 
-import finances.util.financial_helpers as uf
+from finances.util.string_helpers import crop
 
 
-class HMRC_Output:
+class HTMLOutputError(Exception):
+    pass
+
+
+class HMRCOutput:
     HMRC_CALCULATION = "calculation"
     HMRC_ONLINE_ANSWERS = "online answers"
     HMRC_TAX_RETURN = "tax return"
     REPORT_TYPES = [HMRC_CALCULATION, HMRC_ONLINE_ANSWERS, HMRC_TAX_RETURN]
 
-    def __init__(self, output_details: dict[str,str])->None:
+    def __init__(self, output_details: dict[str, str]) -> None:
         self.answers = output_details["answers"]
         self.person_name = output_details["person_name"]
         self.report_type = output_details["report_type"]
@@ -26,8 +30,8 @@ class HMRC_Output:
         tax_year = self.tax_year
         return f"HMRC {report_type} {tax_year} for {person_name} - UTR {unique_tax_reference}\n"
 
-    def position_answer(self, string_list:str) -> str:
-        if self.report_type == HMRC_Output.HMRC_ONLINE_ANSWERS:
+    def position_answer(self, string_list: str) -> str:
+        if self.report_type == HMRCOutput.HMRC_ONLINE_ANSWERS:
             widths = [55]
         else:
             widths = [5, 60]
@@ -38,7 +42,7 @@ class HMRC_Output:
         ]
         return "".join(formatted_parts) + string_list[how_many]
 
-    def print(self, txt: str)->None:
+    def print(self, txt: str) -> None:
         report_file_name = self.report_file_name
         with open(report_file_name, "a") as file:
             print(txt, file=file)
@@ -48,8 +52,14 @@ class HMRC_Output:
         self.print(f"\nEnd of {title}")
 
     def print_formatted_answer(
-        self, question, section: str, header: str, box, answer, information
-    )->None:
+        self,
+        question: str,
+        section: str,
+        header: str,
+        box: str,
+        answer,
+        information: str,
+    ) -> None:
         if section != self.previous_section:
             self.previous_section = section
             self.print(f"\n\n{section.upper()}\n")
@@ -66,8 +76,8 @@ class HMRC_Output:
             pass
         else:
             answer = str(answer)
-        box = uf.crop(box, " (GBP)")
-        if self.report_type == HMRC_Output.HMRC_ONLINE_ANSWERS:
+        box = crop(box, " (GBP)")
+        if self.report_type == HMRCOutput.HMRC_ONLINE_ANSWERS:
             formatted_answer = self.position_answer([box, answer])
         else:
             formatted_answer = self.position_answer([box, question, answer])
@@ -81,7 +91,7 @@ class HMRC_Output:
             raise ValueError("Invalid report type provided.")
         answers = self.answers
         if not answers:
-            self.l.warning("No answers found ==> No report generated.")
+            print("No answers found ==> No report generated.")
             return
         self.set_report_name()
         self.print_title()
@@ -138,8 +148,7 @@ class HMRC_Output:
             with open(report_file_name, "w") as file:
                 pass  # This will truncate the file if it exists, or create it if it doesn't
         except Exception as e:
-            self.l.error(f"Failed to create the report file: {e}")
-            raise
+            raise HTMLOutputError(f"Failed to create the report file") from e
 
         # Save the report file name
         self.report_file_name = report_file_name
