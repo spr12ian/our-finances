@@ -1,8 +1,7 @@
 from decimal import Decimal
 from functools import cache
 
-from sqlalchemy_helper import to_sqlalchemy_name
-
+from finances.classes.sqlalchemy_helper import to_sqlalchemy_name
 from finances.classes.sqlite_table import SQLiteTable
 
 
@@ -22,13 +21,12 @@ class HMRC_ConstantAmountsByYear(SQLiteTable):
 
         if result is None:
             raise ValueError(
-                f"Could not find the HMRC constant '{hmrc_constant}' for tax year {tax_year}"
+                f"Could not find the HMRC constant '{hmrc_constant}' for {tax_year}"
             )
 
         return Decimal(result)
 
-    def __init__(self, tax_year):
-        self.l.set_level_debug()
+    def __init__(self, tax_year: str) -> None:
         super().__init__("hmrc_constant_amounts_by_year")
         self.tax_year = tax_year
         self.tax_year_col = to_sqlalchemy_name(tax_year)
@@ -131,8 +129,6 @@ class HMRC_ConstantAmountsByYear(SQLiteTable):
     def get_starting_rate_limit_for_savings(self) -> Decimal:
         starting_rate_limit_for_savings = self._get_value_by_hmrc_constant(
             "Starting rate limit for savings"
-        )
-            f"starting_rate_limit_for_savings: {starting_rate_limit_for_savings}"
         )
 
         return starting_rate_limit_for_savings
