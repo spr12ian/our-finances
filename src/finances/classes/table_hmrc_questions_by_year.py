@@ -1,5 +1,5 @@
 import finances.util.financial_helpers as uf
-from sqlalchemy_helper import to_sqlalchemy_name, validate_sqlalchemy_name
+from finances.classes.sqlalchemy_helper import to_sqlalchemy_name, validate_sqlalchemy_name
 
 from finances.classes.sqlite_table import SQLiteTable
 

@@ -1,6 +1,6 @@
 from functools import cache
 
-from sqlalchemy_helper import to_sqlalchemy_name
+from finances.classes.sqlalchemy_helper import to_sqlalchemy_name
 
 from finances.classes.sqlite_table import SQLiteTable
 

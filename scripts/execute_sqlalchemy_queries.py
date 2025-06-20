@@ -2,7 +2,7 @@ import finances.util.financial_helpers as uf
 from helper_date_time import DateTimeHelper
 from models import AccountBalances, BankAccounts, Transactions
 from sqlalchemy import DECIMAL, cast, func, not_
-from sqlalchemy_helper import SQLAlchemyHelper
+from finances.classes.sqlalchemy_helper import SQLAlchemyHelper
 
 sql = SQLAlchemyHelper()
 session = sql.get_session()

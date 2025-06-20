@@ -6,7 +6,7 @@ from finances.classes.sqlite_table import SQLiteTable
 
 class Transactions(SQLiteTable):
     def __init__(self) -> None:
-        # self.l.set_level_debug()
+        #
 
         super().__init__("transactions")
 
