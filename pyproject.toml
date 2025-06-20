@@ -1,3 +1,7 @@
+[tool.mypy]
+python_version = "3.12"
+mypy_path = "src"
+
 [tool.ruff]
 extend-select = ["I"]  # optional: enable import sorting (like isort)
 line-length = 88

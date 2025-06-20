@@ -2,15 +2,13 @@
 from decimal import Decimal
 from functools import cache
 
-
-
+# local imports
 from finances.classes.hmrc_calculation import HMRC_Calculation
 from finances.classes.hmrc_output import HMRC_Output
 from finances.classes.hmrc_people import HMRC_People
-
-# local imports
 from finances.classes.sql_helper import SQL_Helper
 from finances.classes.sqlalchemy_helper import valid_sqlalchemy_name
+from finances.generated.tables import *
 from finances.util import boolean_helpers, financial_helpers
 
 
