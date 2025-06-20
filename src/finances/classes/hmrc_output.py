@@ -1,3 +1,5 @@
+from typing import Any
+
 import finances.util.financial_helpers as uf
 
 
@@ -7,7 +9,7 @@ class HMRC_Output:
     HMRC_TAX_RETURN = "tax return"
     REPORT_TYPES = [HMRC_CALCULATION, HMRC_ONLINE_ANSWERS, HMRC_TAX_RETURN]
 
-    def __init__(self, output_details: dict):
+    def __init__(self, output_details: dict[str,str])->None:
         self.answers = output_details["answers"]
         self.person_name = output_details["person_name"]
         self.report_type = output_details["report_type"]
@@ -24,7 +26,7 @@ class HMRC_Output:
         tax_year = self.tax_year
         return f"HMRC {report_type} {tax_year} for {person_name} - UTR {unique_tax_reference}\n"
 
-    def position_answer(self, string_list) -> str:
+    def position_answer(self, string_list:str) -> str:
         if self.report_type == HMRC_Output.HMRC_ONLINE_ANSWERS:
             widths = [55]
         else:
@@ -36,7 +38,7 @@ class HMRC_Output:
         ]
         return "".join(formatted_parts) + string_list[how_many]
 
-    def print(self, txt: str):
+    def print(self, txt: str)->None:
         report_file_name = self.report_file_name
         with open(report_file_name, "a") as file:
             print(txt, file=file)
@@ -47,7 +49,7 @@ class HMRC_Output:
 
     def print_formatted_answer(
         self, question, section: str, header: str, box, answer, information
-    ):
+    )->None:
         if section != self.previous_section:
             self.previous_section = section
             self.print(f"\n\n{section.upper()}\n")

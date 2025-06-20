@@ -1,18 +1,25 @@
 from decimal import Decimal
 from functools import cache
 
-from sqlalchemy_helper import valid_sqlalchemy_name
-from table_hmrc_constant_amounts_by_year import HMRC_ConstantAmountsByYear
-from table_hmrc_constant_percentages_by_year import HMRC_ConstantPercentagesByYear
-
+from finances.classes.sqlalchemy_helper import to_sqlalchemy_name
 from finances.classes.sqlite_table import SQLiteTable
+from finances.classes.table_hmrc_constant_amounts_by_year import (
+    HMRC_ConstantAmountsByYear,
+)
+from finances.classes.table_hmrc_constant_percentages_by_year import (
+    HMRC_ConstantPercentagesByYear,
+)
+
+
+class TableCategoriesError(Exception):
+    pass
 
 
 class HMRC_ConstantsByYear(SQLiteTable):
-    def __init__(self, tax_year):
+    def __init__(self, tax_year: str) -> None:
         super().__init__("hmrc_constants_by_year")
         self.tax_year = tax_year
-        self.tax_year_col = valid_sqlalchemy_name(tax_year)
+        self.tax_year_col = to_sqlalchemy_name(tax_year)
         self.amount_constants = HMRC_ConstantAmountsByYear(tax_year)
         self.percentage_constants = HMRC_ConstantPercentagesByYear(tax_year)
 
@@ -31,7 +38,7 @@ class HMRC_ConstantsByYear(SQLiteTable):
 
         if result is None:
             raise ValueError(
-                f"Could not find the HMRC constant '{hmrc_constant}' for tax year {tax_year}"
+                f"Could not find the HMRC constant '{hmrc_constant}' for {tax_year}"
             )
 
         return int(result)
@@ -135,8 +142,8 @@ class HMRC_ConstantsByYear(SQLiteTable):
                 self.amount_constants.get_trading_income_allowance()
             )
         except ValueError as v:
-            self.l.error(f"Error in get_trading_income_allowance: {v}")
-            raise
+            raise TableCategoriesError("Error in get_trading_income_allowance") from v
+
         return trading_income_allowance
 
     @cache

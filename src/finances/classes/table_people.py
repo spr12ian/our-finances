@@ -1,9 +1,10 @@
+from typing import Any
 from finances.classes.date_time_helper import DateTimeHelper
 from finances.classes.sqlite_table import SQLiteTable
 
 
 class People(SQLiteTable):
-    def __init__(self, code=None):
+    def __init__(self, code: str | None = None) -> None:
         super().__init__("people")
         self.code = code
 

@@ -1,5 +1,5 @@
 import finances.util.financial_helpers as uf
-from sqlalchemy_helper import valid_sqlalchemy_name, validate_sqlalchemy_name
+from sqlalchemy_helper import to_sqlalchemy_name, validate_sqlalchemy_name
 
 from finances.classes.sqlite_table import SQLiteTable
 
@@ -20,7 +20,7 @@ class HMRC_QuestionsByYear(SQLiteTable):
     ]
 
     def _get_table_name(self, tax_year:str)->str:
-        sanitised_tax_year = valid_sqlalchemy_name(tax_year)
+        sanitised_tax_year = to_sqlalchemy_name(tax_year)
 
         table_name = f"hmrc_questions{sanitised_tax_year}"
 

@@ -91,19 +91,19 @@ class SQLAlchemyHelper:
             self.rename_column(table_name, f"{column_name}_real", column_name)
 
 
-def valid_sqlalchemy_name(name: str) -> str:
+def to_sqlalchemy_name(name: str) -> str:
     valid_method_name = to_method_name(name)
 
     return valid_method_name
 
 
 def validate_sqlalchemy_name(name: str) -> None:
-    if name != valid_sqlalchemy_name(name):
+    if name != to_sqlalchemy_name(name):
         raise ValueError(f"Invalid SQLAlchemy name: {name}")
 
 
 def clean_column_names(df):
-    df.columns = [valid_sqlalchemy_name(col) for col in df.columns]
+    df.columns = [to_sqlalchemy_name(col) for col in df.columns]
     return df
 
 

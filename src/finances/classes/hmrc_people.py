@@ -1,14 +1,13 @@
 # standard imports
 from decimal import Decimal
-
-from tables import *
+from typing import Any
 
 # local imports
-from finances.classes.people import People
+from finances.classes.table_people import People
 
 
 class HMRC_People(People):
-    def __init__(self, code):
+    def __init__(self, code: str) -> None:
         super().__init__(code)
 
         self.hmrc_person_details = HMRC_PeopleDetails(code)
@@ -37,7 +36,7 @@ class HMRC_People(People):
     def get_refunds_to(self) -> Any:
         return self.hmrc_person_details.get_refunds_to()
 
-    def get_spouse_code(self) -> Any:
+    def get_spouse_code(self) -> str:
         return self.hmrc_person_details.get_spouse_code()
 
     def get_taxpayer_residency_status(self) -> Any:

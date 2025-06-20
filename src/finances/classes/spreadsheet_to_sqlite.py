@@ -10,7 +10,7 @@ from finances.classes.config import Config
 from finances.classes.google_helper import GoogleHelper
 from finances.classes.pandas_helper import PandasHelper
 from finances.classes.sql_helper import SQL_Helper
-from finances.classes.sqlalchemy_helper import valid_sqlalchemy_name
+from finances.classes.sqlalchemy_helper import to_sqlalchemy_name
 from finances.generated.field_registry import field_registry
 from finances.util.boolean_helpers import boolean_string_to_int
 from finances.util.date_helpers import UK_to_ISO
@@ -26,6 +26,7 @@ class SpreadSheetToSqlite:
         "to_numeric_str": remove_non_numeric,
         "to_str": None,
     }
+
     def __init__(self) -> None:
         """
         Initialize the converter with Google Sheets credentials and spreadsheet name
@@ -50,14 +51,14 @@ class SpreadSheetToSqlite:
         self.sql = SQL_Helper().select_sql_helper("SQLite")
 
     @staticmethod
-    def apply(df: DataFrame, column_name: str, scalar: Callable[[Any], Any]) -> Series: # type: ignore
-        return df[column_name].apply(scalar) # type: ignore
-    
-    def backup_bmonzo(self)->None:
+    def apply(df: DataFrame, column_name: str, scalar: Callable[[Any], Any]) -> Series:  # type: ignore
+        return df[column_name].apply(scalar)  # type: ignore
+
+    def backup_bmonzo(self) -> None:
         pass
 
     def convert_column_name(self, spreadsheet_column_name: str) -> str:
-        sqlite_column_name = valid_sqlalchemy_name(spreadsheet_column_name)
+        sqlite_column_name = to_sqlalchemy_name(spreadsheet_column_name)
 
         if spreadsheet_column_name.endswith(" (£)"):
             sqlite_column_name = crop(sqlite_column_name, "____")
@@ -71,7 +72,6 @@ class SpreadSheetToSqlite:
     def convert_df_col(
         self, df: DataFrame, table_name: str, column_name: str
     ) -> DataFrame:
-
         to_db = self.get_to_db(table_name, column_name)
         if to_db not in self._SCALARS:
             raise ValueError(f"Unexpected to_db value: {to_db}")
@@ -104,7 +104,7 @@ class SpreadSheetToSqlite:
         self.sql.close_connection()
 
     def convert_worksheet(self, worksheet: Worksheet) -> None:
-        table_name = valid_sqlalchemy_name(worksheet.title)
+        table_name = to_sqlalchemy_name(worksheet.title)
         print(table_name)
 
         pdh = self.pdh

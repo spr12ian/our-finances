@@ -1,39 +1,41 @@
-from sqlalchemy_helper import validate_sqlalchemy_name
+from typing import Self
+
+from finances.classes.sqlalchemy_helper import validate_sqlalchemy_name
 
 
 class QueryBuilder:
-    def __init__(self, table_name: str):
+    def __init__(self, table_name: str) -> None:
         self.table_name = table_name
-        self.columns = []
-        self.conditions = []
-        self.group_by = []
+        self.columns: list[str] = []
+        self.conditions: list[str] = []
+        self.group_by: list[str] = []
         self.order_by = None
-        self.limit = None
+        self.limit: int | None = None
 
-    def select(self, *columns):
+    def select(self, *columns: str) -> Self:
         [validate_sqlalchemy_name(col) for col in columns]
         self.columns = [f'"{col}"' for col in columns]
         return self
 
-    def select_raw(self, select_str: str):
+    def select_raw(self, select_str: str) -> Self:
         self.columns = [select_str]
         return self
 
-    def total(self, column: str):
+    def total(self, column: str) -> Self:
         validate_sqlalchemy_name(column)
         self.columns = [f'COALESCE(SUM("{column}"), 0)']
         return self
 
-    def where(self, condition):
+    def where(self, condition: str) -> Self:
         self.conditions.append(condition)
         return self
 
-    def order(self, column: str, direction: str = "ASC"):
+    def order(self, column: str, direction: str = "ASC") -> Self:
         validate_sqlalchemy_name(column)
         self.order_by = f'"{column}" {direction}'
         return self
 
-    def set_limit(self, limit):
+    def set_limit(self, limit: int) -> Self:
         self.limit = limit
         return self
 

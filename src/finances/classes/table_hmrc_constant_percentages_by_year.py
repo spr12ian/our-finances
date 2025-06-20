@@ -1,7 +1,7 @@
 from decimal import Decimal
 from functools import cache
 
-from sqlalchemy_helper import valid_sqlalchemy_name
+from sqlalchemy_helper import to_sqlalchemy_name
 
 from finances.classes.sqlite_table import SQLiteTable
 
@@ -31,7 +31,7 @@ class HMRC_ConstantPercentagesByYear(SQLiteTable):
         self.l.set_level_debug()
         super().__init__("hmrc_constant_percentages_by_year")
         self.tax_year = tax_year
-        self.tax_year_col = valid_sqlalchemy_name(tax_year)
+        self.tax_year_col = to_sqlalchemy_name(tax_year)
 
     @cache
     def get_additional_tax_rate(self) -> Decimal:

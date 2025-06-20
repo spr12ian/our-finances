@@ -8,17 +8,19 @@ from finances.classes.hmrc_calculation import HMRC_Calculation
 from finances.classes.hmrc_output import HMRC_Output
 from finances.classes.hmrc_people import HMRC_People
 from finances.classes.sql_helper import SQL_Helper
-from finances.classes.sqlalchemy_helper import valid_sqlalchemy_name
+from finances.classes.sqlalchemy_helper import to_sqlalchemy_name
 from finances.classes.table_categories import Categories
+from finances.classes.table_hmrc_constants_by_year import HMRC_ConstantsByYear
+from finances.classes.table_hmrc_overrides_by_year import HMRC_OverridesByYear
+from finances.classes.table_transactions import Transactions
 from finances.util import boolean_helpers, financial_helpers
 
 
 class HMRC:
-    def __init__(self, person_code: str, tax_year: str):
-
+    def __init__(self, person_code: str, tax_year: str) -> None:
         self.person_code = person_code
         self.tax_year = tax_year
-        self.tax_year_col = valid_sqlalchemy_name(tax_year)
+        self.tax_year_col = to_sqlalchemy_name(tax_year)
 
         self.categories = Categories()
         self.constants = HMRC_ConstantsByYear(tax_year)
@@ -30,7 +32,7 @@ class HMRC:
         self.sql = SQL_Helper().select_sql_helper("SQLite")
         self.transactions = Transactions()
 
-    def _get_breakdown(self, category_like):
+    def _get_breakdown(self, category_like: str) -> str:
         tax_year = self.tax_year
         query = (
             self.transactions.query_builder()
@@ -66,13 +68,10 @@ class HMRC:
 
         return are_nics_needed_to_acheive_max_state_pension
 
-    def are_supplementary_pages_enclosed(self) -> Any:
-        return self.gbpb(0)
-
-    def are_supplementary_pages_enclosed(self) -> Any:
+    def are_supplementary_pages_enclosed(self) -> bool:
         return False
 
-    def are_there_digest_transactions(self, digest_type) -> bool:
+    def are_there_digest_transactions(self, digest_type:str) -> bool:
         digest_category_like = self.get_digest_type_categories()[digest_type]
         person_code = self.person.code
         tax_year = self.tax_year
@@ -457,10 +456,7 @@ class HMRC:
     def does_this_return_contain_provisional_figures(self) -> Any:
         return False
 
-    def enable_debug(self) -> Any:
-        self.l.enable()
-
-    def format_breakdown(self, breakdown) -> str:
+    def format_breakdown(self, breakdown: list[str]) -> str:
         fields = [line.split("|") for line in breakdown]
         max_widths = [max(len(field.strip()) for field in col) for col in zip(*fields)]
         formatted_lines = [
@@ -868,7 +864,6 @@ class HMRC:
         return "\n" + " | ".join(parts)
 
     def get_digest_deductible(self, digest_type):
-
         if self.does_method_exist(f"get_{digest_type}_allowance_actual"):
             allowance = self.call_method(f"get_{digest_type}_allowance_actual")
             if self.does_method_exist(f"get_{digest_type}_expenses_actual"):
@@ -913,8 +908,7 @@ class HMRC:
         taxible = max(0, income - deductible)
         return self.gbp(taxible).strip()
 
-    def get_digest_type_categories(self) -> dict:
-        person_code = self.person_code
+    def get_digest_type_categories(self) -> dict[str,str]:
         return {
             "savings": " INT ",
             "dividends": " DIV ",
@@ -922,8 +916,8 @@ class HMRC:
             "property": " UKP ",
         }
 
-    def get_disability_and_foreign_service_deduction(self) -> Any:
-        return self.gbpb(0)
+    def get_disability_and_foreign_service_deduction(self) -> str:
+        return self.gbpb(Decimal(0))
 
     def get_dividends_allowance(self) -> Any:
         return self.constants.get_dividends_allowance()

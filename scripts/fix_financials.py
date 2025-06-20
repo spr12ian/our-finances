@@ -9,7 +9,7 @@ from pandas import DataFrame
 from finances.classes.google_helper import GoogleHelper
 from finances.classes.pandas_helper import PandasHelper
 from finances.classes.sql_helper import SQL_Helper
-from finances.classes.sqlalchemy_helper import valid_sqlalchemy_name
+from finances.classes.sqlalchemy_helper import to_sqlalchemy_name
 from finances.util.financial_helpers import string_to_financial
 
 
@@ -53,7 +53,7 @@ class SpreadsheetToSqliteDb:
         self.sql.close_connection()
 
     def convert_worksheet(self, worksheet: Worksheet) -> None:
-        table_name = valid_sqlalchemy_name(worksheet.title)
+        table_name = to_sqlalchemy_name(worksheet.title)
 
         pdh = self.pdh
 
@@ -62,7 +62,7 @@ class SpreadsheetToSqliteDb:
 
         # Split columns and rows
         df = pdh.worksheet_values_to_dataframe(data)
-        df.columns = [valid_sqlalchemy_name(col) for col in df.columns]
+        df.columns = [to_sqlalchemy_name(col) for col in df.columns]
 
         for financial_column in get_financial_columns():
             if financial_column in df.columns:

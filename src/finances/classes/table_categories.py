@@ -1,3 +1,4 @@
+from typing import Any
 from finances.classes.sqlite_table import SQLiteTable
 
 
