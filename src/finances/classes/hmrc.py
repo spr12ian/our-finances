@@ -5,7 +5,6 @@ from functools import cache
 
 
 from finances.classes.hmrc_calculation import HMRC_Calculation
-from finances.classes.hmrc_income import HMRCIncome
 from finances.classes.hmrc_output import HMRC_Output
 from finances.classes.hmrc_people import HMRC_People
 
@@ -21,8 +20,6 @@ class HMRC:
         self.person_code = person_code
         self.tax_year = tax_year
         self.tax_year_col = valid_sqlalchemy_name(tax_year)
-
-        self.income = HMRCIncome(person_code, tax_year)
 
         self.categories = Categories()
         self.constants = HMRC_ConstantsByYear(tax_year)
