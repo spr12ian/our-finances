@@ -1,6 +1,9 @@
+from typing import Any
 import finances.util.financial_helpers as uf
-from finances.classes.sqlalchemy_helper import to_sqlalchemy_name, validate_sqlalchemy_name
-
+from finances.classes.sqlalchemy_helper import (
+    to_sqlalchemy_name,
+    validate_sqlalchemy_name,
+)
 from finances.classes.sqlite_table import SQLiteTable
 
 
@@ -32,7 +35,7 @@ class HMRC_QuestionsByYear(SQLiteTable):
 
         super().__init__(table_name)
 
-    def _get_questions(self, columns, order_column):
+    def _get_questions(self, columns:list[str], order_column:str):
         [validate_sqlalchemy_name(col) for col in columns]
         validate_sqlalchemy_name(order_column)
         table_name = self.table_name
@@ -70,7 +73,7 @@ class HMRC_QuestionsByYear(SQLiteTable):
 
         self.list_online_questions_not_in_printed_form()
 
-    def list_online_questions_not_in_printed_form(self) -> Any:
+    def list_online_questions_not_in_printed_form(self) -> None:
         table_name = self.table_name
         query = (
             'SELECT q1.question, q1."online_order", q2."printed_order"'
@@ -83,6 +86,7 @@ class HMRC_QuestionsByYear(SQLiteTable):
         how_many_rows = len(rows)
         if how_many_rows > 0:
             for row in rows:
+                print(row)
 
     def list_unused_questions(self) -> None:
         table_name = self.table_name

@@ -12,6 +12,7 @@ from finances.classes.sqlalchemy_helper import to_sqlalchemy_name
 from finances.classes.table_categories import Categories
 from finances.classes.table_hmrc_constants_by_year import HMRC_ConstantsByYear
 from finances.classes.table_hmrc_overrides_by_year import HMRC_OverridesByYear
+from finances.classes.table_hmrc_questions_by_year import HMRC_QuestionsByYear
 from finances.classes.table_transactions import Transactions
 from finances.util import boolean_helpers, financial_helpers
 
@@ -2603,8 +2604,7 @@ class HMRC:
     def use_trading_allowance(self) -> bool:
         try:
             value = self.use_trading_allowance_override()
-        except ValueError as v:
-            self.l.exception(v)
+        except ValueError:
             trading_allowance = self.get_trading_allowance_actual()
             trading_expenses = self.get_trading_expenses_actual()
             value = trading_allowance > trading_expenses

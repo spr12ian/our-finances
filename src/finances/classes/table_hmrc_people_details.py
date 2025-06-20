@@ -1,5 +1,5 @@
 from decimal import Decimal
-
+from typing import Any
 from finances.classes.date_time_helper import DateTimeHelper
 from finances.classes.sqlite_table import SQLiteTable
 
