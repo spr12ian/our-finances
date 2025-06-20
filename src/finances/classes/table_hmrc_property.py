@@ -3,7 +3,6 @@ from finances.classes.sqlite_table import SQLiteTable
 
 class HMRC_Property(SQLiteTable):
     def _get_value_by_postcode_column(self, column_name):
-
         postcode = self.postcode
         if postcode:
             query = (
@@ -12,7 +11,6 @@ class HMRC_Property(SQLiteTable):
                 .where(f'"property_postcode" = "{postcode}"')
                 .build()
             )
-            self.l.debug(f"query: {query}")
             result = str(self.sql.fetch_one_value(query))
         else:
             raise ValueError(f"Unexpected postcode: {postcode}")
@@ -22,8 +20,6 @@ class HMRC_Property(SQLiteTable):
     def __init__(self, postcode):
         self.l = LogHelper("HMRC_Property")
         self.l.set_level_debug()
-        self.l.debug(__file__)
-        self.l.debug(f"postcode: {postcode}")
         super().__init__("hmrc_property")
         self.postcode = postcode
 
@@ -44,7 +40,6 @@ class HMRC_Property(SQLiteTable):
         property_joint_owner_code = self._get_value_by_postcode_column(
             "property_joint_owner_code"
         )
-        self.l.debug(f'property_joint_owner_code: "{property_joint_owner_code}"')
         return property_joint_owner_code
 
     def is_let_jointly(self) -> bool:

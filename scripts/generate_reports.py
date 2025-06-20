@@ -28,7 +28,7 @@ def print_reports(hmrc_people: list[str], tax_year: str) -> None:
         hmrc.print_reports()
 
 
-def main():
+def main()->None:
     # List of people to generate reports for
     hmrc_people = ["S", "B"]
 

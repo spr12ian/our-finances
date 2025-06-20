@@ -6,6 +6,7 @@ import os
 from pathlib import Path
 
 from sqlalchemy import text
+
 from finances.classes.sqlalchemy_helper import SQLAlchemyHelper
 
 # import sys

@@ -57,7 +57,6 @@ class HMRC_People(People):
         weekly_state_pension_forecast = (
             self.hmrc_person_details.get_weekly_state_pension_forecast()
         )
-        self.l.debug(f"weekly_state_pension_forecast: {weekly_state_pension_forecast}")
         return Decimal(weekly_state_pension_forecast)
 
     def is_married(self) -> bool:

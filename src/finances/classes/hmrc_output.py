@@ -49,11 +49,6 @@ class HMRC_Output:
     def print_formatted_answer(
         self, question, section: str, header: str, box, answer, information
     ):
-        self.l.debug("print_formatted_answer")
-        self.l.debug(f"\n{question}\n")
-        self.l.debug(f"{section} - {header} - Box {box}")
-        self.l.debug(f"answer: {answer}")
-        self.l.debug(f"information: {information}")
         if section != self.previous_section:
             self.previous_section = section
             self.print(f"\n\n{section.upper()}\n")
@@ -97,7 +92,6 @@ class HMRC_Output:
             answer,
             information,
         ) in enumerate(answers, start=1):
-            self.l.debug(f"Processing answer #{answer_number}")
             self.print_formatted_answer(
                 question, section, header, box, answer, information
             )

@@ -10,7 +10,6 @@ from finances.classes.sqlite_table import SQLiteTable
 
 class HMRC_ConstantsByYear(SQLiteTable):
     def __init__(self, tax_year):
-
         super().__init__("hmrc_constants_by_year")
         self.tax_year = tax_year
         self.tax_year_col = valid_sqlalchemy_name(tax_year)
@@ -26,7 +25,6 @@ class HMRC_ConstantsByYear(SQLiteTable):
             .where(f'"hmrc_constant" = "{hmrc_constant}"')
             .build()
         )
-        self.l.debug(query)
         result = self.sql.fetch_one_value(
             query
         )  # Could be formatted as a float, a ccy, etc.
@@ -40,7 +38,6 @@ class HMRC_ConstantsByYear(SQLiteTable):
 
     @cache
     def get_additional_rate_threshold(self) -> Decimal:
-        self.l.debug("get_additional_rate_threshold")
         return self.amount_constants.get_additional_rate_threshold()
 
     @cache
@@ -61,8 +58,6 @@ class HMRC_ConstantsByYear(SQLiteTable):
         how_many_nic_weeks_in_year = self.how_many_nic_weeks_in_year()
 
         class_2_annual_amount = how_many_nic_weeks_in_year * class_2_nics_weekly_rate
-
-        self.l.debug(f"class_2_annual_amount: {class_2_annual_amount}")
 
         return class_2_annual_amount
 
@@ -135,12 +130,10 @@ class HMRC_ConstantsByYear(SQLiteTable):
         return self.amount_constants.get_starting_rate_limit_for_savings()
 
     def get_trading_income_allowance(self) -> Decimal:
-        self.l.debug("get_trading_income_allowance")
         try:
             trading_income_allowance = (
                 self.amount_constants.get_trading_income_allowance()
             )
-            self.l.debug(f"trading_income_allowance: {trading_income_allowance}")
         except ValueError as v:
             self.l.error(f"Error in get_trading_income_allowance: {v}")
             raise
@@ -159,7 +152,5 @@ class HMRC_ConstantsByYear(SQLiteTable):
         how_many_nic_weeks_in_year = self._get_value_by_hmrc_constant(
             "How many NIC weeks in year"
         )
-
-        self.l.debug(f"how_many_nic_weeks_in_year: {how_many_nic_weeks_in_year}")
 
         return how_many_nic_weeks_in_year

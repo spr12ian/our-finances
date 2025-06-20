@@ -2564,7 +2564,7 @@ class HMRC:
         for row in categories:
             print(row[0])
 
-    def print_reports(self) -> Any:
+    def print_reports(self) -> None:
         for report_type in HMRC_Output.REPORT_TYPES:
             self.report_type = report_type
             output_details = {

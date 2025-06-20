@@ -29,20 +29,12 @@ class HMRC_QuestionsByYear(SQLiteTable):
     def __init__(self, tax_year):
         self.l = LogHelper("HMRC_QuestionsByYear")
         # self.l.set_level_debug()
-        self.l.debug(__file__)
-        self.l.debug(__class__)
-        self.l.debug(__name__)
 
         table_name = self._get_table_name(tax_year)
 
         super().__init__(table_name)
 
-        self.l.debug(f"table_name: {table_name}")
-        self.l.debug(f"self.yes_no_questions: {self.yes_no_questions}")
-
     def _get_questions(self, columns, order_column):
-        self.l.debug(f"columns: {columns}")
-        self.l.debug(f"order_column: {order_column}")
         [validate_sqlalchemy_name(col) for col in columns]
         validate_sqlalchemy_name(order_column)
         table_name = self.table_name
@@ -56,8 +48,6 @@ class HMRC_QuestionsByYear(SQLiteTable):
             + f' WHERE q1."{order_column}" > 0'
             + f' ORDER BY q1."{order_column}" ASC'
         )
-
-        self.l.debug(f"query: {query}")
 
         questions = [
             [
@@ -77,14 +67,12 @@ class HMRC_QuestionsByYear(SQLiteTable):
         return ", ".join([f'q1."{column}"' for column in columns])
 
     def check_questions(self) -> Any:
-        self.l.debug("check_questions")
 
         self.list_unused_questions()
 
         self.list_online_questions_not_in_printed_form()
 
     def list_online_questions_not_in_printed_form(self) -> Any:
-        self.l.debug("list_online_questions_not_in_printed_form")
         table_name = self.table_name
         query = (
             'SELECT q1.question, q1."online_order", q2."printed_order"'
@@ -96,13 +84,9 @@ class HMRC_QuestionsByYear(SQLiteTable):
         rows = self.sql.fetch_all(query)
         how_many_rows = len(rows)
         if how_many_rows > 0:
-            self.l.debug(f"{how_many_rows} online questions not in printed form")
-            self.l.debug(query)
             for row in rows:
-                self.l.debug(row)
 
     def list_unused_questions(self) -> Any:
-        self.l.debug("list_unused_questions")
         table_name = self.table_name
         core_questions = "hmrc_questions"
         query = (
@@ -115,7 +99,6 @@ class HMRC_QuestionsByYear(SQLiteTable):
         how_many_rows = len(rows)
         if how_many_rows > 0:
             self.l.info(f"{how_many_rows} unused questions")
-            self.l.debug(query)
             for row in rows:
                 self.l.info(row)
 
@@ -143,7 +126,6 @@ class HMRC_QuestionsByYear(SQLiteTable):
         return self._get_questions(columns, order_column)
 
     def get_printed_form_questions(self) -> Any:
-        self.l.debug("get_printed_form_questions")
         columns = ["question", "printed_section", "printed_header", "printed_box"]
         order_column = "printed_order"
         return self._get_questions(columns, order_column)
@@ -152,20 +134,13 @@ class HMRC_QuestionsByYear(SQLiteTable):
         return any(question.startswith(q) for q in self.yes_no_questions)
 
     def to_method_name(self, question):
-        self.l.debug("to_method_name")
-        self.l.debug(f"question: {question}")
         reformatted_question = uf.to_valid_method_name(question)
-        self.l.debug(f"reformatted_question: {reformatted_question}")
 
         if self.is_it_a_yes_no_question(question):
-            self.l.debug(f"Yes/No question: {question}")
             method_name = reformatted_question
         elif question[-6:] == " (GBP)":
-            self.l.debug(" (GBP) matched")
             method_name = "get_" + uf.crop(reformatted_question, "__gbp_") + "_gbp"
         else:
             method_name = "get_" + reformatted_question
-
-        self.l.debug(f"method_name: {method_name}")
 
         return method_name

@@ -37,7 +37,6 @@ class HMRC_Calculation:
         self.add_hmrc_part(extra_info)
 
     def add_hmrc_part(self, key: str, amount: Decimal | None = None) -> None:
-        self.l.debug("add_hmrc_part")
         if amount is None:
             self.append(key)
         else:
@@ -49,11 +48,8 @@ class HMRC_Calculation:
 
     def add_part_basic_tax(self, unused_allowance) -> Decimal:
         hmrc = self.hmrc
-        self.l.debug(f"add_part_basic_tax: unused_allowance: {unused_allowance}")
         combined_taxable_profit = hmrc.get_combined_taxable_profit()
-        self.l.debug(f"combined_taxable_profit: {combined_taxable_profit}")
         p_taxable_amount = max(0, combined_taxable_profit - unused_allowance)
-        self.l.debug(f"p_taxable_amount: {p_taxable_amount}")
         if p_taxable_amount > 0:
             taxable_amount_gbp = hmrc.gbp(p_taxable_amount)
             basic_rate = hmrc.get_basic_tax_rate()
@@ -62,15 +58,12 @@ class HMRC_Calculation:
             self.add_hmrc_part(label, basic_tax)
 
             unused_allowance = max(0, unused_allowance - combined_taxable_profit)
-            self.l.debug(f"unused_allowance: {unused_allowance}")
 
         return unused_allowance
 
     def add_part_class_2_nics(self) -> None:
-        self.l.debug("add_part_class_2_nics")
         hmrc = self.hmrc
         class_2_nics = hmrc.get_class_2_nics_due()
-        self.l.debug(f"class_2_nics: {class_2_nics}")
         self.add_hmrc_part(
             "Total Class 2 National Insurance contributions due", class_2_nics
         )
@@ -78,7 +71,6 @@ class HMRC_Calculation:
     def add_part_dividends(self) -> None:
         hmrc = self.hmrc
         dividends_income = hmrc.get_dividends_income()
-        self.l.debug(f"dividends_income: {dividends_income}")
         if dividends_income > 0:
             self.add_hmrc_part("Dividends from UK companies", dividends_income)
 
@@ -86,7 +78,6 @@ class HMRC_Calculation:
         hmrc = self.hmrc
         dividends_income = hmrc.get_dividends_income()
         d_taxable_amount = max(0, dividends_income - unused_allowance)
-        self.l.debug(f"d_taxable_amount: {d_taxable_amount}")
         if d_taxable_amount > 0:
             dividends_basic_rate = hmrc.get_dividends_basic_rate()
             dividends_allowance = hmrc.get_dividends_allowance()
@@ -101,7 +92,6 @@ class HMRC_Calculation:
             self.add_hmrc_part(label, basic_tax)
 
             unused_allowance = max(0, unused_allowance - dividends_income)
-            self.l.debug(f"unused_allowance: {unused_allowance}")
 
         return unused_allowance
 
@@ -137,7 +127,6 @@ class HMRC_Calculation:
         hmrc = self.hmrc
         combined_taxable_profit = hmrc.get_combined_taxable_profit()
         p_taxable_amount = max(0, combined_taxable_profit - unused_allowance)
-        self.l.debug(f"p_taxable_amount: {p_taxable_amount}")
         if p_taxable_amount > 0:
             self.add_hmrc_part("Pay, pensions, profit etc.")
 
@@ -165,7 +154,6 @@ class HMRC_Calculation:
         hmrc = self.hmrc
         savings_income = hmrc.get_savings_income()
         s_taxable_amount = max(0, savings_income - unused_allowance)
-        self.l.debug(f"s_taxable_amount: {s_taxable_amount}")
         if s_taxable_amount > 0:
             savings_basic_rate = hmrc.get_savings_basic_rate()
             savings_nil_band = hmrc.get_savings_nil_band()
@@ -178,7 +166,6 @@ class HMRC_Calculation:
             self.add_hmrc_part(label, basic_tax)
 
             unused_allowance = max(0, unused_allowance - savings_income)
-            self.l.debug(f"unused_allowance: {unused_allowance}")
 
         return unused_allowance
 
@@ -186,7 +173,6 @@ class HMRC_Calculation:
         hmrc = self.hmrc
         savings_income = hmrc.get_savings_income()
         s_taxable_amount = max(0, savings_income - unused_allowance)
-        self.l.debug(f"s_taxable_amount: {s_taxable_amount}")
         if s_taxable_amount > 0:
             self.add_hmrc_part(
                 "Savings interest from banks or building societies, securities etc."
@@ -196,7 +182,6 @@ class HMRC_Calculation:
         hmrc = self.hmrc
         savings_income = hmrc.get_savings_income()
         s_taxable_amount = max(0, savings_income - unused_allowance)
-        self.l.debug(f"s_taxable_amount: {s_taxable_amount}")
         if s_taxable_amount > 0:
             savings_basic_rate = hmrc.get_savings_basic_rate()
             savings_nil_band = hmrc.get_savings_nil_band()
@@ -210,12 +195,10 @@ class HMRC_Calculation:
             self.add_hmrc_part(label, nil_rate_tax)
 
             unused_allowance = max(0, unused_allowance - savings_income)
-            self.l.debug(f"unused_allowance: {unused_allowance}")
 
         return unused_allowance
 
     def add_part_self_employment_profit(self) -> None:
-        self.l.debug("add_part_self_employment_profit")
         trading_profit = self.get_trading_profit()
         if trading_profit > 0:
             self.add_hmrc_part("Profit from self-employment", trading_profit)
@@ -229,21 +212,16 @@ class HMRC_Calculation:
 
     def add_part_total_income(self) -> Decimal:
         hmrc = self.hmrc
-        self.l.debug("add_part_total_income")
         hmrc_total_income = hmrc.get_hmrc_total_income()
-        self.l.debug(f"hmrc_total_income: {hmrc_total_income}")
         label = "Total income"
         if hmrc_total_income > 0:
             label += " on which tax is due"
-        self.l.debug(f"label: {label}")
         self.add_hmrc_part(label, hmrc_total_income)
 
         hmrc_allowance = hmrc.get_hmrc_allowance()
-        self.l.debug(f"hmrc_allowance: {hmrc_allowance}")
 
         unused_allowance = max(0, hmrc_allowance - hmrc_total_income)
         unused_allowance = hmrc_allowance
-        self.l.debug(f"unused_allowance: {unused_allowance}")
 
         return unused_allowance
 
@@ -256,7 +234,6 @@ class HMRC_Calculation:
     def add_part_uk_interest(self) -> None:
         hmrc = self.hmrc
         savings_income = hmrc.get_savings_income()
-        self.l.debug(f"savings_income: {savings_income}")
         if savings_income > 0:
             self.add_hmrc_part(
                 "Interest from UK banks, building societies and securities etc",
@@ -289,8 +266,6 @@ class HMRC_Calculation:
         return tax_year_start, tax_year_end
 
     def get_output(self) -> str:
-        self.l.debug("get_output")
-
         self.add_part_self_employment_profit()
         self.add_part_property_profit()
         self.add_part_uk_interest()
@@ -300,18 +275,13 @@ class HMRC_Calculation:
         self.add_part_personal_allowance()
         self.add_part_marriage_allowance()
         unused_allowance = self.add_part_total_income()
-        self.l.debug(f"1: unused_allowance: {unused_allowance}")
         self.add_part_pay_pensions_profit(unused_allowance)
         self.add_part_pension_payments()
         unused_allowance = self.add_part_basic_tax(unused_allowance)
-        self.l.debug(f"2: unused_allowance: {unused_allowance}")
         self.add_part_savings_interest(unused_allowance)
         unused_allowance = self.add_part_savings_nil_rate_tax(unused_allowance)
-        self.l.debug(f"3: unused_allowance: {unused_allowance}")
         unused_allowance = self.add_part_savings_basic_rate_tax(unused_allowance)
-        self.l.debug(f"4: unused_allowance: {unused_allowance}")
         unused_allowance = self.add_part_dividends_tax(unused_allowance)
-        self.l.debug(f"5: unused_allowance: {unused_allowance}")
         self.add_part_income_tax()
         self.add_part_class_2_nics()
         self.add_part_total_and_nics()
