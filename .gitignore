@@ -9,6 +9,7 @@ get_all_sheet_names.js
 config.ini
 scratch.sql
 models.py
+tables.py
 spreadsheet_fields.py
 .logs/
 # Ignore VS Code settings by default
