@@ -133,7 +133,7 @@ class HMRC_ConstantAmountsByYear(SQLiteTable):
 
         return starting_rate_limit_for_savings
 
-    # @lru_cache(maxsize=None)
+    # @cache
     def get_trading_income_allowance(self) -> Decimal:
         trading_income_allowance = self._get_value_by_hmrc_constant(
             "Trading income allowance"

@@ -11,7 +11,8 @@ scratch.sql
 models.py
 tables.py
 spreadsheet_fields.py
-.logs/
+logs/
+output/
 # Ignore VS Code settings by default
 .vscode/*
 # Byte-compiled / optimized / DLL files

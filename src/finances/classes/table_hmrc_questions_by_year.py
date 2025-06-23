@@ -1,10 +1,11 @@
 from typing import Any
-import finances.util.financial_helpers as uf
+
 from finances.classes.sqlalchemy_helper import (
     to_sqlalchemy_name,
     validate_sqlalchemy_name,
 )
 from finances.classes.sqlite_table import SQLiteTable
+from finances.util.string_helpers import crop, to_method_name
 
 
 class HMRC_QuestionsByYear(SQLiteTable):
@@ -22,21 +23,21 @@ class HMRC_QuestionsByYear(SQLiteTable):
         "Were ",
     ]
 
-    def _get_table_name(self, tax_year:str)->str:
+    def _get_table_name(self, tax_year: str) -> str:
         sanitised_tax_year = to_sqlalchemy_name(tax_year)
 
         table_name = f"hmrc_questions{sanitised_tax_year}"
 
         return table_name
 
-    def __init__(self, tax_year:str)->None:
-
+    def __init__(self, tax_year: str) -> None:
         table_name = self._get_table_name(tax_year)
 
         super().__init__(table_name)
 
-    def _get_questions(self, columns:list[str], order_column:str):
-        [validate_sqlalchemy_name(col) for col in columns]
+    def _get_questions(self, columns: list[str], order_column: str) -> list[list[str]]:
+        for col in columns:
+            validate_sqlalchemy_name(col)
         validate_sqlalchemy_name(order_column)
         table_name = self.table_name
 
@@ -50,7 +51,7 @@ class HMRC_QuestionsByYear(SQLiteTable):
             + f' ORDER BY q1."{order_column}" ASC'
         )
 
-        questions = [
+        questions: list[list[str]] = [
             [
                 row[0],  # question
                 row[1],  # section
@@ -64,11 +65,10 @@ class HMRC_QuestionsByYear(SQLiteTable):
 
         return questions
 
-    def convert_columns_to_string(self, columns):
+    def convert_columns_to_string(self, columns: list[str]) -> str:
         return ", ".join([f'q1."{column}"' for column in columns])
 
     def check_questions(self) -> None:
-
         self.list_unused_questions()
 
         self.list_online_questions_not_in_printed_form()
@@ -100,7 +100,7 @@ class HMRC_QuestionsByYear(SQLiteTable):
         rows = self.sql.fetch_all(query)
         how_many_rows = len(rows)
         if how_many_rows > 0:
-            print(f"{how_many_rows} unused questions")
+            print(f"{how_many_rows} unused questions in {core_questions} but not in {table_name}")
             for row in rows:
                 print(row)
 
@@ -132,16 +132,16 @@ class HMRC_QuestionsByYear(SQLiteTable):
         order_column = "printed_order"
         return self._get_questions(columns, order_column)
 
-    def is_it_a_yes_no_question(self, question):
+    def is_it_a_yes_no_question(self, question: str) -> bool:
         return any(question.startswith(q) for q in self.yes_no_questions)
 
-    def to_method_name(self, question):
-        reformatted_question = uf.to_method_name(question)
+    def to_method_name(self, question: str) -> str:
+        reformatted_question = to_method_name(question)
 
         if self.is_it_a_yes_no_question(question):
             method_name = reformatted_question
         elif question[-6:] == " (GBP)":
-            method_name = "get_" + uf.crop(reformatted_question, "__gbp_") + "_gbp"
+            method_name = "get_" + crop(reformatted_question, "__gbp_") + "_gbp"
         else:
             method_name = "get_" + reformatted_question
 

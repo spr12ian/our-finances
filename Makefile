@@ -106,8 +106,9 @@ venv: ## Create virtual environment if missing
 # ============================
 
 install_tools:
-	pipx install --force ruff
-	pipx install --force mypy
+	pipx ensurepath --force
+	pipx upgrade ruff || pipx install ruff
+	pipx upgrade mypy || pipx install mypy
 
 requirements: venv
 	@echo "🚀 Upgrading pip, setuptools, and wheel..."
@@ -170,6 +171,12 @@ download_sheets_to_sqlite: check_env venv ## Download the spreadsheet into an SQ
 
 generate_reports: check_env venv ## Create reports from the database spreadsheet data
 	@$(MAKE) run_with_log ACTION=generate_reports COMMAND="$(VPYTHON) -m scripts.generate_reports"
+
+first_normal_form: check_env venv ## First normal form
+	@$(MAKE) run_with_log ACTION=first_normal_form COMMAND="$(VPYTHON) -m scripts.first_normal_form"
+
+vacuum_sqlite_database: check_env venv ## Squeeze the database
+	@$(MAKE) run_with_log ACTION=vacuum_sqlite_database COMMAND="$(VPYTHON) -m scripts.vacuum_sqlite_database"
 
 # ============================
 # Testing & Batching

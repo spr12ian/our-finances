@@ -1,10 +1,31 @@
+from dataclasses import dataclass
+from functools import cache
 from typing import Any
 
 from finances.util.string_helpers import crop
 
 
+def format_answer(answer: Any) -> str:
+    if isinstance(answer, bool):
+        return "Yes" if answer else "No"
+    if isinstance(answer, float):
+        return f"£{answer:,.2f}"
+    if isinstance(answer, int):
+        return f"{answer:,}"
+    return str(answer)
+
+
 class HTMLOutputError(Exception):
     pass
+
+
+@dataclass(frozen=True)
+class HMRCOutputData:
+    person_name: str
+    report_type: str
+    tax_year: str
+    unique_tax_reference: str
+    answers: list[list[str]]
 
 
 class HMRCOutput:
@@ -13,24 +34,26 @@ class HMRCOutput:
     HMRC_TAX_RETURN = "tax return"
     REPORT_TYPES = [HMRC_CALCULATION, HMRC_ONLINE_ANSWERS, HMRC_TAX_RETURN]
 
-    def __init__(self, output_details: dict[str, str]) -> None:
-        self.answers = output_details["answers"]
-        self.person_name = output_details["person_name"]
-        self.report_type = output_details["report_type"]
-        self.tax_year = output_details["tax_year"]
-        self.unique_tax_reference = output_details["unique_tax_reference"]
+    def __init__(
+        self, hmrc_output_data:HMRCOutputData
+    ) -> None:
+        self.person_name = hmrc_output_data.person_name
+        self.report_type = hmrc_output_data.report_type
+        self.tax_year = hmrc_output_data.tax_year
+        self.unique_tax_reference = hmrc_output_data.unique_tax_reference
+        self.answers = hmrc_output_data.answers
 
         self.previous_section = ""
         self.previous_header = ""
 
-    def get_title(self) -> Any:
+    def get_title(self) -> str:
         unique_tax_reference = self.unique_tax_reference
         person_name = self.person_name
         report_type = self.report_type
         tax_year = self.tax_year
         return f"HMRC {report_type} {tax_year} for {person_name} - UTR {unique_tax_reference}\n"
 
-    def position_answer(self, string_list: str) -> str:
+    def position_answer(self, string_list: list[str]) -> str:
         if self.report_type == HMRCOutput.HMRC_ONLINE_ANSWERS:
             widths = [55]
         else:
@@ -40,14 +63,16 @@ class HMRCOutput:
             f"{string:<{width}}"
             for (string, width) in zip(string_list[:how_many], widths)
         ]
-        return "".join(formatted_parts) + string_list[how_many]
+        try:
+            return "".join(formatted_parts) + string_list[how_many]
+        except IndexError:
+            raise HTMLOutputError("Answer formatting error: string_list is too short.")
 
     def print(self, txt: str) -> None:
-        report_file_name = self.report_file_name
-        with open(report_file_name, "a") as file:
+        with open(self.get_report_name(), "a") as file:
             print(txt, file=file)
 
-    def print_end_of_tax_return(self) -> Any:
+    def print_end_of_tax_return(self) -> None:
         title = self.get_title()
         self.print(f"\nEnd of {title}")
 
@@ -57,43 +82,42 @@ class HMRCOutput:
         section: str,
         header: str,
         box: str,
-        answer,
+        answer: Any,
         information: str,
     ) -> None:
         if section != self.previous_section:
             self.previous_section = section
             self.print(f"\n\n{section.upper()}\n")
+
         if header != self.previous_header:
             self.previous_header = header
             self.print(f"\n{header.upper()}\n")
-        if isinstance(answer, bool):
-            answer = "Yes" if answer else "No"
-        elif isinstance(answer, float):
-            answer = f"£{answer:,.2f}"
-        elif isinstance(answer, int):
-            answer = f"{answer:,}"
-        elif isinstance(answer, str):
-            pass
-        else:
-            answer = str(answer)
+
+        formatted_answer = format_answer(answer)
+
         box = crop(box, " (GBP)")
+
         if self.report_type == HMRCOutput.HMRC_ONLINE_ANSWERS:
-            formatted_answer = self.position_answer([box, answer])
+            positioned_answer = self.position_answer([box, formatted_answer])
         else:
-            formatted_answer = self.position_answer([box, question, answer])
+            positioned_answer = self.position_answer([box, question, formatted_answer])
+
         if len(information):
             self.print(information)
-        self.print(formatted_answer)
 
-    def print_report(self) -> Any:
+        self.print(positioned_answer)
+
+    def print_report(self) -> None:
         report_type = self.report_type
-        if not isinstance(report_type, str) or not report_type:
+        if not report_type:
             raise ValueError("Invalid report type provided.")
+
         answers = self.answers
-        if not answers:
+        if len(answers) == 0:
             print("No answers found ==> No report generated.")
             return
-        self.set_report_name()
+
+        self.truncate_report()
         self.print_title()
         for answer_number, (
             question,
@@ -113,42 +137,42 @@ class HMRCOutput:
         self.previous_section = ""
         self.previous_header = ""
 
-    def set_report_name(self) -> Any:
+    @cache
+    def get_report_name(self) -> str:
         """
-        Sets the report file name based on the person's name, report type, and tax year,
-        and creates an empty file with the generated name, overwriting if it already exists.
+        Gets the report file name based on the person's name, report type, and tax year.
         """
         # Retrieve necessary information
         person_name = self.person_name
         report_type = self.report_type
         tax_year = self.tax_year
 
-        # Validate inputs
-        if not person_name or not isinstance(person_name, str):
-            raise ValueError("Invalid person name.")
-        if not report_type or not isinstance(report_type, str):
-            raise ValueError("Invalid report type.")
-        if not tax_year or not isinstance(tax_year, str):
-            raise ValueError("Invalid tax year.")
-
         # Generate a sanitized file name
         sanitized_name = person_name.replace(" ", "_").lower()
         sanitized_report_type = report_type.replace(" ", "_").lower()
         sanitized_tax_year = tax_year.replace(" ", "_")
 
-        report_file_name = (
+        report_name = (
             f"hmrc_{sanitized_report_type}_{sanitized_tax_year}_{sanitized_name}.txt"
         )
+        return report_name
 
+    def print_report_name(self) -> None:
         # Log the generated file name
-        print(f"Generated report file name: {report_file_name}")
+        print(f"Generated report file name: {self.get_report_name()}")
+
+    def truncate_report(self) -> None:
+        """
+        Creates an empty file with the report name, overwriting if it already exists.
+        """
+
+        report_name = self.get_report_name()
 
         # Create or overwrite the file to ensure it's empty
         try:
-            with open(report_file_name, "w") as file:
-                pass  # This will truncate the file if it exists, or create it if it doesn't
+            with open(report_name, "w"):
+                pass  # Truncate the file if it exists, or create it if it doesn't
         except Exception as e:
-            raise HTMLOutputError(f"Failed to create the report file") from e
-
-        # Save the report file name
-        self.report_file_name = report_file_name
+            raise HTMLOutputError(
+                f"Failed to create the report file: {report_name}"
+            ) from e

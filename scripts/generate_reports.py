@@ -10,6 +10,7 @@ from finances.classes.table_hmrc_questions_by_year import HMRC_QuestionsByYear
 
 def check_questions(tax_year: str) -> None:
     questions = HMRC_QuestionsByYear(tax_year)
+    print("Checking questions")
     questions.check_questions()
 
 

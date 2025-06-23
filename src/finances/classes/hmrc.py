@@ -5,13 +5,14 @@ from typing import Any
 
 # local imports
 from finances.classes.hmrc_calculation import HMRC_Calculation
-from finances.classes.hmrc_output import HMRCOutput
+from finances.classes.hmrc_output import HMRCOutput, HMRCOutputData
 from finances.classes.hmrc_people import HMRC_People
 from finances.classes.sql_helper import SQL_Helper
 from finances.classes.sqlalchemy_helper import to_sqlalchemy_name
 from finances.classes.table_categories import Categories
 from finances.classes.table_hmrc_constants_by_year import HMRC_ConstantsByYear
 from finances.classes.table_hmrc_overrides_by_year import HMRC_OverridesByYear
+from finances.classes.table_hmrc_property import HMRC_Property
 from finances.classes.table_hmrc_questions_by_year import HMRC_QuestionsByYear
 from finances.classes.table_transactions import Transactions
 from finances.util import boolean_helpers, financial_helpers
@@ -121,31 +122,31 @@ class HMRC:
             return True
         return False
 
-    def are_you_a_diver(self) -> Any:
+    def are_you_a_diver(self) -> bool:
         return False
 
-    def are_you_a_farmer(self) -> Any:
+    def are_you_a_farmer(self) -> bool:
         return False
 
-    def are_you_a_foster_carer(self) -> Any:
+    def are_you_a_foster_carer(self) -> bool:
         return False
 
-    def are_you_a_trustee__executor_or_administrator(self) -> Any:
+    def are_you_a_trustee__executor_or_administrator(self) -> bool:
         return False
 
-    def are_you_acting_in_capacity_on_behalf_of_someone_else(self) -> Any:
+    def are_you_acting_in_capacity_on_behalf_of_someone_else(self) -> bool:
         return False
 
-    def are_you_affected_by_basis_period_reform(self) -> Any:
+    def are_you_affected_by_basis_period_reform(self) -> bool:
         return False
 
-    def are_you_claiming__overlap_relief_(self) -> Any:
+    def are_you_claiming__overlap_relief_(self) -> bool:
         return False
 
-    def are_you_claiming_back_cis_tax_already_paid(self) -> Any:
+    def are_you_claiming_back_cis_tax_already_paid(self) -> bool:
         return False
 
-    def are_you_claiming_marriage_allowance(self) -> Any:
+    def are_you_claiming_marriage_allowance(self) -> bool:
         if not self.is_married():
             return False
         total_income = self.get_hmrc_total_income_received()
@@ -160,13 +161,13 @@ class HMRC:
             return False
         return True
 
-    def are_you_claiming_married_couple_s_allowance(self) -> Any:
+    def are_you_claiming_married_couple_s_allowance(self) -> bool:
         return False
 
-    def are_you_claiming_other_tax_reliefs(self) -> Any:
+    def are_you_claiming_other_tax_reliefs(self) -> bool:
         return False
 
-    def are_you_claiming_relief_for_a_loss(self) -> Any:
+    def are_you_claiming_relief_for_a_loss(self) -> bool:
         trading_income = self.get_trading_income()
         trading_allowance = self.get_trading_allowance_actual()
         loss = self.get_trading_loss()
@@ -175,7 +176,7 @@ class HMRC:
     def are_you_claiming_rent_a_room_relief(self) -> Any:
         return False
 
-    def are_you_eligible_to_claim_marriage_allowance(self) -> Any:
+    def are_you_eligible_to_claim_marriage_allowance(self) -> bool:
         if not self.is_married():
             return False
         total_income = self.get_hmrc_total_income_received()
@@ -188,7 +189,7 @@ class HMRC:
             and spouse_total_income < higher_rate_threshold
         )
 
-    def are_you_eligible_to_receive_marriage_allowance(self) -> Any:
+    def are_you_eligible_to_receive_marriage_allowance(self) -> bool:
         if not self.is_married():
             return False
         total_income = self.get_hmrc_total_income_received()
@@ -201,7 +202,7 @@ class HMRC:
             and total_income < higher_rate_threshold
         )
 
-    def are_you_exempt_from_paying_class_4_nics(self) -> Any:
+    def are_you_exempt_from_paying_class_4_nics(self) -> bool:
         return not self.did_none_of_these_apply__class_4_nics_()
 
     def are_you_liable_to_pension_savings_tax_charges(self) -> Any:
@@ -210,7 +211,7 @@ class HMRC:
     def are_you_registered_blind(self) -> Any:
         return False
 
-    def calculate_dividends_tax(self, amount, available_allowance=0):
+    def calculate_dividends_tax(self, amount, available_allowance=0) -> tuple:
         if amount <= available_allowance:
             tax = 0
             available_allowance -= amount
@@ -270,17 +271,17 @@ class HMRC:
                     )
         return (round(tax, 2), available_allowance)
 
-    def call_method(self, method_name):
+    def call_method(self, method_name: str) -> str:
         if not self.does_method_exist(method_name):
-            self.l.error(f"\tdef {method_name}(self)->Any: return self.gbpb(0)")
             return f"Method not found: {method_name} - check log file"
+
         method = getattr(self, method_name)
         return method()
 
     def ceased_renting__consider_cgt(self) -> Any:
         return self.gbpb(0)
 
-    def deduct_trading_expenses(self) -> Any:
+    def deduct_trading_expenses(self) -> bool:
         try:
             return self.deduct_trading_expenses_override()
         except ValueError:
@@ -288,12 +289,8 @@ class HMRC:
             trading_expenses = self.get_trading_expenses_actual()
             return trading_allowance < trading_expenses
 
-    def deduct_trading_expenses_override(self) -> Any:
-        try:
-            return self.overrides.deduct_trading_expenses()
-        except ValueError as v:
-            print(v)
-            raise
+    def deduct_trading_expenses_override(self) -> bool:
+        return self.overrides.deduct_trading_expenses()
 
     def did_business_details_change(self) -> bool:
         return False
@@ -447,7 +444,7 @@ class HMRC:
             return False
         return self.are_nics_needed_to_acheive_max_state_pension()
 
-    def does_method_exist(self, method_name):
+    def does_method_exist(self, method_name: str) -> bool:
         method = getattr(self, method_name, None)
         return method is not None
 
@@ -548,9 +545,9 @@ class HMRC:
     def get_annual_payments_made(self) -> Any:
         return self.gbpb(0)
 
-    def get_answers(self) -> list:
+    def get_answers(self) -> list[list[str]]:
         questions = self.get_questions()
-        answers = []
+        answers: list[list[str]] = []
         for question, section, header, box, method_name, information in questions:
             answer = self.call_method(method_name)
             answers.append([question, section, header, box, answer, information])
@@ -2555,15 +2552,15 @@ class HMRC:
     def print_reports(self) -> None:
         for report_type in HMRCOutput.REPORT_TYPES:
             self.report_type = report_type
-            output_details = {
-                "answers": self.get_answers(),
-                "person_name": self.get_person_name(),
-                "report_type": report_type,
-                "tax_year": self.tax_year,
-                "unique_tax_reference": self.get_unique_tax_reference(),
-            }
-            HMRCOutput = HMRCOutput(output_details)
-            HMRCOutput.print_report()
+            hmrc_output_data = HMRCOutputData(
+                person_name=self.get_person_name(),
+                report_type=report_type,
+                tax_year=self.tax_year,
+                unique_tax_reference=self.get_unique_tax_reference(),
+                answers=self.get_answers(),
+            )
+            hmrc_output = HMRCOutput(hmrc_output_data)
+            hmrc_output.print_report()
 
     def receives_child_benefit(self) -> Any:
         return self.person.receives_child_benefit()
@@ -2607,11 +2604,7 @@ class HMRC:
         return value
 
     def use_trading_allowance_override(self) -> bool:
-        try:
-            return self.overrides.use_trading_allowance()
-        except ValueError as v:
-            print(v)
-            raise
+        return self.overrides.use_trading_allowance()
 
     def were_any_repayments_claimed_for_next_year(self) -> bool:
         return False
