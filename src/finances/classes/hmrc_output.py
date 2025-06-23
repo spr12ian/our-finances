@@ -142,6 +142,7 @@ class HMRCOutput:
         """
         Gets the report file name based on the person's name, report type, and tax year.
         """
+        report_dir = "output/reports/hmrc"
         # Retrieve necessary information
         person_name = self.person_name
         report_type = self.report_type
@@ -153,7 +154,7 @@ class HMRCOutput:
         sanitized_tax_year = tax_year.replace(" ", "_")
 
         report_name = (
-            f"hmrc_{sanitized_report_type}_{sanitized_tax_year}_{sanitized_name}.txt"
+            f"{report_dir}/{sanitized_tax_year}_{sanitized_name}_{sanitized_report_type}.txt"
         )
         return report_name
 
