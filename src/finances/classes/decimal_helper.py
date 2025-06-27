@@ -1,14 +1,13 @@
 from decimal import ROUND_HALF_UP, Decimal, getcontext
-from typing import Union
 
-MONEY = Union[Decimal, int, float]
+MONEY = Decimal | int | float
 
 # Set the global rounding mode
 getcontext().rounding = ROUND_HALF_UP
 
 
 class DecimalHelper:
-    def __init__(self, decimal_places: int | None = None):
+    def __init__(self, decimal_places: int | None = None)-> None:
         self.decimal_places = decimal_places
 
     def get_decimal(self, value: MONEY) -> Decimal:

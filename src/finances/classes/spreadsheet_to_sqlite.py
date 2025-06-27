@@ -2,7 +2,6 @@ import time
 from collections.abc import Callable
 from typing import Any, Final
 
-from database_keys import get_primary_key_columns, has_primary_key
 from gspread import Worksheet
 from pandas import DataFrame, Series
 
@@ -11,6 +10,7 @@ from finances.classes.google_helper import GoogleHelper
 from finances.classes.pandas_helper import PandasHelper
 from finances.classes.sql_helper import SQL_Helper
 from finances.classes.sqlalchemy_helper import to_sqlalchemy_name
+from finances.generated.database_keys import get_primary_key_columns, has_primary_key
 from finances.generated.field_registry import field_registry
 from finances.util.boolean_helpers import boolean_string_to_int
 from finances.util.date_helpers import UK_to_ISO

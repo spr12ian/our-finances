@@ -3,8 +3,10 @@ from typing import Any
 
 from finances.classes.exception_helper import ExceptionHelper
 
+
 class ConfigError(ExceptionHelper):
     pass
+
 
 class Config:
     def __init__(self) -> None:
@@ -34,7 +36,7 @@ class Config:
             return default
 
         raise ConfigError(f"Environment variable '{name}' not found")
-    
+
     def getOptional(self, name: str) -> Any:
         return self.get(name, default=None)
 

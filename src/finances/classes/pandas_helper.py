@@ -4,7 +4,6 @@ from pandas import DataFrame, api
 
 
 class PandasHelper:
-
     def header_to_dataframe(self, values: Any) -> DataFrame:
         # Create a DataFrame
         columns = values

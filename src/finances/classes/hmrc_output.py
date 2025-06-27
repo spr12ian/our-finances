@@ -34,9 +34,7 @@ class HMRCOutput:
     HMRC_TAX_RETURN = "tax return"
     REPORT_TYPES = [HMRC_CALCULATION, HMRC_ONLINE_ANSWERS, HMRC_TAX_RETURN]
 
-    def __init__(
-        self, hmrc_output_data:HMRCOutputData
-    ) -> None:
+    def __init__(self, hmrc_output_data: HMRCOutputData) -> None:
         self.person_name = hmrc_output_data.person_name
         self.report_type = hmrc_output_data.report_type
         self.tax_year = hmrc_output_data.tax_year
@@ -153,9 +151,7 @@ class HMRCOutput:
         sanitized_report_type = report_type.replace(" ", "_").lower()
         sanitized_tax_year = tax_year.replace(" ", "_")
 
-        report_name = (
-            f"{report_dir}/{sanitized_tax_year}_{sanitized_name}_{sanitized_report_type}.txt"
-        )
+        report_name = f"{report_dir}/{sanitized_tax_year}_{sanitized_name}_{sanitized_report_type}.txt"
         return report_name
 
     def print_report_name(self) -> None:

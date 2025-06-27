@@ -1,12 +1,14 @@
 # standard imports
+from __future__ import annotations
+
 from decimal import Decimal
 from functools import cache
 from typing import Any
 
 # local imports
+from finances.classes.hmrc.person import HMRCPerson as Person
 from finances.classes.hmrc_calculation import HMRC_Calculation
 from finances.classes.hmrc_output import HMRCOutput, HMRCOutputData
-from finances.classes.hmrc_people import HMRC_People
 from finances.classes.sql_helper import SQL_Helper
 from finances.classes.sqlalchemy_helper import to_sqlalchemy_name
 from finances.classes.table_categories import Categories
@@ -22,15 +24,15 @@ class HMRC:
     def __init__(self, person_code: str, tax_year: str) -> None:
         self.person_code = person_code
         self.tax_year = tax_year
+
         self.tax_year_col = to_sqlalchemy_name(tax_year)
 
         self.categories = Categories()
         self.constants = HMRC_ConstantsByYear(tax_year)
         self.overrides = HMRC_OverridesByYear(person_code, tax_year)
-        self.person = HMRC_People(person_code)
-        if self.is_married():
-            spouse_code = self.person.get_spouse_code()
-            self.spouse = HMRC_People(spouse_code)
+        self.person = Person(person_code)
+        self._spouse: Person | None = None
+
         self.sql = SQL_Helper().select_sql_helper("SQLite")
         self.transactions = Transactions()
 
@@ -63,12 +65,12 @@ class HMRC:
     def are_computations_provided(self) -> Any:
         return False
 
-    def are_nics_needed_to_acheive_max_state_pension(self) -> bool:
-        are_nics_needed_to_acheive_max_state_pension = (
-            self.person.are_nics_needed_to_acheive_max_state_pension()
+    def are_nics_needed_to_achieve_max_state_pension(self) -> bool:
+        are_nics_needed_to_achieve_max_state_pension = (
+            self.person.are_nics_needed_to_achieve_max_state_pension()
         )
 
-        return are_nics_needed_to_acheive_max_state_pension
+        return are_nics_needed_to_achieve_max_state_pension
 
     def are_supplementary_pages_enclosed(self) -> bool:
         return False
@@ -147,7 +149,7 @@ class HMRC:
         return False
 
     def are_you_claiming_marriage_allowance(self) -> bool:
-        if not self.is_married():
+        if not self.person.is_married():
             return False
         total_income = self.get_hmrc_total_income_received()
         spouse_total_income = self.get_spouse_total_income_received()
@@ -177,7 +179,7 @@ class HMRC:
         return False
 
     def are_you_eligible_to_claim_marriage_allowance(self) -> bool:
-        if not self.is_married():
+        if not self.person.is_married():
             return False
         total_income = self.get_hmrc_total_income_received()
         spouse_total_income = self.get_spouse_total_income_received()
@@ -190,7 +192,7 @@ class HMRC:
         )
 
     def are_you_eligible_to_receive_marriage_allowance(self) -> bool:
-        if not self.is_married():
+        if not self.person.is_married():
             return False
         total_income = self.get_hmrc_total_income_received()
         spouse_total_income = self.get_spouse_total_income_received()
@@ -442,7 +444,7 @@ class HMRC:
         small_profits_threshold = self.get_small_profits_threshold()
         if trading_income > small_profits_threshold:
             return False
-        return self.are_nics_needed_to_acheive_max_state_pension()
+        return self.are_nics_needed_to_achieve_max_state_pension()
 
     def does_method_exist(self, method_name: str) -> bool:
         method = getattr(self, method_name, None)
@@ -700,8 +702,8 @@ class HMRC:
 
         # If trading profits less than small profits threshold
         # then class 2 nics are voluntary.
-        # Pay voluntarily if neccesary to acheive max state pension.
-        if self.are_nics_needed_to_acheive_max_state_pension():
+        # Pay voluntarily if neccesary to achieve max state pension.
+        if self.are_nics_needed_to_achieve_max_state_pension():
             return class_2_annual_amount
 
         return 0
@@ -1268,11 +1270,8 @@ class HMRC:
     def get_maintenance_payments(self) -> Any:
         return self.gbpb(0)
 
-    def get_marital_status(self) -> Any:
-        return self.person.get_marital_status()
-
     def get_marriage_allowance_digest(self) -> Any:
-        if not self.is_married():
+        if not self.person.is_married():
             return ""
         marriage_allowance = self.get_marriage_allowance_donor_amount()
         if marriage_allowance == 0:
@@ -1284,7 +1283,7 @@ class HMRC:
         return "\n" + " | ".join(parts)
 
     def get_marriage_allowance_donor_amount(self) -> Decimal:
-        if not self.is_married():
+        if not self.person.is_married():
             return Decimal(0)
 
         total_income = self.get_hmrc_total_income_received()
@@ -1314,9 +1313,9 @@ class HMRC:
 
     @cache
     def get_marriage_allowance_recipient_amount(self) -> Decimal:
-        if not self.is_married():
+        if not self.person.is_married():
             return Decimal(0)
-        spouse_hmrc = self.get_spouse_hmrc()
+        spouse_hmrc = self.person.get_spouse_hmrc(self.tax_year)
         marriage_allowance_recipient_amount = (
             spouse_hmrc.get_marriage_allowance_donor_amount()
         )
@@ -1327,7 +1326,7 @@ class HMRC:
         return self.gbpb(self.get_marriage_allowance_recipient_amount())
 
     def get_marriage_date(self) -> str:
-        if not self.is_married():
+        if not self.person.is_married():
             return ""
         return self.spouse.get_uk_marriage_date()
 
@@ -1539,9 +1538,6 @@ class HMRC:
 
     def get_private_pensions_income__other_than_state_pension_(self) -> Any:
         return 0
-
-    def get_person_name(self) -> Any:
-        return self.person.get_name()
 
     def get_personal_allowance(self) -> Any:
         return self.constants.get_personal_allowance()
@@ -1861,21 +1857,9 @@ class HMRC:
     def get_small_profits_threshold(self) -> Any:
         return self.constants.get_small_profits_threshold()
 
-    def get_spouse_code(self) -> Any:
-        if not self.is_married():
-            return ""
-        return self.person.get_spouse_code()
-
-    @cache
-    def get_spouse_hmrc(self) -> Any:
-        spouse_code = self.get_spouse_code()
-        tax_year = self.tax_year
-        spouse_hmrc = HMRC(spouse_code, tax_year)
-        return spouse_hmrc
-
     @cache
     def get_spouse_total_income_received(self) -> Decimal:
-        spouse_hmrc = self.get_spouse_hmrc()
+        spouse_hmrc = self.person.get_spouse_hmrc(self.tax_year)
         spouse_total_income_received = spouse_hmrc.get_hmrc_total_income_received()
         return spouse_total_income_received
 
@@ -2435,22 +2419,22 @@ class HMRC:
         return self.person.get_phone_number()
 
     def get_your_spouse_s_date_of_birth(self) -> str:
-        if not self.is_married():
+        if not self.person.is_married():
             return ""
         return self.spouse.get_uk_date_of_birth()
 
     def get_your_spouse_s_first_name(self) -> Any:
-        if not self.is_married():
+        if not self.person.is_married():
             return ""
         return self.spouse.get_first_name()
 
     def get_your_spouse_s_last_name(self) -> Any:
-        if not self.is_married():
+        if not self.person.is_married():
             return ""
         return self.spouse.get_last_name()
 
     def get_your_spouse_s_national_insurance_number(self) -> Any:
-        if not self.is_married():
+        if not self.person.is_married():
             return ""
         return self.spouse.get_national_insurance_number()
 
@@ -2468,9 +2452,6 @@ class HMRC:
 
     def is_box_6_blank_as_tax_inc__in_box_2_of__employment_(self) -> bool:
         return self.gbpb(0)
-
-    def is_married(self) -> bool:
-        return self.person.is_married()
 
     def is_postgraduate_loan_repayment_due(self) -> bool:
         return False
@@ -2553,7 +2534,7 @@ class HMRC:
         for report_type in HMRCOutput.REPORT_TYPES:
             self.report_type = report_type
             hmrc_output_data = HMRCOutputData(
-                person_name=self.get_person_name(),
+                person_name=self.person.get_name(),
                 report_type=report_type,
                 tax_year=self.tax_year,
                 unique_tax_reference=self.get_unique_tax_reference(),
@@ -2587,6 +2568,19 @@ class HMRC:
         if turnover > trading_allowance:
             return False
         return self.do_you_wish_to_voluntarily_pay_class_2_nics()
+
+    @property
+    def spouse(self) -> Person | None:
+        if self._spouse is not None:
+            return self._spouse
+
+        spouse_code = self.person.get_spouse_code()
+        if spouse_code is None:
+            return None
+
+        self._spouse = Person(spouse_code)
+        return self._spouse
+
 
     def use_property_allowance(self) -> Any:
         property_allowance = self.get_property_allowance()

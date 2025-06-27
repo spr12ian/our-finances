@@ -12,11 +12,11 @@ from finances.classes.exception_helper import ExceptionHelper
 class GoogleHelperError(ExceptionHelper):
     pass
 
+
 class GoogleHelper:
     def __init__(self) -> None:
         self.read_config()
         self.check_config_values()
-
 
     def check_config_values(self) -> None:
         service_account_key_file = Path(self.service_account_key_file)
@@ -29,20 +29,17 @@ class GoogleHelper:
             with open(service_account_key_file, encoding="utf-8") as f:
                 json.load(f)
         except json.JSONDecodeError as e:
-            raise ValueError(
-                f"{service_account_key_file}: Invalid JSON: {e}"
-            ) from e
+            raise ValueError(f"{service_account_key_file}: Invalid JSON: {e}") from e
         except OSError as e:
             raise OSError(
                 f"Error reading service account file '{service_account_key_file}': {e}"
             ) from e
 
-        spreadsheet_key=self.spreadsheet_key
+        spreadsheet_key = self.spreadsheet_key
         if not spreadsheet_key:
             raise GoogleHelperError(
                 f"Missing spreadsheet key '{spreadsheet_key}'"
             ) from OSError(spreadsheet_key)
-
 
     def get_authorized_client(self, scopes: Sequence[str]) -> gspread.Client:
         # from_service_account_file requires scopes to be passed as a keyword arguement
@@ -78,6 +75,4 @@ class GoogleHelper:
             self.service_account_key_file = config.GOOGLE_SERVICE_ACCOUNT_KEY_FILE
             self.spreadsheet_key = config.GOOGLE_DRIVE_OUR_FINANCES_KEY
         except ConfigError as e:
-            raise GoogleHelperError(
-                f"Config error"
-            ) from e
+            raise GoogleHelperError(f"Config error") from e

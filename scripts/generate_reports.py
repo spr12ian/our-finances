@@ -4,7 +4,7 @@ setup_path()
 
 from datetime import datetime
 
-from finances.classes.hmrc import HMRC
+from finances.classes.hmrc.core import HMRC
 from finances.classes.table_hmrc_questions_by_year import HMRC_QuestionsByYear
 
 

@@ -8,7 +8,7 @@ from finances.classes.sqlalchemy_helper import (
 
 
 class SQLiteTable:
-    def __init__(self, table_name: str)->None:
+    def __init__(self, table_name: str) -> None:
         validate_sqlalchemy_name(table_name)
         self.sql = SQLAlchemyHelper()
         self.table_name = table_name

@@ -1,5 +1,8 @@
 # standard imports
+from __future__ import annotations
+
 from decimal import Decimal
+from functools import cache
 from typing import Any
 
 from finances.classes.table_bank_accounts import BankAccounts
@@ -9,14 +12,14 @@ from finances.classes.table_hmrc_people_details import HMRC_PeopleDetails
 from finances.classes.table_people import People
 
 
-class HMRC_People(People):
+class HMRCPerson(People):
     def __init__(self, code: str) -> None:
         super().__init__(code)
 
         self.hmrc_person_details = HMRC_PeopleDetails(code)
 
-    def are_nics_needed_to_acheive_max_state_pension(self) -> bool:
-        return self.hmrc_person_details.are_nics_needed_to_acheive_max_state_pension()
+    def are_nics_needed_to_achieve_max_state_pension(self) -> bool:
+        return self.hmrc_person_details.are_nics_needed_to_achieve_max_state_pension()
 
     def get_bank_account_number(self) -> Any:
         refunds_to = self.hmrc_person_details.get_refunds_to()
@@ -39,8 +42,18 @@ class HMRC_People(People):
     def get_refunds_to(self) -> Any:
         return self.hmrc_person_details.get_refunds_to()
 
-    def get_spouse_code(self) -> str:
+    def get_spouse_code(self) -> str | None:
         return self.hmrc_person_details.get_spouse_code()
+
+    @cache
+    def get_spouse_hmrc(self, tax_year: str) -> HMRC | None:
+        from finances.classes.hmrc.core import HMRC
+
+        return (
+            HMRC(spouse_code, tax_year)
+            if (spouse_code := self.get_spouse_code())
+            else None
+        )
 
     def get_taxpayer_residency_status(self) -> Any:
         return self.hmrc_person_details.get_taxpayer_residency_status()
@@ -49,7 +62,7 @@ class HMRC_People(People):
         marriage_date = self.hmrc_person_details.get_marriage_date()
         return marriage_date
 
-    def get_unique_tax_reference(self) -> str:
+    def get_unique_tax_reference(self) -> str | None:
         return self.hmrc_person_details.get_unique_tax_reference()
 
     def get_utr_check_digit(self) -> str:

@@ -14,6 +14,7 @@ from finances.classes.exception_helper import ExceptionHelper
 class SQLiteHelperError(ExceptionHelper):
     pass
 
+
 class SQLiteHelper:
     def __init__(self) -> None:
         self.read_config()
@@ -139,7 +140,7 @@ FROM {table_name}
         query = f"PRAGMA table_info('{table_name}')"
         self.open_connection()
 
-        cursor:sqlite3.Cursor = self.db_connection.cursor()
+        cursor: sqlite3.Cursor = self.db_connection.cursor()
         cursor.execute(query)
         table_info = cursor.fetchall()
 
@@ -149,7 +150,7 @@ FROM {table_name}
 
     def open_connection(self) -> None:
         # Connect to SQLite database
-        self.db_connection:sqlite3.Connection = sqlite3.connect(self.db_path)
+        self.db_connection: sqlite3.Connection = sqlite3.connect(self.db_path)
 
     def read_config(self) -> None:
         config = Config()
@@ -168,9 +169,7 @@ FROM {table_name}
         if not db_location:
             raise SQLiteHelperError(
                 "SQLITE_DB_LOCATION is not set in the configuration."
-            ) from ValueError(
-                "SQLITE_DB_LOCATION is not set in the configuration."
-            )
+            ) from ValueError("SQLITE_DB_LOCATION is not set in the configuration.")
 
         self.db_location = db_location
 
@@ -181,7 +180,6 @@ FROM {table_name}
     def rename_column(
         self, table_name: str, old_column_name: str, new_column_name: str
     ) -> None:
-
         self.open_connection()
 
         cursor = self.db_connection.cursor()

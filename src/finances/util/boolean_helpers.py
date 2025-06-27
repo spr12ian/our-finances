@@ -25,7 +25,6 @@ def all_items_are_boolean(lst: list[Any]) -> bool:
 
 # Function to convert boolean strings to int
 def boolean_string_to_int(string: str) -> int:
-
     string = string.strip().lower()
 
     if string == "":

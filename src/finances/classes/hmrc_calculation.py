@@ -4,7 +4,7 @@ from decimal import Decimal
 from typing import Any, TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from finances.classes.hmrc import HMRC
+    from finances.classes.hmrc.core import HMRC
 
 
 class HMRC_Calculation:

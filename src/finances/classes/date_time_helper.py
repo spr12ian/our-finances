@@ -6,13 +6,13 @@ class DateTimeHelper:
     UK_DATE_FORMAT = "%d/%m/%Y"
 
     # Function to convert ISO date strings (YYYY-MM-DD) to UK date strings DD/MM/YYYY
-    def ISO_to_UK(self, date_str: str) -> str:
+    def ISO_to_UK(self, date_str: str | None) -> str:
         return self.reformat_date_str(
             date_str, DateTimeHelper.ISO_DATE_FORMAT, DateTimeHelper.UK_DATE_FORMAT
         )
 
     # Function to convert UK date strings (DD/MM/YYYY) to ISO date strings YYYY-MM-DD
-    def UK_to_ISO(self, date_str: str) -> str:
+    def UK_to_ISO(self, date_str: str | None) -> str:
         return self.reformat_date_str(
             date_str, DateTimeHelper.UK_DATE_FORMAT, DateTimeHelper.ISO_DATE_FORMAT
         )
@@ -39,8 +39,12 @@ class DateTimeHelper:
         now = datetime.now()
         return now.strftime("%H:%M:%S")
 
-    def reformat_date_str(self, date_str: str, from_format: str, to_format: str) -> str:
-        if date_str.strip() == "":  # Check if the string is empty or whitespace
+    def reformat_date_str(
+        self, date_str: str | None, from_format: str, to_format: str
+    ) -> str:
+        if (
+            date_str is None or date_str.strip() == ""
+        ):  # Check if the string is empty or whitespace
             return ""
 
         # Convert the string to a datetime object
