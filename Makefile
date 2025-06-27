@@ -230,8 +230,8 @@ test_only: venv logs ## Run only the test suite
 	$(VPYTHON) -m pytest tests --maxfail=1 --disable-warnings -q | tee -a "$$log_file"
 	echo "✅ Unit tests complete." | tee -a "$$log_file"
 
-tree: ## list contents of directories in a tree-like format
-	tree -I '__pycache__|.git|.hatch' -a -F
+tree: logs ## list contents of directories in a tree-like format
+	@$(MAKE) run_with_log ACTION=tree COMMAND="tree -a -F -I '__pycache__' -I '.git' -I '.hatch' -I '.mypy_cache' -I '.pytest_cache' -I '.ruff_cache' -I '.venv'"
 
 types: logs ## Type check source code using Mypy
 	@log_file="logs/types.log"; \

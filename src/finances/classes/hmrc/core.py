@@ -6,6 +6,7 @@ from functools import cache
 from typing import Any
 
 # local imports
+from finances.classes.hmrc.income import HMRCIncome as Income
 from finances.classes.hmrc.person import HMRCPerson as Person
 from finances.classes.hmrc_calculation import HMRC_Calculation
 from finances.classes.hmrc_output import HMRCOutput, HMRCOutputData
@@ -25,16 +26,21 @@ class HMRC:
         self.person_code = person_code
         self.tax_year = tax_year
 
+        self.initialize_properties()
+
         self.tax_year_col = to_sqlalchemy_name(tax_year)
 
         self.categories = Categories()
         self.constants = HMRC_ConstantsByYear(tax_year)
         self.overrides = HMRC_OverridesByYear(person_code, tax_year)
         self.person = Person(person_code)
-        self._spouse: Person | None = None
 
         self.sql = SQL_Helper().select_sql_helper("SQLite")
         self.transactions = Transactions()
+
+    def initialize_properties(self) -> None:
+        self._income: Income | None = None
+        self._spouse: Person | None = None
 
     def _get_breakdown(self, category_like: str) -> str:
         tax_year = self.tax_year
@@ -2178,9 +2184,6 @@ class HMRC:
     def get_trading_balancing_charges_gbp(self) -> Any:
         return self.gbpb(self.get_trading_balancing_charges())
 
-    def get_trading_digest(self) -> str:
-        return self.get_digest_by_type("trading")
-
     def get_trading_expenses(self) -> Any:
         actual_trading_allowance = self.get_trading_allowance_actual()
         actual_trading_expenses = self.get_trading_expenses_actual()
@@ -2562,6 +2565,14 @@ class HMRC:
         if turnover > trading_allowance:
             return False
         return self.do_you_wish_to_voluntarily_pay_class_2_nics()
+
+    @property
+    def income(self) -> Income | None:
+        if self._income is not None:
+            return self._income
+
+        self._income = Income(self)
+        return self._income
 
     @property
     def spouse(self) -> Person | None:
