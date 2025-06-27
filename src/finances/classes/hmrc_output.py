@@ -24,7 +24,7 @@ class HMRCOutputData:
     person_name: str
     report_type: str
     tax_year: str
-    unique_tax_reference: str
+    unique_tax_reference: str | None
     answers: list[list[str]]
 
 

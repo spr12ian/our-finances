@@ -2344,9 +2344,6 @@ class HMRC:
     def get_underpaid_tax_for_earlier_years(self) -> Any:
         return self.gbpb(0)
 
-    def get_unique_tax_reference(self) -> Any:
-        return self.person.get_unique_tax_reference()
-
     def get_unique_taxpayer_reference__utr_(self) -> Any:
         return self.person.get_unique_tax_reference()
 
@@ -2402,9 +2399,6 @@ class HMRC:
 
     def get_years_voided_isas_held(self) -> Any:
         return self.gbpb(0)
-
-    def get_your_address(self) -> Any:
-        return self.person.get_address()
 
     def get_your_date_of_birth(self) -> Any:
         return self.person.get_uk_date_of_birth()
@@ -2537,7 +2531,7 @@ class HMRC:
                 person_name=self.person.get_name(),
                 report_type=report_type,
                 tax_year=self.tax_year,
-                unique_tax_reference=self.get_unique_tax_reference(),
+                unique_tax_reference=self.person.get_unique_tax_reference(),
                 answers=self.get_answers(),
             )
             hmrc_output = HMRCOutput(hmrc_output_data)
@@ -2580,7 +2574,6 @@ class HMRC:
 
         self._spouse = Person(spouse_code)
         return self._spouse
-
 
     def use_property_allowance(self) -> Any:
         property_allowance = self.get_property_allowance()
