@@ -6,6 +6,7 @@ from functools import cache
 from typing import Any
 
 # local imports
+from finances.classes.hmrc.booleans import HMRCBooleans as Booleans
 from finances.classes.hmrc.income import HMRCIncome as Income
 from finances.classes.hmrc.person import HMRCPerson as Person
 from finances.classes.hmrc_calculation import HMRC_Calculation
@@ -39,6 +40,7 @@ class HMRC:
         self.transactions = Transactions()
 
     def initialize_properties(self) -> None:
+        self._booleans: Booleans | None = None
         self._income: Income | None = None
         self._spouse: Person | None = None
 
@@ -65,18 +67,7 @@ class HMRC:
             )
         return self.format_breakdown(breakdown)
 
-    def are_any_of_these_figures_provisional(self) -> Any:
-        return False
 
-    def are_computations_provided(self) -> Any:
-        return False
-
-    def are_nics_needed_to_achieve_max_state_pension(self) -> bool:
-        are_nics_needed_to_achieve_max_state_pension = (
-            self.person.are_nics_needed_to_achieve_max_state_pension()
-        )
-
-        return are_nics_needed_to_achieve_max_state_pension
 
     def are_supplementary_pages_enclosed(self) -> bool:
         return False
@@ -450,7 +441,7 @@ class HMRC:
         small_profits_threshold = self.get_small_profits_threshold()
         if trading_income > small_profits_threshold:
             return False
-        return self.are_nics_needed_to_achieve_max_state_pension()
+        return self.person.are_nics_needed_to_achieve_max_state_pension()
 
     def does_method_exist(self, method_name: str) -> bool:
         method = getattr(self, method_name, None)
@@ -701,15 +692,15 @@ class HMRC:
 
         # If trading profits between small profits threshold and personal allowance
         # then class 2 nics are deemed to have been paid.
-        # This rule may be year dependednt.
+        # This rule may be year dependent.
         small_profits_threshold = self.get_small_profits_threshold()
         if trading_profit >= small_profits_threshold:
             return 0
 
         # If trading profits less than small profits threshold
         # then class 2 nics are voluntary.
-        # Pay voluntarily if neccesary to achieve max state pension.
-        if self.are_nics_needed_to_achieve_max_state_pension():
+        # Pay voluntarily if necessary to achieve max state pension.
+        if self.person.are_nics_needed_to_achieve_max_state_pension():
             return class_2_annual_amount
 
         return 0
