@@ -1,3 +1,4 @@
+src/finances/generated/
 *.bak
 *.csv
 *.sqlite
