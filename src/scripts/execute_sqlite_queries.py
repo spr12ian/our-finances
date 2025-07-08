@@ -3,10 +3,7 @@
 import sqlite3
 import sys
 
-import sqlparse  # type: ignore
-from scripts.bootstrap import setup_path
-
-setup_path()
+import sqlparse
 
 from finances.classes.config import Config
 
@@ -25,7 +22,7 @@ conn = sqlite3.connect(config.OUR_FINANCES_SQLITE_DB_NAME)
 cursor = conn.cursor()
 
 # Split script into individual statements safely
-statements = sqlparse.split(script)  # type: ignore
+statements = sqlparse.split(script)
 
 for statement in statements:
     stmt = statement.strip()

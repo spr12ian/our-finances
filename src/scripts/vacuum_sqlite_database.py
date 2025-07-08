@@ -1,7 +1,3 @@
-from scripts.bootstrap import setup_path
-
-setup_path()
-
 import os
 from pathlib import Path
 

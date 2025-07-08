@@ -1,8 +1,3 @@
-from scripts.bootstrap import setup_path
-
-setup_path()
-
-
 from gspread.worksheet import Worksheet
 from pandas import DataFrame
 

@@ -1,7 +1,3 @@
-from scripts.bootstrap import setup_path
-
-setup_path()
-
 from datetime import datetime
 
 from finances.classes.hmrc.core import HMRC

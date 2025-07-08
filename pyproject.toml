@@ -57,14 +57,12 @@ check = [
 ]
 test = "pytest"
 
-
-
 [tool.hatch.version]
 source = "vcs"  # Automatically version from Git tags (e.g., 0.1.0)
 
 [tool.mypy]
 python_version = "3.12"
-mypy_path = "src"
+mypy_path = "src:typings"
 
 [tool.ruff]
 extend-select = ["I"]

@@ -1,7 +1,3 @@
-from scripts.bootstrap import setup_path
-
-setup_path()
-
 from finances.classes.date_time_helper import DateTimeHelper
 
 

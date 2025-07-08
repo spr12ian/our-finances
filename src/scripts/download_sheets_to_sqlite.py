@@ -1,7 +1,3 @@
-from scripts.bootstrap import setup_path
-
-setup_path()
-
 from finances.classes.spreadsheet_to_sqlite import SpreadSheetToSqlite
 
 
