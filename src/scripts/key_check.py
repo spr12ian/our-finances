@@ -1,10 +1,5 @@
 import sys
 
-from scripts.bootstrap import setup_path
-
-setup_path()
-
-
 from finances.classes.google_helper import GoogleHelper, GoogleHelperError
 
 

@@ -64,6 +64,7 @@ TOP_LEVEL_PACKAGES := \
 	generate_reports \
 	help \
 	info \
+	install_package \
 	install_tools \
 	key_check \
 	lint \
@@ -78,6 +79,7 @@ TOP_LEVEL_PACKAGES := \
 	test_all \
 	test_only \
 	types \
+	update \
 	version
 
 # ============================
@@ -96,6 +98,17 @@ setup: clean requirements install_tools ## Set up the environment and tools
 # ============================
 # Package installation
 # ============================
+
+install_package: ## Install a dev dependency and persist to pyproject.toml
+	@test "$(PACKAGE)" || (echo "❌ Must provide PACKAGE=<name>"; exit 1)
+	@echo "📦 Installing $(PACKAGE) into dev environment..."
+	@hatch run dev:pip install "$(PACKAGE)"
+	@echo "📝 Adding $(PACKAGE) to [tool.hatch.envs.dev] in pyproject.toml..."
+	@sed -i '/^\[tool\.hatch\.envs\.dev\]/,/^\[/{/dependencies = \[/a\    "$(PACKAGE)",}' pyproject.toml
+	@echo "🔁 Recreating environment..."
+	@hatch env prune && hatch env create dev
+	@echo "✅ $(PACKAGE) installed and environment updated."
+
 
 install_tools:
 	pipx ensurepath --force
@@ -152,7 +165,7 @@ clean: logs ## Cleanup the directory
 # ============================
 
 key_check: check_env ## Run key_check to test connection to the spreadsheet
-	@$(MAKE) run_with_log ACTION=key_check COMMAND="$(VPYTHON) -m scripts.key_check"
+	@$(MAKE) run_with_log ACTION=key_check COMMAND="hatch run key-check"
 
 analyze_spreadsheet: check_env ## Analyze the spreadsheet prior to downloading it
 	@$(MAKE) run_with_log ACTION=analyze_spreadsheet COMMAND="$(VPYTHON) -m scripts.analyze_spreadsheet"
@@ -293,6 +306,12 @@ shell: ## Enter Hatch dev environment shell
 
 
 
+
+update: ## Recreate hatch with current pyproject.toml
+	@echo "🔄 Recreating Hatch environment..."
+	@hatch env prune
+	@hatch env create dev
+	@echo "✅ Hatch environment recreated."
 
 
 
