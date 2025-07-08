@@ -77,7 +77,6 @@ install_package: ## Install a dev dependency and persist to pyproject.toml
 	@echo "✅ $(PACKAGE) installed and environment updated."
 
 install_tools:
-	pipx ensurepath --force
 	pipx upgrade ruff || pipx install ruff
 	pipx upgrade mypy || pipx install mypy
 

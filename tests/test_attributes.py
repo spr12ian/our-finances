@@ -6,7 +6,7 @@ import logging
 
 
 class MyClass:
-    def __init__(self, x, y):
+    def __init__(self, x: int, y: int) -> None:
         self.x = x
         self.y = y
 
@@ -16,7 +16,7 @@ def greet(name: str, age: int) -> str:
     return f"Hello, {name}. You are {age} years old."
 
 
-def main():
+def main() -> None:
     print(f"greet.__annotations__: {greet.__annotations__}")
     print(f"__doc__: {__doc__}")
     print(f"__file__: {__file__}")

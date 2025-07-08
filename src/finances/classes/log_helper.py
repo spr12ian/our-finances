@@ -9,7 +9,13 @@ from finances.classes.date_time_helper import DateTimeHelper
 # https://docs.python.org/3/library/logging.html?form=MG0AV3
 
 DEBUG_FILE = "debug.log"
-logging.basicConfig(filename=DEBUG_FILE, level=logging.INFO)
+logging.basicConfig(
+    filename=DEBUG_FILE,
+    level=logging.INFO,
+    format="%(asctime)s %(levelname)s [%(name)s] %(message)s",
+    datefmt="%Y-%m-%d %H:%M:%S",
+)
+
 logger = logging.getLogger(__name__)
 # logger.setLevel(logging.DEBUG)
 
@@ -33,7 +39,7 @@ class LogHelper:
         logging.NOTSET: "NOTSET",  # 0
     }
 
-    def __init__(self, name) -> None:
+    def __init__(self, name: str) -> None:
         # print(f"LogHelper name: {name}")
         name = os.path.basename(name)
         # print(f"LogHelper basename: {basename}")
@@ -53,7 +59,7 @@ class LogHelper:
     def critical(self, msg):
         self.logger.critical(msg)
 
-    def debug(self, msg):
+    def debug(self, msg: str) -> None:
         self.logger.debug(msg)
 
     def disable(self) -> Any:
@@ -82,7 +88,7 @@ class LogHelper:
         level_name = LogHelper.LOG_LEVELS.get(level, "UNKNOWN")
         return level_name
 
-    def info(self, msg):
+    def info(self, msg: str) -> None:
         self.logger.info(msg)
 
     def is_debug_enabled(self) -> Any:
@@ -127,7 +133,7 @@ class LogHelper:
                 f"Cannot set the log level to {logging.NOTSET}. Choose a valid log level."
             )
 
-        with open("debug.log", "a") as file:
+        with open(DEBUG_FILE, "a") as file:
             print(f"Calling logger.setLevel({level})", file=file)
 
         # Set the logger level
