@@ -7,13 +7,13 @@ log = LogHelper(__name__)
 log.debug(__file__)
 
 
-def test_level(level):
-    with open("debug.log", "a") as file:
+def test_level(level: int | str) -> None:
+    with open("logs/test_log_helper.txt", "a") as file:
         print(f"Testing level: {level}", file=file)
 
     log.set_level(level)
 
-    with open("debug.log", "a") as file:
+    with open("logs/test_log_helper.txt", "a") as file:
         print(f"{log.get_level_as_string()}: {log.get_level()}", file=file)
 
     log.critical("Critical")

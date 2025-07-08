@@ -8,9 +8,9 @@ from finances.classes.date_time_helper import DateTimeHelper
 
 # https://docs.python.org/3/library/logging.html?form=MG0AV3
 
-DEBUG_FILE = "debug.log"
+LOG_FILE = "logs/log.log"
 logging.basicConfig(
-    filename=DEBUG_FILE,
+    filename=LOG_FILE,
     level=logging.INFO,
     format="%(asctime)s %(levelname)s [%(name)s] %(message)s",
     datefmt="%Y-%m-%d %H:%M:%S",
@@ -53,10 +53,10 @@ class LogHelper:
         self.dt = DateTimeHelper()
 
     def clear_debug_log(self) -> Any:
-        with open(DEBUG_FILE, "w") as file:
+        with open(LOG_FILE, "w"):
             pass
 
-    def critical(self, msg):
+    def critical(self, msg: str) -> None:
         self.logger.critical(msg)
 
     def debug(self, msg: str) -> None:
@@ -69,10 +69,10 @@ class LogHelper:
     def enable(self) -> Any:
         self.logger.setLevel(self.saved_level)
 
-    def error(self, msg):
+    def error(self, msg: str) -> None:
         self.logger.error(msg)
 
-    def exception(self, msg):
+    def exception(self, msg: str) -> None:
         self.logger.exception(msg)
 
     def get_date_today(self) -> Any:
@@ -133,7 +133,7 @@ class LogHelper:
                 f"Cannot set the log level to {logging.NOTSET}. Choose a valid log level."
             )
 
-        with open(DEBUG_FILE, "a") as file:
+        with open(LOG_FILE, "a") as file:
             print(f"Calling logger.setLevel({level})", file=file)
 
         # Set the logger level
@@ -170,7 +170,7 @@ class LogHelper:
         message = f"{time_now}: {msg}"
         self.debug(message)
 
-    def tlog(self, msg):
+    def tlog(self, msg:str)->None:
         dt = self.dt
 
         time_now = dt.get_time_now()
@@ -178,7 +178,7 @@ class LogHelper:
         message = f"{time_now}: {msg}"
         self.info(message)
 
-    def warning(self, msg):
+    def warning(self, msg:str)->None:
         self.logger.warning(msg)
 
 

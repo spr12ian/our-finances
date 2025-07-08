@@ -12,7 +12,7 @@ scratch.sql
 models.py
 tables.py
 spreadsheet_fields.py
-logs/
+output/
 output/
 # Ignore VS Code settings by default
 .vscode/*

@@ -48,7 +48,7 @@ SRC := src tests
 	install_tools \
 	key-check \
 	lint \
-	logs \
+	output \
 	pipx \
 	requirements \
 	run_queries \
@@ -88,12 +88,13 @@ info:
 	@echo "GOOGLE_DRIVE_OUR_FINANCES_KEY=$(GOOGLE_DRIVE_OUR_FINANCES_KEY)"
 	@echo "GOOGLE_SERVICE_ACCOUNT_KEY_FILE=$(GOOGLE_SERVICE_ACCOUNT_KEY_FILE)"
 
-clean: logs ## Clean-up the directory
+clean: output ## Clean-up the directory
 	@echo "🧹 Cleaning up..."
 	@rm -rf .venv .mypy_cache .ruff_cache .pytest_cache dist build
 	@find . -type d -name '__pycache__' -exec rm -rf {} +
 	@find . -type f -name '*.py[co]' -delete
-	@find . -type f -name '*.log' -print | tee logs/deleted_logs.txt | xargs -r rm -f
+	@find . -type f -name '*.stderr' -print | tee output/deleted_stderr.txt | xargs -r rm -f
+	@find . -type f -name '*.stdout' -print | tee output/deleted_stdout.txt | xargs -r rm -f
 	@echo "✅ Cleaned."
 
 key-check: check_env ## Run key-check to test connection to the spreadsheet
@@ -141,18 +142,18 @@ check: format_check types test_only
 	@$(MAKE) test
 	@echo "✅ All checks passed."
 
-lint: logs
-	@log_file="logs/lint.log"; \
+lint: output
+	@log_file="output/lint.log"; \
 	echo "🔍 Linting ..." | tee "$$log_file"; \
 	hatch run dev:check | tee -a "$$log_file"
 
-format: logs
-	@log_file="logs/format.log"; \
+format: output
+	@log_file="output/format.log"; \
 	echo "🎨 Formatting with ruff..." | tee "$$log_file"; \
 	hatch run ruff format . | tee -a "$$log_file"
 
-format_check: logs
-	@log_file="logs/format_check.log"; \
+format_check: output
+	@log_file="output/format_check.log"; \
 	echo "🎨 Checking formatting with ruff (check mode)..." | tee "$$log_file"; \
 	hatch run ruff format --check --diff $(SRC) | tee -a "$$log_file"
 
@@ -160,17 +161,17 @@ test_all:
 	@echo "🔮 Running pytest..."
 	@hatch run pytest --maxfail=1 --disable-warnings -q
 
-test_only: logs
-	@log_file="logs/test_only.log"; \
+test_only: output
+	@log_file="output/test_only.log"; \
 	echo "🔮 Running isolated unit tests..." | tee "$$log_file"; \
 	hatch run pytest tests --maxfail=1 --disable-warnings -q | tee -a "$$log_file"
 	echo "✅ Unit tests complete." | tee -a "$$log_file"
 
-tree: logs
+tree: output
 	@$(MAKE) run_with_log ACTION=tree COMMAND="tree -a -F -I '__pycache__|.git|.hatch|.mypy_cache|.pytest_cache|.ruff_cache|.venv'"
 
-types: logs
-	@log_file="logs/types.log"; \
+types: output
+	@log_file="output/types.log"; \
 	echo "🔎 Type checking with mypy..." | tee "$$log_file"; \
 	hatch run mypy --explicit-package-bases $(SRC) | tee -a "$$log_file"
 
@@ -191,14 +192,22 @@ check_env:
 		echo "✅ All required environment variables are set."; \
 	fi
 
-logs:
-	@install -d logs
+output:
+	@install -d output
 
-run_with_log: logs
-	@log_file="logs/$(ACTION).log"; \
-	echo "🔧 Starting $(ACTION)..." | tee "$$log_file"; \
-	eval $(COMMAND) 2>&1 | tee -a "$$log_file"; \
-	echo "✅ $(ACTION) finished." | tee -a "$$log_file"
+run_with_log: output
+	@log_file="output/$(ACTION).txt"; \
+	stdout_file="output/$(ACTION).stdout"; \
+	stderr_file="output/$(ACTION).stderr"; \
+	color_log() { printf "\033[1;34m🔧 Starting %s...\033[0m\n" "$(ACTION)"; }; \
+	color_log_end() { printf "\033[1;32m✅ %s finished.\033[0m\n" "$(ACTION)"; }; \
+	color_log | tee "$$log_file"; \
+	{ \
+	  { eval $(COMMAND); } 2> >(tee "$$stderr_file" >&2); \
+	} | tee "$$stdout_file" -a "$$log_file"; \
+	cat "$$stderr_file" >> "$$log_file"; \
+	color_log_end | tee -a "$$log_file"
+
 
 help:
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | \
