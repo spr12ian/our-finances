@@ -3,7 +3,7 @@ from decimal import Decimal
 import pandas as pd
 
 
-def d(string) -> Decimal:
+def d(string: str) -> Decimal:
     return Decimal(string)
 
 

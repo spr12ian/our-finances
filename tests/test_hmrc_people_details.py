@@ -1,7 +1,7 @@
-from table_hmrc_people_details import HMRC_PeopleDetails
+from finances.classes.table_hmrc_people_details import HMRC_PeopleDetails
 
 
-def test_people():
+def test_people() -> None:
     people = HMRC_PeopleDetails()
     print(people.fetch_all())
     print(people.fetch_by_code("B"))

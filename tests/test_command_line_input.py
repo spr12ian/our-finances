@@ -1,7 +1,7 @@
 import sys
 
 
-def main():
+def main() -> None:
     # Check if the correct number of arguments is provided
     if len(sys.argv) < 2:
         print("Usage: python script.py <arg1> <arg2> ...")
