@@ -46,10 +46,12 @@ TOP_LEVEL_PACKAGES := \
 .DEFAULT_GOAL := help
 
 .PHONY: \
-	activate \
 	all \
 	analyze_spreadsheet \
 	batch \
+	bump-major \
+	bump-minor \
+	bump-patch \
 	check \
 	check_env \
 	ci \
@@ -60,6 +62,7 @@ TOP_LEVEL_PACKAGES := \
 	format \
 	format_check \
 	generate_reports \
+	help \
 	info \
 	install_tools \
 	key_check \
@@ -70,10 +73,12 @@ TOP_LEVEL_PACKAGES := \
 	run_queries \
 	run_with_log \
 	setup \
+	shell \
+	test \
 	test_all \
 	test_only \
 	types \
-	venv
+	version
 
 # ============================
 # Meta targets
@@ -81,25 +86,12 @@ TOP_LEVEL_PACKAGES := \
 
 all: setup test_only
 
-activate: venv
-	@echo "Run this to activate the virtual environment:" \
-	echo "source $(VENV_DIR)/bin/activate"
+
 
 setup: clean requirements install_tools ## Set up the environment and tools
 	@echo "✅ Setup complete."
 
-# ============================
-# Virtual environment
-# ============================
 
-venv: ## Create virtual environment if missing
-	@echo "🔧 Creating virtual environment in $(VENV_DIR) if it doesn't exist..."; \
-	if [ ! -d "$(VENV_DIR)" ]; then \
-		$(PYTHON) -m venv $(VENV_DIR); \
-		echo "✅ Created virtual environment"; \
-	else \
-		echo "✅ Virtual environment already exists"; \
-	fi
 
 # ============================
 # Package installation
@@ -110,7 +102,7 @@ install_tools:
 	pipx upgrade ruff || pipx install ruff
 	pipx upgrade mypy || pipx install mypy
 
-requirements: venv
+requirements:
 	@echo "🚀 Upgrading pip, setuptools, and wheel..."
 	$(PIP) install --upgrade pip setuptools wheel
 ifeq ("$(wildcard $(REQUIREMENTS))","")
@@ -138,44 +130,48 @@ info:
 	@echo "GOOGLE_DRIVE_OUR_FINANCES_KEY=$(GOOGLE_DRIVE_OUR_FINANCES_KEY)"
 	@echo "GOOGLE_SERVICE_ACCOUNT_KEY_FILE=$(GOOGLE_SERVICE_ACCOUNT_KEY_FILE)"
 
+
+# 🧽 Clean caches and build artifacts
 clean: logs ## Cleanup the directory
 	@echo "🧹 Removing virtual environment..."
 	@rm -rf $(VENV_DIR)
 	@echo "🧹 Removing all __pycache__ directories..."
 	@find . -type d -name '__pycache__' -exec rm -rf {} +
 	@echo "🧹 Removing .mypy_cache directory..."
-	@rm -rf .mypy_cache .ruff_cache .pytest_cache
+	@rm -rf .mypy_cache .ruff_cache .pytest_cache dist build
 	@echo "🧹 Removing log files..."
 	@find . -type f -name '*.log' -print | tee logs/deleted_logs.txt | xargs -r rm -f
 	@echo "🧹 Removing requirements.txt ..."
 	@rm -rf $(REQUIREMENTS)
+	@find . -type f -name '*.py[co]' -delete
 	@echo "✅ Cleaned all caches and virtual environment."
+
 
 # ============================
 # scripts
 # ============================
 
-key_check: check_env venv ## Run key_check to test connection to the spreadsheet
+key_check: check_env ## Run key_check to test connection to the spreadsheet
 	@$(MAKE) run_with_log ACTION=key_check COMMAND="$(VPYTHON) -m scripts.key_check"
 
-analyze_spreadsheet: check_env venv ## Analyze the spreadsheet prior to downloading it
+analyze_spreadsheet: check_env ## Analyze the spreadsheet prior to downloading it
 	@$(MAKE) run_with_log ACTION=analyze_spreadsheet COMMAND="$(VPYTHON) -m scripts.analyze_spreadsheet"
 
 db:
 	@$(MAKE) run_with_log ACTION=db COMMAND="sqlitebrowser $(SQLITE_OUR_FINANCES_DB_NAME) &;" \
 	echo "sqlitebrowser $(SQLITE_OUR_FINANCES_DB_NAME) should be running in the background"
 
-download_sheets_to_sqlite: check_env venv ## Download the spreadsheet into an SQLite database
+download_sheets_to_sqlite: check_env ## Download the spreadsheet into an SQLite database
 	@$(MAKE) run_with_log ACTION=download_sheets_to_sqlite COMMAND="$(VPYTHON) -m scripts.download_sheets_to_sqlite"
 	@echo "sqlitebrowser ${SQLITE_OUR_FINANCES_DB_NAME} or sqlite3 ${SQLITE_OUR_FINANCES_DB_NAME}"
 
-generate_reports: check_env venv ## Create reports from the database spreadsheet data
+generate_reports: check_env ## Create reports from the database spreadsheet data
 	@$(MAKE) run_with_log ACTION=generate_reports COMMAND="$(VPYTHON) -m scripts.generate_reports"
 
-first_normal_form: check_env venv ## First normal form
+first_normal_form: check_env ## First normal form
 	@$(MAKE) run_with_log ACTION=first_normal_form COMMAND="$(VPYTHON) -m scripts.first_normal_form"
 
-vacuum_sqlite_database: check_env venv ## Squeeze the database
+vacuum_sqlite_database: check_env ## Squeeze the database
 	@$(MAKE) run_with_log ACTION=vacuum_sqlite_database COMMAND="$(VPYTHON) -m scripts.vacuum_sqlite_database"
 
 # ============================
@@ -185,7 +181,8 @@ vacuum_sqlite_database: check_env venv ## Squeeze the database
 ci: lint format_check types test_only
 	@echo "✅ CI checks passed."
 
-test: lint format types test_only
+# 🧪 Run tests
+test: lint format types test_only ## Run tests using pytest
 	@echo "Running tests..."
 	@$(MAKE) key_check
 	@$(MAKE) analyze_spreadsheet
@@ -196,35 +193,40 @@ test: lint format types test_only
 	@$(MAKE) execute_sqlite_queries
 	@$(MAKE) generate_sqlalchemy_models
 	@$(MAKE) execute_sqlalchemy_queries
+	hatch run dev:test
 	@echo "✅ Tests completed."
 
 # ============================
 # Linting & Formatting
 # ============================
 
-check: lint format_check types test_only ## Run all static analysis and tests
+# ✅ Check all (lint + test)
+check: format_check types test_only ## Run all checks (lint + test)
+	@$(MAKE) lint
+	@$(MAKE) test
 	@echo "✅ All checks passed."
 
-lint: logs ## Lint Python code with Ruff
+lint: logs ## Run linters (ruff, mypy)
 	@log_file="logs/lint.log"; \
-	echo "🔍 Linting with ruff..." | tee "$$log_file"; \
-	$(include_env) ruff check ${SRC} | tee -a "$$log_file"
+	echo "🔍 Linting ..." | tee "$$log_file"; \
+	hatch run dev:check | tee -a "$$log_file"
 
-format: logs ## Format Python code with Ruff
+# 🎨 Auto-format code with Ruff
+format: logs ## Format code with Ruff
 	@log_file="logs/format.log"; \
 	echo "🎨 Formatting with ruff..." | tee "$$log_file"; \
-	$(include_env) ruff format $(SRC) | tee -a "$$log_file"
+	hatch run ruff format . | tee -a "$$log_file"
 
 format_check: logs ## Check formatting with Ruff (no changes made)
 	@log_file="logs/format_check.log"; \
 	echo "🎨 Checking formatting with ruff (check mode)..." | tee "$$log_file"; \
 	$(include_env) ruff format --check --diff $(SRC) | tee -a "$$log_file"
 
-test_all: venv
+test_all:
 	@echo "🧪 Running pytest..."
 	@$(VPYTHON) -m pytest --maxfail=1 --disable-warnings -q
 
-test_only: venv logs ## Run only the test suite
+test_only: logs ## Run only the test suite
 	@log_file="logs/test_only.log"; \
 	echo "🧪 Running isolated unit tests..." | tee "$$log_file"; \
 	$(VPYTHON) -m pytest tests --maxfail=1 --disable-warnings -q | tee -a "$$log_file"
@@ -265,6 +267,7 @@ run_with_log: logs
 	eval $(COMMAND) 2>&1 | tee -a "$$log_file"; \
 	echo "✅ $(ACTION) finished." | tee -a "$$log_file"
 
+# 🎯 Show help
 help:
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | \
 	sort | \
@@ -273,6 +276,36 @@ help:
 run:
 	@$(MAKE) run_with_log ACTION=$(ACTION) COMMAND=$(COMMAND)
 
-run_queries: check_env venv
+run_queries: check_env
 	@$(MAKE) run_with_log ACTION=execute_sqlite_queries COMMAND="$(VPYTHON) -m scripts.execute_sqlite_queries $(FILE)"
+
+.DEFAULT_GOAL := help
+
+
+
+
+
+# 🐚 Enter dev shell
+shell: ## Enter Hatch dev environment shell
+	hatch shell dev
+
+
+
+
+
+
+
+
+# 🆚 Show current version (from Git tags if using VCS versioning)
+version: ## Show current project version
+	hatch version
+
+# 🔖 Version bumps (requires Git tagging workflow)
+bump-patch: ## Bump patch version (x.y.Z)
+	hatch version minor && git commit -am "bump: patch version" && git tag v$$(hatch version)
+bump-minor: ## Bump minor version (x.Y.z)
+	hatch version minor && git commit -am "bump: minor version" && git tag v$$(hatch version)
+bump-major: ## Bump major version (X.y.z)
+	hatch version major && git commit -am "bump: major version" && git tag v$$(hatch version)
+
 

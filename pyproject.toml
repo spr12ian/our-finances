@@ -1,22 +1,67 @@
+[project]
+name = "our-finances"
+version = "0.1.0"
+description = "Family accounts"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    # Your runtime dependencies here, e.g. "requests"
+]
+
+[project.scripts]
+# CLI tools: maps `hatch run my-tool` or installs as entry points
+# Adjust as needed to your actual script locations and function names
+my-tool = "scripts.my_tool:main"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/finances"]
+
+[tool.hatch.envs.default]
+dependencies = [
+    # Just core dependencies here if needed
+]
+
+[tool.hatch.envs.dev]
+dependencies = [
+    "mypy",
+    "ruff",
+    "pytest",
+    "ipython"
+]
+# Optional: set dev env as default for commands like `hatch run`
+[tool.hatch.envs.dev.scripts]
+check = [
+    "ruff check .",
+    "mypy src"
+]
+test = "pytest"
+
+
+
+[tool.hatch.version]
+source = "vcs"  # Automatically version from Git tags (e.g., 0.1.0)
+
 [tool.mypy]
 python_version = "3.12"
 mypy_path = "src"
 
 [tool.ruff]
-extend-select = ["I"]  # optional: enable import sorting (like isort)
+extend-select = ["I"]
 line-length = 88
 src = ["src", "scripts"]
 extend-exclude = ["tests/data", "scripts/old"]
 target-version = "py312"
 
 [tool.ruff.lint]
-select = ["E", "F", "I", "UP", "ANN"]  # Style, bugs, import order, upgrades, annotations
-ignore = ["ANN401","E402"]  # Allow non-top-level imports (e.g., bootstrap.py)
+select = ["E", "F", "I", "UP", "ANN"]
+ignore = ["ANN401", "E402"]
 fixable = ["ALL"]
 
 [tool.ruff.format]
 indent-style = "space"
 line-ending = "auto"
 quote-style = "double"
-
-
