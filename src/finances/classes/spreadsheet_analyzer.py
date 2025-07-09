@@ -89,6 +89,7 @@ class SpreadsheetAnalyzer:
 
         pdh = self.pdh
         first_row = worksheet.row_values(1)
+        print(f"first_row: {first_row}")
 
         # Split columns and rows
         df = pdh.header_to_dataframe(first_row)

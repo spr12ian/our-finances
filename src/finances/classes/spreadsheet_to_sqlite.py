@@ -17,6 +17,10 @@ from finances.util.financial_helpers import string_to_financial
 from finances.util.string_helpers import crop, remove_non_numeric
 
 
+class SpreadSheetToSqliteError(Exception):
+    pass
+
+
 class SpreadSheetToSqlite:
     _SCALARS: Final[dict[str, Callable[[str], Any] | None]] = {
         "to_boolean_integer": boolean_string_to_int,
@@ -104,7 +108,7 @@ class SpreadSheetToSqlite:
 
     def convert_worksheet(self, worksheet: Worksheet) -> None:
         table_name = to_sqlite_name(worksheet.title)
-        print(table_name)
+        print(f"table_name: {table_name}")
 
         pdh = self.pdh
 
@@ -115,6 +119,17 @@ class SpreadSheetToSqlite:
         df = pdh.worksheet_values_to_dataframe(data)
 
         df.columns = [self.convert_column_name(col) for col in df.columns]
+
+        for col in df.columns:
+            print(f"Original header: {repr(col)} → Converted: {self.convert_column_name(col)}")
+
+
+        # Validate column headers
+        original_headers = df.columns.tolist()
+        if any(col.strip() == "" for col in original_headers):
+            raise SpreadSheetToSqliteError(
+                f"Empty column name(s) in worksheet '{table_name}': {original_headers}"
+            ) from ValueError
 
         for col in df.columns:
             df = self.convert_df_col(df, table_name, col)
@@ -130,6 +145,9 @@ class SpreadSheetToSqlite:
             # Add 'id' column and populate with values
             df.insert(0, "id", range(1, len(df) + 1))  # type: ignore
             dtype = {"id": "INTEGER PRIMARY KEY AUTOINCREMENT"}
+
+        print(f"table_name: {table_name}")
+        print(f"dtype: {dtype}")
 
         # Write DataFrame to SQLite table (sheet name becomes table name)
         df.to_sql(
