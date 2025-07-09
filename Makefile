@@ -50,13 +50,13 @@ SRC := src tests
 	lint \
 	output \
 	pipx \
+	pytest \
 	requirements \
 	run_queries \
 	run_with_log \
 	setup \
 	shell \
 	test \
-	test_all \
 	test_only \
 	types \
 	update \
@@ -157,9 +157,10 @@ format_check: output
 	echo "🎨 Checking formatting with ruff (check mode)..." | tee "$$log_file"; \
 	hatch run ruff format --check --diff $(SRC) | tee -a "$$log_file"
 
-test_all:
-	@echo "🔮 Running pytest..."
-	@hatch run pytest --maxfail=1 --disable-warnings -q
+pytest:
+	$(eval ACTION := pytest)
+	$(eval COMMAND := hatch run pytest --maxfail=1 --disable-warnings -q)
+	@$(MAKE) run_with_log ACTION="$(ACTION)" COMMAND="$(COMMAND)"
 
 test_only: output
 	@log_file="output/test_only.log"; \
@@ -196,14 +197,16 @@ output:
 	@install -d output
 
 run_with_log: output
-	@log_file="output/$(ACTION).txt"; \
-	stdout_file="output/$(ACTION).stdout"; \
-	stderr_file="output/$(ACTION).stderr"; \
+	@timestamp="$$(date '+%F_%H:%M')"; \
+	log_file="output/$${timestamp}_$(ACTION).txt"; \
+	stdout_file="output/$${timestamp}_$(ACTION).stdout"; \
+	stderr_file="output/$${timestamp}_$(ACTION).stderr"; \
+	echo "$$COMMAND"; \
 	color_log() { printf "\033[1;34m🔧 Starting %s...\033[0m\n" "$(ACTION)"; }; \
 	color_log_end() { printf "\033[1;32m✅ %s finished.\033[0m\n" "$(ACTION)"; }; \
 	color_log | tee "$$log_file"; \
 	{ \
-	  { eval $(COMMAND); } 2> >(tee "$$stderr_file" >&2); \
+	  { eval "$(COMMAND)"; } 2> >(tee "$$stderr_file" >&2); \
 	} | tee "$$stdout_file" -a "$$log_file"; \
 	cat "$$stderr_file" >> "$$log_file"; \
 	color_log_end | tee -a "$$log_file"

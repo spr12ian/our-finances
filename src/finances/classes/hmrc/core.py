@@ -11,7 +11,7 @@ from finances.classes.hmrc.income import HMRCIncome as Income
 from finances.classes.hmrc.person import HMRCPerson as Person
 from finances.classes.hmrc_calculation import HMRC_Calculation
 from finances.classes.hmrc_output import HMRCOutput, HMRCOutputData
-from finances.classes.sql_helper import SQL_Helper
+from finances.classes.sql_helper import SQLHelper
 from finances.classes.sqlalchemy_helper import to_sqlalchemy_name
 from finances.classes.table_categories import Categories
 from finances.classes.table_hmrc_constants_by_year import HMRC_ConstantsByYear
@@ -36,7 +36,7 @@ class HMRC:
         self.overrides = HMRC_OverridesByYear(person_code, tax_year)
         self.person = Person(person_code)
 
-        self.sql = SQL_Helper().select_sql_helper("SQLite")
+        self.sql = SQLHelper().select_sql_helper("SQLite")
         self.transactions = Transactions()
 
     def initialize_properties(self) -> None:
@@ -66,8 +66,6 @@ class HMRC:
                 f"{row[0]} | {row[1]} | {row[2][:max_description_width]} | {row[3]} | {nett_decimal:>10.2f} | {row[5][:max_category_width]}"
             )
         return self.format_breakdown(breakdown)
-
-
 
     def are_supplementary_pages_enclosed(self) -> bool:
         return False

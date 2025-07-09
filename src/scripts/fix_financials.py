@@ -3,7 +3,7 @@ from pandas import DataFrame
 
 from finances.classes.google_helper import GoogleHelper
 from finances.classes.pandas_helper import PandasHelper
-from finances.classes.sql_helper import SQL_Helper
+from finances.classes.sql_helper import SQLHelper
 from finances.classes.sqlalchemy_helper import to_sqlalchemy_name
 from finances.util.financial_helpers import string_to_financial
 
@@ -33,7 +33,7 @@ class SpreadsheetToSqliteDb:
 
         self.spreadsheet = GoogleHelper().get_spreadsheet(scopes)
 
-        self.sql = SQL_Helper().select_sql_helper("SQLite")
+        self.sql = SQLHelper().select_sql_helper("SQLite")
 
     def convert_to_sqlite(self) -> None:
         """

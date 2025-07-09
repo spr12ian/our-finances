@@ -6,7 +6,7 @@ from functools import cache
 from typing import Any
 
 from finances.classes.table_bank_accounts import BankAccounts
-from finances.classes.table_hmrc_people_details import HMRC_PeopleDetails
+from finances.classes.sqlite_table.table_hmrc_people_details import HMRC_PeopleDetails
 
 # local imports
 from finances.classes.table_people import People

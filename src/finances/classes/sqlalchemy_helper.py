@@ -1,5 +1,6 @@
 # standard imports
-from typing import Any, Sequence
+from collections.abc import Sequence
+from typing import Any
 
 # pip imports
 from sqlalchemy import Row, create_engine, text
@@ -17,22 +18,43 @@ class SQLAlchemyHelper:
         self.engine = create_engine(self.database_url, echo=self.is_echo_enabled)
         self.Session = sessionmaker(bind=self.engine)
 
-    def read_config(self) -> None:
-        config = Config()
+    def drop_column(self, table_name: str, column_name: str) -> None:
+        session = self.Session()
+        try:
+            # Step 1: get current schema
+            result = session.execute(text(f"PRAGMA table_info({table_name})"))
+            columns_info = result.fetchall()
 
-        database_url = config.get("OUR_FINANCES_SQLITE_DB_NAME")
-        if not database_url:
-            raise ValueError(
-                "OUR_FINANCES_SQLITE_DB_NAME is not set in the configuration."
-            )
-        self.database_url = database_url
+            # Step 2: build list of columns to keep
+            keep_columns = [col[1] for col in columns_info if col[1] != column_name]
+            if column_name not in [col[1] for col in columns_info]:
+                raise ValueError(
+                    f"Column {column_name} not found in table {table_name}"
+                )
 
-        is_echo_enabled = config.get("OUR_FINANCES_SQLITE_ECHO_ENABLED")
-        if not is_echo_enabled:
-            raise ValueError(
-                "OUR_FINANCES_SQLITE_ECHO_ENABLED is not set in the configuration."
+            # Step 3: create new table using selected columns
+            tmp_table = f"{table_name}_tmp"
+            create_table_statement = (
+                f"CREATE TABLE {tmp_table} AS "
+                f"SELECT {', '.join(keep_columns)} "
+                f"FROM {table_name}"
             )
-        self.is_echo_enabled = is_echo_enabled
+            session.execute(text(create_table_statement))
+
+            # Step 4: replace original table
+            session.execute(text(f"DROP TABLE {table_name}"))
+            session.execute(text(f"ALTER TABLE {tmp_table} RENAME TO {table_name}"))
+            session.commit()
+        finally:
+            session.close()
+
+    def executeAndCommit(self, sql: str) -> None:
+        session = self.Session()
+        try:
+            session.execute(text(sql))
+            session.commit()
+        finally:
+            session.close()
 
     def fetch_one_value(self, query: str) -> Any:
         text_clause = text(query)
@@ -70,6 +92,63 @@ class SQLAlchemyHelper:
 
         return table_info
 
+    def read_config(self) -> None:
+        config = Config()
+
+        database_url = config.get("OUR_FINANCES_SQLITE_DB_NAME")
+        if not database_url:
+            raise ValueError(
+                "OUR_FINANCES_SQLITE_DB_NAME is not set in the configuration."
+            )
+        self.database_url = database_url
+
+        is_echo_enabled = config.get("OUR_FINANCES_SQLITE_ECHO_ENABLED")
+        if not is_echo_enabled:
+            raise ValueError(
+                "OUR_FINANCES_SQLITE_ECHO_ENABLED is not set in the configuration."
+            )
+        self.is_echo_enabled = is_echo_enabled
+
+    def rename_column(self, table_name: str, old_name: str, new_name: str) -> None:
+        session = self.Session()
+        try:
+            # Step 1: get table structure
+            result = session.execute(text(f"PRAGMA table_info({table_name})"))
+            columns_info = result.fetchall()
+
+            if old_name not in [col[1] for col in columns_info]:
+                raise ValueError(f"Column {old_name} not found in table {table_name}")
+
+            # Step 2: reconstruct schema with new column name
+            new_columns: list[str] = []
+            select_columns: list[str] = []
+            for col in columns_info:
+                col_name, col_type = col[1], col[2]
+                if col_name == old_name:
+                    new_columns.append(f"{new_name} {col_type}")
+                    select_columns.append(f"{old_name} AS {new_name}")
+                else:
+                    new_columns.append(f"{col_name} {col_type}")
+                    select_columns.append(col_name)
+
+            tmp_table = f"{table_name}_tmp"
+            session.execute(
+                text(f"CREATE TABLE {tmp_table} ({', '.join(new_columns)})")
+            )
+            insert_statement = (
+                f"INSERT INTO {tmp_table} "
+                f"SELECT {', '.join(select_columns)} "
+                f"FROM {table_name}"
+            )
+            session.execute(text(insert_statement))
+
+            # Step 3: replace original table
+            session.execute(text(f"DROP TABLE {table_name}"))
+            session.execute(text(f"ALTER TABLE {tmp_table} RENAME TO {table_name}"))
+            session.commit()
+        finally:
+            session.close()
+
     def text_to_real(self, table_name: str, column_name: str) -> None:
         table_info = self.get_table_info(table_name)
 
@@ -80,9 +159,16 @@ class SQLAlchemyHelper:
                 column_type = column[2]
 
         if column_type == "TEXT":
+            update_statement = (
+                f"UPDATE {table_name} "
+                f"SET {column_name}_real = CAST("
+                f"REPLACE(REPLACE(REPLACE({column_name}, '£', ''), ',', ''), ' ', '') "
+                f"AS REAL)"
+            )
+
             sql_statements = [
                 f"ALTER TABLE {table_name} ADD COLUMN {column_name}_real REAL",
-                f"UPDATE {table_name} SET {column_name}_real = CAST(REPLACE(REPLACE(REPLACE({column_name}, '£', ''), ',', ''), ' ', '') AS REAL)",
+                update_statement,
             ]
             for sql_statement in sql_statements:
                 self.executeAndCommit(sql_statement)
@@ -102,17 +188,13 @@ def validate_sqlalchemy_name(name: str) -> None:
         raise ValueError(f"Invalid SQLAlchemy name: {name}")
 
 
-def clean_column_names(df):
-    df.columns = [to_sqlalchemy_name(col) for col in df.columns]
-    return df
-
-
 # print(len(metadata.tables))
 # for table in metadata.tables.values():
 #     print(table.name)
 
 #     if not table.primary_key.columns:
-#         table.append_column(Column('id', Integer, primary_key=True))  # Add a primary key manually
+#         # Add a primary key manually
+#         table.append_column(Column('id', Integer, primary_key=True))
 
 #     for column in table.columns.values():
 #         print(f'    {column.name}')
@@ -123,7 +205,8 @@ def clean_column_names(df):
 
 #     # Print the actual data contained in the objects
 #     for row in result:
-#         print({column.name: getattr(row, column.name) for column in model.__table__.columns})
+#         for column in model.__table__.columns:
+#             print(f"{column.name}: {getattr(row, column.name)}")
 
 
 # model = Base.classes["account_balances"]

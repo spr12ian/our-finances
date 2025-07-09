@@ -8,11 +8,10 @@ from pandas import DataFrame, Series
 from finances.classes.config import Config
 from finances.classes.google_helper import GoogleHelper
 from finances.classes.pandas_helper import PandasHelper
-from finances.classes.sql_helper import SQL_Helper
-from finances.classes.sqlalchemy_helper import to_sqlalchemy_name
-from finances.generated.database_keys import get_primary_key_columns, has_primary_key
+from finances.classes.sqlite_helper import SQLiteHelper, to_sqlite_name
 from finances.generated.field_registry import field_registry
 from finances.util.boolean_helpers import boolean_string_to_int
+from finances.util.database_keys import get_primary_key_columns, has_primary_key
 from finances.util.date_helpers import UK_to_ISO
 from finances.util.financial_helpers import string_to_financial
 from finances.util.string_helpers import crop, remove_non_numeric
@@ -48,7 +47,7 @@ class SpreadSheetToSqlite:
 
         self.spreadsheet = GoogleHelper().get_spreadsheet(scopes)
 
-        self.sql = SQL_Helper().select_sql_helper("SQLite")
+        self.sql = SQLiteHelper()
 
     @staticmethod
     def apply(df: DataFrame, column_name: str, scalar: Callable[[Any], Any]) -> Series:  # type: ignore
@@ -58,7 +57,7 @@ class SpreadSheetToSqlite:
         pass
 
     def convert_column_name(self, spreadsheet_column_name: str) -> str:
-        sqlite_column_name = to_sqlalchemy_name(spreadsheet_column_name)
+        sqlite_column_name = to_sqlite_name(spreadsheet_column_name)
 
         if spreadsheet_column_name.endswith(" (£)"):
             sqlite_column_name = crop(sqlite_column_name, "____")
@@ -104,7 +103,7 @@ class SpreadSheetToSqlite:
         self.sql.close_connection()
 
     def convert_worksheet(self, worksheet: Worksheet) -> None:
-        table_name = to_sqlalchemy_name(worksheet.title)
+        table_name = to_sqlite_name(worksheet.title)
         print(table_name)
 
         pdh = self.pdh

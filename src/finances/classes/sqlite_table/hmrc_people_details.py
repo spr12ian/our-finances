@@ -3,7 +3,7 @@ from finances.classes.gbp import GBP
 from finances.classes.sqlite_table import SQLiteTable
 
 
-class HMRC_PeopleDetails(SQLiteTable):
+class HMRCPeopleDetails(SQLiteTable):
     def __init__(self, code: str | None = None) -> None:
         super().__init__("hmrc_people_details")
         self.code = code

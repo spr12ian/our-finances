@@ -1,8 +1,18 @@
-from typing import Any
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from finances.classes.sqlalchemy_helper import SQLAlchemyHelper
+    from finances.classes.sqlite_helper import SQLiteHelper
+
+    SQL_HelperType = SQLAlchemyHelper | SQLiteHelper
 
 
-class SQL_Helper:
-    def select_sql_helper(self, preferred_helper: str) -> Any:
+class SQLHelperError(Exception):
+    pass
+
+
+class SQLHelper:
+    def select_sql_helper(self, preferred_helper: str) -> SQL_HelperType:
         match preferred_helper:
             case "SQLAlchemy":
                 from finances.classes.sqlalchemy_helper import SQLAlchemyHelper
@@ -13,4 +23,6 @@ class SQL_Helper:
 
                 return SQLiteHelper()
             case _:
-                raise ValueError(f"Unexpected preferred_helper: {preferred_helper}")
+                raise SQLHelperError(
+                    f"Unexpected preferred_helper: {preferred_helper}"
+                ) from ValueError

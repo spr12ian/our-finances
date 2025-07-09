@@ -2,24 +2,24 @@ from finances.classes.sqlite_table import SQLiteTable
 
 
 class HMRC_Businesses(SQLiteTable):
-    def __init__(self, business_name: str):
+    def __init__(self, business_name: str) -> None:
         super().__init__("hmrc_businesses")
         self.business_name = business_name
 
-    def get_business_description(self) -> Any:
+    def get_business_description(self) -> str:
         business_description = self._get_value_by_business_name("business_description")
 
         return business_description
 
-    def get_business_name(self) -> Any:
+    def get_business_name(self) -> str:
         return self.business_name
 
-    def get_business_postcode(self) -> Any:
+    def get_business_postcode(self) -> str:
         business_description = self._get_value_by_business_name("business_postcode")
 
         return business_description
 
-    def _get_value_by_business_name(self, column_name):
+    def _get_value_by_business_name(self, column_name: str) -> str:
         business_name = self.business_name
         query = (
             self.query_builder()

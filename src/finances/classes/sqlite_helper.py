@@ -9,6 +9,7 @@ from typing import Any
 # local imports
 from finances.classes.config import Config
 from finances.classes.exception_helper import ExceptionHelper
+from finances.util.string_helpers import to_method_name
 
 
 class SQLiteHelperError(ExceptionHelper):
@@ -38,8 +39,12 @@ class SQLiteHelper:
         column_names_str = ", ".join(column_names)
 
         # Create a temporary table without the column to drop
-        sql_statement = f"CREATE TABLE {temp_table_name} AS SELECT {column_names_str} FROM {table_name}"
-        cursor.execute(sql_statement)
+        create_table_statement = (
+            f"CREATE TABLE {temp_table_name} AS "
+            f"SELECT {column_names_str} "
+            f"FROM {table_name}"
+        )
+        cursor.execute(create_table_statement)
 
         # Drop the original table
         sql_statement = f"DROP TABLE {table_name}"
@@ -234,3 +239,8 @@ FROM {table_name}
 
             self.drop_column(table_name, column_name)
             self.rename_column(table_name, f"{column_name}_real", column_name)
+
+def to_sqlite_name(name: str) -> str:
+    valid_method_name = to_method_name(name)
+
+    return valid_method_name
