@@ -5,7 +5,7 @@ from pathlib import Path
 PACKAGE = "our_finances"
 
 
-def list_commands():
+def list_commands() -> None:
     commands_dir = Path(__file__).parent / "commands"
     commands: list[str] = []
 
@@ -19,7 +19,7 @@ def list_commands():
         print(f"  {cmd}")
 
 
-def main():
+def main() -> None:
     if len(sys.argv) < 2:
         print("Usage: python -m main <command>")
         print("Use 'python -m main list' to see available commands.")

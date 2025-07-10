@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from collections.abc import Callable
-from typing import Final
+from typing import Final  # noqa: F401
 
 from finances.classes.spreadsheet_field import SpreadsheetField as SF
 
@@ -31,7 +31,10 @@ class FieldRegistry:
             raise KeyError(self.missing(table, spreadsheet_col))
 
     def missing(self, table: str, spreadsheet_col: str) -> str:
-        return f"Field not found for table '{table}', spreadsheet column '{spreadsheet_col}'"
+        return (
+            f"Field not found for table '{table}', "
+            f"spreadsheet column '{spreadsheet_col}'"
+        )
 
     def get_by_sqlite(self, table: str, sqlite_col: str) -> SF:
         try:

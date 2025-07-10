@@ -15,7 +15,7 @@ class FileHelper:
         else:
             raise ValueError("file_path is not set.")
 
-    def append(self, message: str = ""):
+    def append(self, message: str = "") -> None:
         if file_path := self.file_path:
             with open(file_path, "a") as file:
                 file.write(message + "\n")

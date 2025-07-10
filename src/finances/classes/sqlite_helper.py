@@ -240,6 +240,7 @@ FROM {table_name}
             self.drop_column(table_name, column_name)
             self.rename_column(table_name, f"{column_name}_real", column_name)
 
+
 def to_sqlite_name(name: str) -> str:
     valid_method_name = to_method_name(name)
 

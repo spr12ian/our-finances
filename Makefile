@@ -49,18 +49,26 @@ TREE_EXCLUDES := '__pycache__|.git|.hatch|.mypy_cache|.pytest_cache|.ruff_cache|
 	$(scripts) \
 	$(tools)
 
-all: clean check_env update pre_commit_check ## clean check_env update pre_commit_check
-	@echo "Running tests..."
+all: ## Run all steps
+	@echo "Running all steps..."
+	@$(MAKE) clean
+	@$(MAKE) check_env
+	@$(MAKE) update
+	@$(MAKE) version
+	@$(MAKE) format
+#	@$(MAKE) lint
 	@$(MAKE) key-check
 	@$(MAKE) analyze-spreadsheet
 	@$(MAKE) download-sheets-to-sqlite
 	@$(MAKE) vacuum-sqlite-database
 	@$(MAKE) generate-reports
+	@$(MAKE) pre_commit_check
+# what follows is really future development
 	@$(MAKE) first-normal-form
 	@$(MAKE) execute_sqlite_queries
 	@$(MAKE) generate_sqlalchemy_models
 	@$(MAKE) execute_sqlalchemy_queries
-	@echo "✅ Tests completed."
+	@echo "✅ All steps completed."
 
 check_env: ## Check required env variables are set
 	@missing=0; \
@@ -174,17 +182,13 @@ version: ## Show current project version
 # scripts
 define run-script
 $1: check_env ## hatch run $(1)
-	$$(eval ACTION := $1)
-	$$(eval COMMAND := hatch run "$(1)")
-	@$$(MAKE) run_with_log ACTION="$$ACTION" COMMAND="$$COMMAND"
+	@$$(MAKE) run_with_log ACTION="$1" COMMAND="hatch run $1"
 endef
 
 # tools
 define run-tool
 $1: ## hatch run dev:"$(1)"
-	$$(eval ACTION := $1)
-	$$(eval COMMAND := hatch run dev:"$(1)")
-	@$$(MAKE) run_with_log ACTION="$$ACTION" COMMAND="$$COMMAND"
+	@$$(MAKE) run_with_log ACTION="$1" COMMAND="hatch run dev:$1"
 endef
 
 scripts := \

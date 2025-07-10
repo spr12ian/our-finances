@@ -12,13 +12,13 @@ from finances.classes.hmrc.person import HMRCPerson as Person
 from finances.classes.hmrc_calculation import HMRC_Calculation
 from finances.classes.hmrc_output import HMRCOutput, HMRCOutputData
 from finances.classes.sql_helper import SQLHelper
-from finances.classes.sqlalchemy_helper import to_sqlalchemy_name
-from finances.classes.table_categories import Categories
-from finances.classes.table_hmrc_constants_by_year import HMRC_ConstantsByYear
-from finances.classes.table_hmrc_overrides_by_year import HMRC_OverridesByYear
-from finances.classes.table_hmrc_property import HMRC_Property
-from finances.classes.table_hmrc_questions_by_year import HMRC_QuestionsByYear
-from finances.classes.table_transactions import Transactions
+from finances.classes.sqlite_helper import to_sqlite_name
+from finances.classes.sqlite_table.categories import Categories
+from finances.classes.sqlite_table.hmrc_constants_by_year import HMRC_ConstantsByYear
+from finances.classes.sqlite_table.hmrc_overrides_by_year import HMRC_OverridesByYear
+from finances.classes.sqlite_table.hmrc_property import HMRC_Property
+from finances.classes.sqlite_table.hmrc_questions_by_year import HMRC_QuestionsByYear
+from finances.classes.sqlite_table.transactions import Transactions
 from finances.util import boolean_helpers, financial_helpers
 
 
@@ -29,7 +29,7 @@ class HMRC:
 
         self.initialize_properties()
 
-        self.tax_year_col = to_sqlalchemy_name(tax_year)
+        self.tax_year_col = to_sqlite_name(tax_year)
 
         self.categories = Categories()
         self.constants = HMRC_ConstantsByYear(tax_year)

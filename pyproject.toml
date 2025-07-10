@@ -55,13 +55,14 @@ run_queries = "hatch run dev:run_queries"
 run_tests = "hatch run dev:run_tests"
 
 [tool.hatch.envs.dev]
-dependencies = [":dev"] # Use list from [project.optional-dependencies].dev
+# Copy list from [project.optional-dependencies].dev
+dependencies = ["ipython", "mypy", "pandas-stubs", "pytest", "ruff"]
 
 # Optional: set dev env as default for commands like `hatch run`
 [tool.hatch.envs.dev.scripts]
 format = "hatch run ruff format ."
 lint = ["ruff check .", "mypy src"] # lint + check types
-pre_commit_check = ["hatch run dev:lint", "hatch run dev:run_tests"]
+pre_commit_check = ["hatch run dev:format", "hatch run dev:lint", "hatch run dev:run_tests"]
 run_queries = "execute_sqlite_queries \"$FILE\""
 run_tests = "pytest --maxfail=1 --disable-warnings -q"
 
@@ -70,7 +71,6 @@ python_version = "3.12"
 mypy_path = "src:typings"
 
 [tool.ruff]
-extend-select = ["I"]
 line-length = 88
 src = ["src", "scripts"]
 extend-exclude = ["tests/data", "scripts/old"]
@@ -82,6 +82,7 @@ line-ending = "auto"
 quote-style = "double"
 
 [tool.ruff.lint]
+extend-select = ["I"]
 select = ["E", "F", "I", "UP", "ANN"]
 ignore = ["ANN401", "E402"]
 fixable = ["ALL"]

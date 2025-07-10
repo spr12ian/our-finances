@@ -170,7 +170,7 @@ class LogHelper:
         message = f"{time_now}: {msg}"
         self.debug(message)
 
-    def tlog(self, msg:str)->None:
+    def tlog(self, msg: str) -> None:
         dt = self.dt
 
         time_now = dt.get_time_now()
@@ -178,7 +178,7 @@ class LogHelper:
         message = f"{time_now}: {msg}"
         self.info(message)
 
-    def warning(self, msg:str)->None:
+    def warning(self, msg: str) -> None:
         self.logger.warning(msg)
 
 

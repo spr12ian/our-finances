@@ -42,9 +42,6 @@ class GoogleHelper:
             ) from OSError(spreadsheet_key)
 
     def get_authorized_client(self, scopes: Sequence[str]) -> gspread.Client:
-        # from_service_account_file requires scopes to be passed as a keyword arguement
-
-        # creds = Credentials.from_service_account_file(credentials_path, scopes=scopes)
         credentials = self.get_credentials(scopes)
 
         client = gspread.authorize(credentials)
@@ -75,4 +72,4 @@ class GoogleHelper:
             self.service_account_key_file = config.GOOGLE_SERVICE_ACCOUNT_KEY_FILE
             self.spreadsheet_key = config.GOOGLE_DRIVE_OUR_FINANCES_KEY
         except ConfigError as e:
-            raise GoogleHelperError(f"Config error") from e
+            raise GoogleHelperError("Config error") from e

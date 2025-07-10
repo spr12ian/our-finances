@@ -1,4 +1,3 @@
-
 # table_name, column_name, is_primary_key
 database_keys: list[tuple[str, str, bool]] = [
     ("account_balances", "key", True),
