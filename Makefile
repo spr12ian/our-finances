@@ -92,12 +92,16 @@ ci: lint format_check types ## Check CI still works
 
 clean: output ## Clean-up the directory
 	@echo "🧹 Cleaning up..."
-	@rm -rf .venv .mypy_cache .ruff_cache .pytest_cache dist build
-	@find . -type d -name '__pycache__' -exec rm -rf {} +
-	@find . -type f -name '*.py[co]' -delete
-	@find . -type f -name '*.stderr' -print | tee output/deleted_stderr.txt | xargs -r rm -f
-	@find . -type f -name '*.stdout' -print | tee output/deleted_stdout.txt | xargs -r rm -f
-	@echo "✅ Cleaned."
+	@timestamp="$$(date '+%F_%H-%M')"; \
+	stdout_file="output/$${timestamp}_deleted_stdout.txt"; \
+	stderr_file="output/$${timestamp}_deleted_stderr.txt"; \
+	mkdir -p output; \
+	rm -rf .venv .mypy_cache .ruff_cache .pytest_cache dist build; \
+	find . -type d -name '__pycache__' -exec rm -rf {} +; \
+	find . -type f -name '*.py[co]' -delete; \
+	find . -type f -name '*.stderr' -print | tee "$$stderr_file" | xargs -r rm -f; \
+	find . -type f -name '*.stdout' -print | tee "$$stdout_file" | xargs -r rm -f; \
+	echo "✅ Cleaned."
 
 format_check: output ## Check but don't make changes???
 	@log_file="output/format_check.log"; \
@@ -151,7 +155,7 @@ run_with_log: output
 	  { eval "$(COMMAND)"; } 2> >(tee "$$stderr_file" >&2); \
 	} | tee "$$stdout_file" -a "$$log_file"; \
 	cat "$$stderr_file" >> "$$log_file"; \
-	color_log_end | tee -a "$$log_file"
+	color_log_end | tee -a "$$log_file"; \
 	for f in "$$log_file" "$$stdout_file" "$$stderr_file"; do \
 	  [ -s "$$f" ] || rm -f "$$f"; \
 	done
