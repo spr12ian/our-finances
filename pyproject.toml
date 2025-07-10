@@ -65,9 +65,6 @@ pre_commit_check = ["hatch run dev:lint", "hatch run dev:run_tests"]
 run_queries = "execute_sqlite_queries \"$FILE\""
 run_tests = "pytest --maxfail=1 --disable-warnings -q"
 
-[tool.hatch.version]
-source = "vcs" # Automatically version from Git tags (e.g., 0.1.0)
-
 [tool.mypy]
 python_version = "3.12"
 mypy_path = "src:typings"

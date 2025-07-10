@@ -30,15 +30,13 @@ TREE_EXCLUDES := '__pycache__|.git|.hatch|.mypy_cache|.pytest_cache|.ruff_cache|
 
 .PHONY: \
 	all \
-	bump-major \
-	bump-minor \
-	bump-patch \
 	check_env \
 	ci \
 	clean \
 	format_check \
 	help \
-	install_package \
+	install_hatch_plugin \
+	install_pip_package \
 	output \
 	run_with_log \
 	shell \
@@ -63,15 +61,6 @@ all: clean check_env update pre_commit_check ## clean check_env update pre_commi
 	@$(MAKE) generate_sqlalchemy_models
 	@$(MAKE) execute_sqlalchemy_queries
 	@echo "✅ Tests completed."
-
-bump-major: ## Major bump
-	git commit -am "bump: major version" && git tag v$$(hatch version)
-
-bump-minor: ## Minor bump
-	git commit -am "bump: minor version" && git tag v$$(hatch version)
-
-bump-patch: ## Patch bump
-	git commit -am "bump: patch version" && git tag v$$(hatch version)
 
 check_env: ## Check required env variables are set
 	@missing=0; \
@@ -123,9 +112,15 @@ help: ## Lists available targets
 	done
 	@printf "\033[36m%-25s\033[0m %s\n" "all-tools"  "Run all tool tasks"
 
-install_package: ## Install a dev dependency and persist to pyproject.toml
+install_hatch_plugin: ## Install a Hatch plugin (via pipx inject)
+	@test "$(PLUGIN)" || (echo "❌ Must provide PLUGIN=<name>"; exit 1)
+	@echo "🔌 Installing Hatch plugin $(PLUGIN)..."
+	pipx inject hatch "$(PLUGIN)"
+	@echo "✅ Plugin $(PLUGIN) installed into Hatch environment."
+
+install_pip_package: ## Install a dev pip dependency and persist to pyproject.toml
 	@test "$(PACKAGE)" || (echo "❌ Must provide PACKAGE=<name>"; exit 1)
-	@echo "📦 Installing $(PACKAGE) into dev environment..."
+	@echo "📦 Installing pip $(PACKAGE) into dev environment..."
 	@hatch run dev:pip install "$(PACKAGE)"
 	@echo "🗘️ Adding $(PACKAGE) to [tool.hatch.envs.dev] in pyproject.toml..."
 	@sed -i '/^\[tool\.hatch\.envs\.dev\]/,/^\[/{/dependencies = \[/a\    "$(PACKAGE)",}' pyproject.toml
