@@ -1,7 +1,7 @@
 from datetime import datetime
 
 from finances.classes.hmrc.core import HMRC
-from finances.classes.table_hmrc_questions_by_year import HMRC_QuestionsByYear
+from finances.classes.sqlite_table.hmrc_questions_by_year import HMRC_QuestionsByYear
 
 
 def check_questions(tax_year: str) -> None:

@@ -5,18 +5,18 @@ from decimal import Decimal
 from functools import cache
 from typing import Any
 
-from finances.classes.table_bank_accounts import BankAccounts
-from finances.classes.sqlite_table.table_hmrc_people_details import HMRC_PeopleDetails
+from finances.classes.sqlite_table.bank_accounts import BankAccounts
+from finances.classes.sqlite_table.hmrc_people_details import HMRCPeopleDetails
 
 # local imports
-from finances.classes.table_people import People
+from finances.classes.sqlite_table.people import People
 
 
 class HMRCPerson(People):
     def __init__(self, code: str) -> None:
         super().__init__(code)
 
-        self.hmrc_person_details = HMRC_PeopleDetails(code)
+        self.hmrc_person_details = HMRCPeopleDetails(code)
 
     def are_nics_needed_to_achieve_max_state_pension(self) -> bool:
         return self.hmrc_person_details.are_nics_needed_to_achieve_max_state_pension()

@@ -60,10 +60,10 @@ all: ## Run all steps
 	@$(MAKE) key-check
 	@$(MAKE) analyze-spreadsheet
 	@$(MAKE) download-sheets-to-sqlite
-	@$(MAKE) vacuum-sqlite-database
 	@$(MAKE) generate-reports
 	@$(MAKE) pre_commit_check
 # what follows is really future development
+	@$(MAKE) vacuum-sqlite-database
 	@$(MAKE) first-normal-form
 	@$(MAKE) execute_sqlite_queries
 	@$(MAKE) generate_sqlalchemy_models

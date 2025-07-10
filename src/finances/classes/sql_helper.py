@@ -4,15 +4,16 @@ if TYPE_CHECKING:
     from finances.classes.sqlalchemy_helper import SQLAlchemyHelper
     from finances.classes.sqlite_helper import SQLiteHelper
 
-    SQL_HelperType = SQLAlchemyHelper | SQLiteHelper
-
+    SQLHelperType = SQLAlchemyHelper | SQLiteHelper
+else:
+    SQLHelperType = object  # Fallback to satisfy runtime typing
 
 class SQLHelperError(Exception):
     pass
 
 
 class SQLHelper:
-    def select_sql_helper(self, preferred_helper: str) -> SQL_HelperType:
+    def select_sql_helper(self, preferred_helper: str) -> SQLHelperType:
         match preferred_helper:
             case "SQLAlchemy":
                 from finances.classes.sqlalchemy_helper import SQLAlchemyHelper

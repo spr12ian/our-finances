@@ -17,7 +17,7 @@ def main():
         ["cls_method_sorter", "MethodSorter"],
         ["cls_table_hmrc_constants_by_year", "HMRC_ConstantsByYear"],
         ["cls_table_hmrc_overrides_by_year", "HMRC_OverridesByYear"],
-        ["cls_table_hmrc_people_details", "HMRC_PeopleDetails"],
+        ["cls_table_hmrc_people_details", "HMRCPeopleDetails"],
     ]
 
     sort_classes(directory, classes)

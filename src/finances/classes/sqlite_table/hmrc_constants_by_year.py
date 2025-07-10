@@ -3,10 +3,10 @@ from functools import cache
 
 from finances.classes.sqlalchemy_helper import to_sqlalchemy_name
 from finances.classes.sqlite_table import SQLiteTable
-from finances.classes.table_hmrc_constant_amounts_by_year import (
+from finances.classes.sqlite_table.hmrc_constant_amounts_by_year import (
     HMRC_ConstantAmountsByYear,
 )
-from finances.classes.table_hmrc_constant_percentages_by_year import (
+from finances.classes.sqlite_table.hmrc_constant_percentages_by_year import (
     HMRC_ConstantPercentagesByYear,
 )
 
