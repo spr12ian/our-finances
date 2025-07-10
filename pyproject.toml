@@ -1,6 +1,6 @@
 [project]
 name = "our-finances"
-version = "0.1.0"
+version = "0.0.1" #Major, minor, patch
 description = "Family accounts"
 readme = "README.md"
 requires-python = ">=3.12"
@@ -51,6 +51,7 @@ dependencies = [
 format = "hatch run dev:format"
 lint = "hatch run dev:lint"
 pre_commit_check = "hatch run dev:pre_commit_check"
+run_queries = "hatch run dev:run_queries"
 run_tests = "hatch run dev:run_tests"
 
 [tool.hatch.envs.dev]
@@ -61,6 +62,7 @@ dependencies = [":dev"] # Use list from [project.optional-dependencies].dev
 format = "hatch run ruff format ."
 lint = ["ruff check .", "mypy src"] # lint + check types
 pre_commit_check = ["hatch run dev:lint", "hatch run dev:run_tests"]
+run_queries = "execute_sqlite_queries \"$FILE\""
 run_tests = "pytest --maxfail=1 --disable-warnings -q"
 
 [tool.hatch.version]
@@ -76,7 +78,6 @@ line-length = 88
 src = ["src", "scripts"]
 extend-exclude = ["tests/data", "scripts/old"]
 target-version = "py312"
-
 
 [tool.ruff.format]
 indent-style = "space"
