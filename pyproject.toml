@@ -18,7 +18,7 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
-dev = ["mypy", "ruff", "pytest", "ipython"]
+dev = ["ipython", "mypy", "pandas-stubs", "pytest", "ruff"]
 
 [project.scripts]
 # CLI tools: maps `hatch run my-tool` or installs as entry points
@@ -36,6 +36,9 @@ generate-sqlalchemy-models = "scripts.generate_sqlalchemy_models:main"
 requires = ["hatchling"]
 build-backend = "hatchling.build"
 
+[tool.hatch.build]
+include = ["src/**", "tests/**", "README.md"]
+
 [tool.hatch.build.targets.wheel]
 packages = ["src/finances", "src/scripts", "tests"]
 
@@ -44,13 +47,21 @@ dependencies = [
   # Just core dependencies here if needed
 ]
 
+[tool.hatch.envs.default.scripts]
+format = "hatch run dev:format"
+lint = "hatch run dev:lint"
+pre_commit_check = "hatch run dev:pre_commit_check"
+run_tests = "hatch run dev:run_tests"
+
 [tool.hatch.envs.dev]
-dependencies = ["mypy", "ruff", "pytest", "ipython"]
+dependencies = [":dev"] # Use list from [project.optional-dependencies].dev
 
 # Optional: set dev env as default for commands like `hatch run`
 [tool.hatch.envs.dev.scripts]
-check = ["ruff check .", "mypy src"]
-test = "pytest"
+format = "hatch run ruff format ."
+lint = ["ruff check .", "mypy src"] # lint + check types
+pre_commit_check = ["hatch run dev:lint", "hatch run dev:run_tests"]
+run_tests = "pytest --maxfail=1 --disable-warnings -q"
 
 [tool.hatch.version]
 source = "vcs" # Automatically version from Git tags (e.g., 0.1.0)

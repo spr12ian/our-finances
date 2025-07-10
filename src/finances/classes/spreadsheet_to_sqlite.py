@@ -121,8 +121,9 @@ class SpreadSheetToSqlite:
         df.columns = [self.convert_column_name(col) for col in df.columns]
 
         for col in df.columns:
-            print(f"Original header: {repr(col)} → Converted: {self.convert_column_name(col)}")
-
+            print(
+                f"Original header: {repr(col)} → Converted: {self.convert_column_name(col)}"
+            )
 
         # Validate column headers
         original_headers = df.columns.tolist()

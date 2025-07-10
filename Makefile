@@ -6,6 +6,7 @@ endif
 # Configuration
 # ============================
 SHELL := /bin/bash
+.SHELLFLAGS := -eu -o pipefail -c
 
 ENV_FILE := $(HOME)/.env
 include_env = . $(ENV_FILE) >/dev/null 2>&1 &&
@@ -27,45 +28,33 @@ SRC := src tests
 
 .PHONY: \
 	all \
-	analyze-spreadsheet \
-	batch \
 	bump-major \
 	bump-minor \
 	bump-patch \
-	check \
 	check_env \
 	ci \
 	clean \
-	db \
-	freeze \
-	download-sheets-to-sqlite \
-	format \
 	format_check \
-	generate-reports \
 	help \
 	info \
 	install_package \
-	install_tools \
-	key-check \
-	lint \
 	output \
 	pipx \
-	pytest \
-	requirements \
 	run_queries \
 	run_with_log \
-	setup \
 	shell \
-	test \
 	test_only \
 	types \
 	update \
-	version
+	version \
+	$(scripts) \
+	$(tools)
 
-all: setup test_only
 
-setup: clean install_tools update ## Set up the environment and tools
-	@echo "✅ Setup complete."
+all: clean check_env update pre_commit_check ## clean check_env update pre_commit_check
+
+hatch-%:
+	@$(MAKE) run_with_log ACTION=$* COMMAND="hatch run $*"
 
 install_package: ## Install a dev dependency and persist to pyproject.toml
 	@test "$(PACKAGE)" || (echo "❌ Must provide PACKAGE=<name>"; exit 1)
@@ -75,14 +64,6 @@ install_package: ## Install a dev dependency and persist to pyproject.toml
 	@sed -i '/^\[tool\.hatch\.envs\.dev\]/,/^\[/{/dependencies = \[/a\    "$(PACKAGE)",}' pyproject.toml
 	@$(MAKE) update
 	@echo "✅ $(PACKAGE) installed and environment updated."
-
-install_tools:
-	pipx upgrade ruff || pipx install ruff
-	pipx upgrade mypy || pipx install mypy
-
-requirements:
-	@echo "🚀 Upgrading pip, setuptools, and wheel..."
-	pip install --upgrade pip setuptools wheel
 
 info:
 	@echo "GOOGLE_DRIVE_OUR_FINANCES_KEY=$(GOOGLE_DRIVE_OUR_FINANCES_KEY)"
@@ -97,31 +78,24 @@ clean: output ## Clean-up the directory
 	@find . -type f -name '*.stdout' -print | tee output/deleted_stdout.txt | xargs -r rm -f
 	@echo "✅ Cleaned."
 
-key-check: check_env ## Run key-check to test connection to the spreadsheet
-	@$(MAKE) run_with_log ACTION=key-check COMMAND="hatch run key-check"
 
-analyze-spreadsheet: check_env
-	@$(MAKE) run_with_log ACTION=analyze-spreadsheet COMMAND="hatch run analyze-spreadsheet"
 
-db:
-	@$(MAKE) run_with_log ACTION=db COMMAND="sqlitebrowser $(SQLITE_OUR_FINANCES_DB_NAME) &;"
-	db-browser: echo "sqlitebrowser $(SQLITE_OUR_FINANCES_DB_NAME) should be running."
+ci: lint format_check types test_only
+	@echo "✅ CI checks passed."
 
-download-sheets-to-sqlite: check_env
-	@$(MAKE) run_with_log ACTION=download-sheets-to-sqlite COMMAND="hatch run download-sheets-to-sqlite"
-	@echo "sqlitebrowser ${SQLITE_OUR_FINANCES_DB_NAME} or sqlite3 ${SQLITE_OUR_FINANCES_DB_NAME}"
 
-generate-reports: check_env
-	@$(MAKE) run_with_log ACTION=generate-reports COMMAND="hatch run generate-reports"
+
+sqlitebrowser: check_env ## SQLite GUI
+	@sqlitebrowser ${SQLITE_OUR_FINANCES_DB_NAME}
+
+sqlite3: check_env ## SQLite command line
+	@sqlite3 ${SQLITE_OUR_FINANCES_DB_NAME}
 
 first-normal-form: check_env
 	@$(MAKE) run_with_log ACTION=first-normal-form COMMAND="hatch run first-normal-form"
 
 vacuum-sqlite-database: check_env
 	@$(MAKE) run_with_log ACTION=vacuum-sqlite-database COMMAND="hatch run vacuum-sqlite-database"
-
-ci: lint format_check types test_only
-	@echo "✅ CI checks passed."
 
 test: lint format types test_only
 	@echo "Running tests..."
@@ -137,36 +111,10 @@ test: lint format types test_only
 	hatch run dev:test
 	@echo "✅ Tests completed."
 
-check: format_check types test_only
-	@$(MAKE) lint
-	@$(MAKE) test
-	@echo "✅ All checks passed."
-
-lint: output
-	@log_file="output/lint.log"; \
-	echo "🔍 Linting ..." | tee "$$log_file"; \
-	hatch run dev:check | tee -a "$$log_file"
-
-format: output
-	@log_file="output/format.log"; \
-	echo "🎨 Formatting with ruff..." | tee "$$log_file"; \
-	hatch run ruff format . | tee -a "$$log_file"
-
 format_check: output
 	@log_file="output/format_check.log"; \
 	echo "🎨 Checking formatting with ruff (check mode)..." | tee "$$log_file"; \
 	hatch run ruff format --check --diff $(SRC) | tee -a "$$log_file"
-
-pytest:
-	$(eval ACTION := pytest)
-	$(eval COMMAND := hatch run pytest --maxfail=1 --disable-warnings -q)
-	@$(MAKE) run_with_log ACTION="$(ACTION)" COMMAND="$(COMMAND)"
-
-test_only: output
-	@log_file="output/test_only.log"; \
-	echo "🔮 Running isolated unit tests..." | tee "$$log_file"; \
-	hatch run pytest tests --maxfail=1 --disable-warnings -q | tee -a "$$log_file"
-	echo "✅ Unit tests complete." | tee -a "$$log_file"
 
 tree: output
 	@$(MAKE) run_with_log ACTION=tree COMMAND="tree -a -F -I '__pycache__|.git|.hatch|.mypy_cache|.pytest_cache|.ruff_cache|.venv'"
@@ -193,6 +141,7 @@ check_env:
 		echo "✅ All required environment variables are set."; \
 	fi
 
+
 output:
 	@install -d output
 
@@ -213,9 +162,18 @@ run_with_log: output
 
 
 help:
-	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | \
+	@grep -E '^[a-zA-Z0-9_-]+:.*?## .*$$' $(MAKEFILE_LIST) | \
 	sort | \
-	awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-30s\033[0m %s\n", $$1, $$2}'
+	awk 'BEGIN {FS=":.*?## "}; {printf "\033[36m%-25s\033[0m %s\n", $$1, $$2}'
+	@# --- add dynamically-generated targets ---
+	@for t in $(scripts); do \
+		printf "\033[36m%-25s\033[0m %s\n" "$$t" "hatch run $$t"; \
+	done
+	@for t in $(tools); do \
+		printf "\033[36m%-25s\033[0m %s\n" "$$t" "hatch run dev:$$t"; \
+	done
+	@printf "\033[36m%-25s\033[0m %s\n" "all-tools"  "Run all tool tasks"
+
 
 run:
 	@$(MAKE) run_with_log ACTION=$(ACTION) COMMAND=$(COMMAND)
@@ -243,3 +201,34 @@ bump-minor:
 
 bump-major:
 	hatch version major && git commit -am "bump: major version" && git tag v$$(hatch version)
+
+# scripts
+define run-script
+$1: check_env ## hatch run $(1)
+	$$(eval ACTION := $1)
+	$$(eval COMMAND := hatch run "$(1)")
+	@$$(MAKE) run_with_log ACTION="$$ACTION" COMMAND="$$COMMAND"
+endef
+
+# tools
+define run-tool
+$1: ## hatch run dev:"$(1)"
+	$$(eval ACTION := $1)
+	$$(eval COMMAND := hatch run dev:"$(1)")
+	@$$(MAKE) run_with_log ACTION="$$ACTION" COMMAND="$$COMMAND"
+endef
+
+scripts := \
+    key-check \
+    analyze-spreadsheet \
+    download-sheets-to-sqlite \
+    generate-reports
+
+tools := \
+    format \
+    lint \
+    run_tests \
+    pre_commit_check
+
+$(foreach target,$(scripts),$(eval $(call run-script,$(target))))
+$(foreach target,$(tools),$(eval $(call run-tool,$(target))))
