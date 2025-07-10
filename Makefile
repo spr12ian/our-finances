@@ -152,6 +152,9 @@ run_with_log: output
 	} | tee "$$stdout_file" -a "$$log_file"; \
 	cat "$$stderr_file" >> "$$log_file"; \
 	color_log_end | tee -a "$$log_file"
+	for f in "$$log_file" "$$stdout_file" "$$stderr_file"; do \
+	  [ -s "$$f" ] || rm -f "$$f"; \
+	done
 
 shell: ## Enter Hatch dev environment shell
 	hatch shell dev
