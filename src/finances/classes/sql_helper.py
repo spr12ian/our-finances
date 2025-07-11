@@ -1,3 +1,4 @@
+import importlib
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
@@ -8,22 +9,23 @@ if TYPE_CHECKING:
 else:
     SQLHelperType = object  # Fallback to satisfy runtime typing
 
+
 class SQLHelperError(Exception):
     pass
 
 
-class SQLHelper:
-    def select_sql_helper(self, preferred_helper: str) -> SQLHelperType:
-        match preferred_helper:
-            case "SQLAlchemy":
-                from finances.classes.sqlalchemy_helper import SQLAlchemyHelper
+mapping = {
+    "SQLAlchemy": "finances.classes.sqlalchemy_helper.SQLAlchemyHelper",
+    "SQLite": "finances.classes.sqlite_helper.SQLiteHelper",
+}
 
-                return SQLAlchemyHelper()
-            case "SQLite":
-                from finances.classes.sqlite_helper import SQLiteHelper
 
-                return SQLiteHelper()
-            case _:
-                raise SQLHelperError(
-                    f"Unexpected preferred_helper: {preferred_helper}"
-                ) from ValueError
+def select_sql_helper(preferred_helper: str) -> SQLHelperType:
+    try:
+        module_path, class_name = mapping[preferred_helper].rsplit(".", 1)
+        mod = importlib.import_module(module_path)
+        return getattr(mod, class_name)()
+    except KeyError:
+        raise SQLHelperError(
+            f"Unexpected preferred_helper: {preferred_helper}"
+        ) from KeyError

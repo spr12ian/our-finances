@@ -1,6 +1,6 @@
 # standard imports
 from collections.abc import Sequence
-from typing import Any
+from typing import Any, cast
 
 # pip imports
 from sqlalchemy import Row, create_engine, text
@@ -55,6 +55,19 @@ class SQLAlchemyHelper:
             session.commit()
         finally:
             session.close()
+
+    def fetch_all(self, query: str) -> list[Any]:
+        text_clause = text(query)
+        session = self.Session()
+        try:
+            # Execute the query
+            result = session.execute(text_clause)
+            all = result.fetchall()
+        finally:
+            # Close the session
+            session.close()
+
+        return cast(list[Any], all)
 
     def fetch_one_value(self, query: str) -> Any:
         text_clause = text(query)
@@ -177,15 +190,25 @@ class SQLAlchemyHelper:
             self.rename_column(table_name, f"{column_name}_real", column_name)
 
 
-def to_sqlalchemy_name(name: str) -> str:
+def to_column_name(name: str) -> str:
+    valid_method_name = to_method_name(name)
+
+    return valid_method_name
+
+def to_table_name(name: str) -> str:
     valid_method_name = to_method_name(name)
 
     return valid_method_name
 
 
-def validate_sqlalchemy_name(name: str) -> None:
-    if name != to_sqlalchemy_name(name):
-        raise ValueError(f"Invalid SQLAlchemy name: {name}")
+def validate_column_name(name: str) -> None:
+    if name != to_column_name(name):
+        raise ValueError(f"Invalid column name: {name}")
+
+
+def validate_table_name(name: str) -> None:
+    if name != to_table_name(name):
+        raise ValueError(f"Invalid table name: {name}")
 
 
 # print(len(metadata.tables))

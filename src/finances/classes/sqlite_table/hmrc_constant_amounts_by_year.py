@@ -1,7 +1,7 @@
 from decimal import Decimal
 from functools import cache
 
-from finances.classes.sqlalchemy_helper import to_sqlalchemy_name
+from finances.classes.sqlite_helper import to_table_name
 from finances.classes.sqlite_table import SQLiteTable
 
 
@@ -29,7 +29,7 @@ class HMRC_ConstantAmountsByYear(SQLiteTable):
     def __init__(self, tax_year: str) -> None:
         super().__init__("hmrc_constant_amounts_by_year")
         self.tax_year = tax_year
-        self.tax_year_col = to_sqlalchemy_name(tax_year)
+        self.tax_year_col = to_table_name(tax_year)
 
     @cache
     def get_additional_rate_threshold(self) -> Decimal:

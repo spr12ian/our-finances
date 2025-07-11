@@ -1,6 +1,6 @@
 from typing import Self
 
-from finances.classes.sqlalchemy_helper import validate_sqlalchemy_name
+from finances.classes.sqlalchemy_helper import validate_table_name
 
 
 class QueryBuilder:
@@ -13,7 +13,7 @@ class QueryBuilder:
         self.limit: int | None = None
 
     def select(self, *columns: str) -> Self:
-        [validate_sqlalchemy_name(col) for col in columns]
+        [validate_table_name(col) for col in columns]
         self.columns = [f'"{col}"' for col in columns]
         return self
 
@@ -22,7 +22,7 @@ class QueryBuilder:
         return self
 
     def total(self, column: str) -> Self:
-        validate_sqlalchemy_name(column)
+        validate_table_name(column)
         self.columns = [f'COALESCE(SUM("{column}"), 0)']
         return self
 
@@ -31,7 +31,7 @@ class QueryBuilder:
         return self
 
     def order(self, column: str, direction: str = "ASC") -> Self:
-        validate_sqlalchemy_name(column)
+        validate_table_name(column)
         self.order_by = f'"{column}" {direction}'
         return self
 

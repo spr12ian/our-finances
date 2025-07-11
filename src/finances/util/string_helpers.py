@@ -8,6 +8,11 @@ def crop(string: str, excess: str) -> str:
     return string
 
 
+def label_to_attr(label: str) -> str:
+    """Convert a label like 'Basic tax rate' to 'basic_tax_rate'."""
+    return re.sub(r"\W+", "_", label.strip().lower())
+
+
 def remove_non_numeric(string: str) -> str:
     """
     Remove all characters from a string except digits or decimal points.
@@ -39,7 +44,8 @@ def to_class_name(s: str) -> str:
 def to_method_name(s: str) -> str:
     """
     Convert a string to be a valid Python variable name:
-    - Replace all characters that are not letters, numbers, or underscores with underscores.
+    - Replace all characters that are not letters, numbers,
+      or underscores with underscores.
     - Prefix with an underscore if the resulting string starts with a number.
     - Ensure the result is all lowercase.
     """
@@ -59,7 +65,8 @@ def to_method_name(s: str) -> str:
 def to_table_name(s: str) -> str:
     """
     Convert a string to be a valid SQLite table name:
-    - Replace all characters that are not letters, numbers, or underscores with underscores.
+    - Replace all characters that are not letters, numbers,
+    - or underscores with underscores.
     - Prefix with an underscore if the resulting string starts with a number.
     - Ensure the result is all lowercase.
     """

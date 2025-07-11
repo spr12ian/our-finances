@@ -5,6 +5,7 @@ description = "Family accounts"
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
+  "beartype",
   "google-auth",
   "gspread",
   "jinja2",
@@ -18,7 +19,7 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
-dev = ["ipython", "mypy", "pandas-stubs", "pytest", "ruff"]
+dev = ["beartype", "ipython", "mypy", "pandas-stubs", "pytest", "ruff"]
 
 [project.scripts]
 # CLI tools: maps `hatch run my-tool` or installs as entry points
@@ -56,7 +57,7 @@ run_tests = "hatch run dev:run_tests"
 
 [tool.hatch.envs.dev]
 # Copy list from [project.optional-dependencies].dev
-dependencies = ["ipython", "mypy", "pandas-stubs", "pytest", "ruff"]
+dependencies = ["beartype", "ipython", "mypy", "pandas-stubs", "pytest", "ruff"]
 
 # Optional: set dev env as default for commands like `hatch run`
 [tool.hatch.envs.dev.scripts]

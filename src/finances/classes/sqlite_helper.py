@@ -241,7 +241,21 @@ FROM {table_name}
             self.rename_column(table_name, f"{column_name}_real", column_name)
 
 
-def to_sqlite_name(name: str) -> str:
+def to_column_name(name: str) -> str:
     valid_method_name = to_method_name(name)
 
     return valid_method_name
+
+def to_table_name(name: str) -> str:
+    valid_method_name = to_method_name(name)
+
+    return valid_method_name
+
+def validate_column_name(name: str) -> None:
+    if name != to_column_name(name):
+        raise ValueError(f"Invalid column name: {name}")
+
+
+def validate_table_name(name: str) -> None:
+    if name != to_table_name(name):
+        raise ValueError(f"Invalid table name: {name}")

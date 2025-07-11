@@ -13,7 +13,7 @@ from sqlalchemy import create_engine, text
 # Import the class under test
 from finances.classes.sqlalchemy_helper import (
     SQLAlchemyHelper,
-    validate_sqlalchemy_name,
+    validate_table_name,
 )
 
 
@@ -103,10 +103,10 @@ def test_get_session(helper: SQLAlchemyHelper) -> None:
 
 def test_validate_sqlalchemy_name_valid() -> None:
     """Check that valid SQLAlchemy names pass validation."""
-    validate_sqlalchemy_name("valid_name")
+    validate_table_name("valid_name")
 
 
 def test_validate_sqlalchemy_name_invalid() -> None:
     """Ensure invalid names raise ValueError."""
     with pytest.raises(ValueError):
-        validate_sqlalchemy_name("invalid name")
+        validate_table_name("invalid name")

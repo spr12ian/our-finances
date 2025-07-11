@@ -1,15 +1,15 @@
 from functools import cache
 
-from finances.classes.sqlalchemy_helper import to_sqlalchemy_name
+from finances.classes.sqlite_helper import to_table_name
 from finances.classes.sqlite_table import SQLiteTable
 
 
-class HMRC_OverridesByYear(SQLiteTable):
+class HMRCOverridesByYear(SQLiteTable):
     def __init__(self, person_code: str, tax_year: str) -> None:
         super().__init__("hmrc_overrides_by_year")
         self.person_code = person_code
         self.tax_year = tax_year
-        self.tax_year_col = to_sqlalchemy_name(tax_year)
+        self.tax_year_col = to_table_name(tax_year)
 
     def _get_value_by_override(self, override: str) -> str:
         person_code = self.person_code

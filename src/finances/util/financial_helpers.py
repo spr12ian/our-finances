@@ -121,10 +121,3 @@ def string_to_float(string: str) -> float:
         return float(string) / 100
 
     return float(string)
-
-
-def sum_values(lst: list[Decimal]) -> Decimal:
-    total = Decimal(0)
-    for value in lst:
-        total += value
-    return total

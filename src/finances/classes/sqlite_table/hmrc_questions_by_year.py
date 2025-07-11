@@ -1,8 +1,8 @@
 from typing import Any
 
-from finances.classes.sqlalchemy_helper import (
-    to_sqlalchemy_name,
-    validate_sqlalchemy_name,
+from finances.classes.sqlite_helper import (
+    to_table_name,
+    validate_column_name,
 )
 from finances.classes.sqlite_table import SQLiteTable
 from finances.util.string_helpers import crop, to_method_name
@@ -24,7 +24,7 @@ class HMRC_QuestionsByYear(SQLiteTable):
     ]
 
     def _get_table_name(self, tax_year: str) -> str:
-        sanitised_tax_year = to_sqlalchemy_name(tax_year)
+        sanitised_tax_year = to_table_name(tax_year)
 
         table_name = f"hmrc_questions{sanitised_tax_year}"
 
@@ -37,8 +37,8 @@ class HMRC_QuestionsByYear(SQLiteTable):
 
     def _get_questions(self, columns: list[str], order_column: str) -> list[list[str]]:
         for col in columns:
-            validate_sqlalchemy_name(col)
-        validate_sqlalchemy_name(order_column)
+            validate_column_name(col)
+        validate_column_name(order_column)
         table_name = self.table_name
 
         columns_as_string = self.convert_columns_to_string(columns)

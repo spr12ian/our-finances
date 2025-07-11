@@ -9,7 +9,7 @@ from gspread.worksheet import Worksheet
 from finances.classes.google_helper import GoogleHelper
 from finances.classes.pandas_helper import PandasHelper
 from finances.classes.spreadsheet_field import SpreadsheetField
-from finances.classes.sqlalchemy_helper import to_sqlalchemy_name
+from finances.classes.sqlite_helper import to_table_name
 from finances.util.string_helpers import crop, to_class_name, to_table_name
 
 GENERATED_DIR = "src/finances/generated/"
@@ -85,7 +85,7 @@ class SpreadsheetAnalyzer:
         if worksheet.title.startswith("_"):
             self.account_sheet_names.append(worksheet.title)
 
-        table_name = to_sqlalchemy_name(worksheet.title)
+        table_name = to_table_name(worksheet.title)
 
         pdh = self.pdh
         first_row = worksheet.row_values(1)
@@ -105,7 +105,7 @@ class SpreadsheetAnalyzer:
         # python_type is used when reading the database column value from the database
         # i.e. read the sqlite value and format as python type
 
-        sqlite_column_name = to_sqlalchemy_name(spreadsheet_column_name)
+        sqlite_column_name = to_table_name(spreadsheet_column_name)
         for type_map_key, type_info in TYPE_MAPPING.items():
             if spreadsheet_column_name.endswith(type_map_key):
                 if type_map_key == "?":  # Only for boolean columns

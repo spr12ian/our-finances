@@ -6,16 +6,18 @@ from functools import cache
 from typing import Any
 
 # local imports
+from finances.classes.gbp import GBP
 from finances.classes.hmrc.booleans import HMRCBooleans as Booleans
 from finances.classes.hmrc.income import HMRCIncome as Income
 from finances.classes.hmrc.person import HMRCPerson as Person
+from finances.classes.hmrc.tax import HMRCTax as Tax
 from finances.classes.hmrc_calculation import HMRC_Calculation
 from finances.classes.hmrc_output import HMRCOutput, HMRCOutputData
-from finances.classes.sql_helper import SQLHelper
-from finances.classes.sqlite_helper import to_sqlite_name
+from finances.classes.sql_helper import select_sql_helper
+from finances.classes.sqlite_helper import to_table_name
 from finances.classes.sqlite_table.categories import Categories
-from finances.classes.sqlite_table.hmrc_constants_by_year import HMRC_ConstantsByYear
-from finances.classes.sqlite_table.hmrc_overrides_by_year import HMRC_OverridesByYear
+from finances.classes.sqlite_table.hmrc_constants_by_year import HMRCConstantsByYear
+from finances.classes.sqlite_table.hmrc_overrides_by_year import HMRCOverridesByYear
 from finances.classes.sqlite_table.hmrc_property import HMRC_Property
 from finances.classes.sqlite_table.hmrc_questions_by_year import HMRC_QuestionsByYear
 from finances.classes.sqlite_table.transactions import Transactions
@@ -29,14 +31,15 @@ class HMRC:
 
         self.initialize_properties()
 
-        self.tax_year_col = to_sqlite_name(tax_year)
+        self.tax_year_col = to_table_name(tax_year)
 
         self.categories = Categories()
-        self.constants = HMRC_ConstantsByYear(tax_year)
-        self.overrides = HMRC_OverridesByYear(person_code, tax_year)
+        self.constants = HMRCConstantsByYear(tax_year)
+        self.tax = Tax(tax_year)
+        self.overrides = HMRCOverridesByYear(person_code, tax_year)
         self.person = Person(person_code)
 
-        self.sql = SQLHelper().select_sql_helper("SQLite")
+        self.sql = select_sql_helper("SQLite")
         self.transactions = Transactions()
 
     def initialize_properties(self) -> None:
@@ -207,21 +210,6 @@ class HMRC:
 
     def are_you_registered_blind(self) -> Any:
         return False
-
-    def calculate_dividends_tax(self, amount, available_allowance=0) -> tuple:
-        if amount <= available_allowance:
-            tax = 0
-            available_allowance -= amount
-        else:
-            amount -= available_allowance
-            available_allowance = 0
-            dividends_allowance = self.get_dividends_allowance()
-            if amount <= dividends_allowance:
-                tax = 0
-            else:
-                dividends_basic_rate = self.get_dividends_basic_rate()
-                tax = (amount - dividends_allowance) * dividends_basic_rate
-        return (round(tax, 2), available_allowance)
 
     def calculate_savings_tax(self, amount, available_allowance=0):
         if amount <= available_allowance:
@@ -479,10 +467,10 @@ class HMRC:
         return "Maybe: Married couples allowance section"
 
     def get_additional_rate_threshold(self) -> Decimal:
-        return self.constants.get_additional_rate_threshold()
+        return self.constants.additional_rate_threshold
 
     def get_additional_tax_rate(self) -> Any:
-        additional_tax_rate = self.constants.get_additional_tax_rate()
+        additional_tax_rate = self.constants.additional_tax_rate
         return additional_tax_rate
 
     def get_adjusted_loss_for_the_year(self) -> Any:
@@ -587,10 +575,10 @@ class HMRC:
         return basic_rate_limit
 
     def get_basic_rate_threshold(self) -> Any:
-        return self.constants.get_basic_rate_threshold()
+        return self.constants.basic_rate_threshold
 
     def get_basic_tax_rate(self) -> Decimal:
-        basic_tax_rate = self.constants.get_basic_tax_rate()
+        basic_tax_rate = self.constants.basic_tax_rate
         return basic_tax_rate
 
     def get_benefit_from_pre_owned_assets(self) -> Any:
@@ -676,7 +664,7 @@ class HMRC:
         return self.gbpb(0)
 
     def get_class_2_annual_amount(self) -> Any:
-        return self.constants.get_class_2_annual_amount()
+        return self.constants.class_2_annual_amount
 
     def get_class_2_nics_due(self) -> Any:
         class_2_annual_amount = self.get_class_2_annual_amount()
@@ -707,13 +695,13 @@ class HMRC:
         return self.gbpa(self.get_class_2_nics_due())
 
     def get_class_2_weekly_rate(self) -> Any:
-        return self.constants.get_class_2_weekly_rate()
+        return self.constants.class_2_weekly_rate
 
     def get_class_4_lower_profits_limit(self) -> Decimal:
-        return self.constants.get_class_4_lower_profits_limit()
+        return self.constants.class_4_lower_profits_limit
 
-    def get_class_4_lower_rate(self) -> Decimal:
-        return self.constants.get_class_4_lower_rate()
+    def get_class_4_lower_rate(self) -> Percentage:
+        return self.constants.class_4_lower_rate
 
     def get_class_4_nics_due(self) -> Decimal:
         class_4_nics_lower_rate = self.get_class_4_lower_rate()
@@ -741,10 +729,10 @@ class HMRC:
         return self.gbpa(self.get_class_4_nics_due())
 
     def get_class_4_upper_profits_limit(self) -> Any:
-        return self.constants.get_class_4_lower_profits_limit()
+        return self.constants.class_4_lower_profits_limit
 
     def get_class_4_upper_rate(self) -> Any:
-        return self.constants.get_class_4_upper_rate()
+        return self.constants.class_4_upper_rate
 
     def get_combined_tax_digest(self) -> Any:
         combined_taxable_profit = self.get_combined_taxable_profit()
@@ -912,13 +900,13 @@ class HMRC:
         return self.gbpb(Decimal(0))
 
     def get_dividends_allowance(self) -> Any:
-        return self.constants.get_dividends_allowance()
+        return self.constants.dividends_allowance
 
     def get_dividends_allowance_gbp(self) -> Any:
         return self.gbp(self.get_dividends_allowance())
 
     def get_dividends_basic_rate(self) -> Any:
-        return self.constants.get_dividends_basic_rate()
+        return self.constants.dividends_basic_rate
 
     def get_dividends_digest(self) -> Any:
         return self.get_digest_by_type("dividends")
@@ -930,7 +918,7 @@ class HMRC:
             tax_year, f"HMRC {person_code} INC Dividends from UK companies"
         )
 
-    def get_dividends_income(self) -> Decimal:
+    def get_dividends_income(self) -> GBP:
         person_code = self.person_code
         tax_year = self.tax_year
         category_like = f"HMRC {person_code} DIV income: "
@@ -952,7 +940,7 @@ class HMRC:
         parts = [f"taxable dividends: {taxable_dividends_gbp}"]
         unused_allowance = self.unused_allowance
         taxable_amount = max(0, taxable_dividends - unused_allowance)
-        (tax, unused_allowance) = self.calculate_dividends_tax(income, unused_allowance)
+        (tax, unused_allowance) = Tax.calculate_dividends_tax(income, unused_allowance)
         self.unused_allowance = unused_allowance
         tax_gbp = self.gbp(tax).strip()
         unused_allowance_gbp = self.gbp(unused_allowance).strip()
@@ -1061,10 +1049,10 @@ class HMRC:
         return self.gbpb(0)
 
     def get_higher_rate_threshold(self) -> Any:
-        return self.constants.get_higher_rate_threshold()
+        return self.constants.higher_rate_threshold
 
     def get_higher_tax_rate(self) -> Any:
-        higher_tax_rate = self.constants.get_higher_tax_rate()
+        higher_tax_rate = self.constants.higher_tax_rate
         return higher_tax_rate
 
     def get_hmrc_allowance(self) -> Any:
@@ -1187,7 +1175,7 @@ class HMRC:
         pay_voluntarily_nics = self.do_you_want_to_pay_class_2_nics_voluntarily()
         return trading_income <= trading_allowance and pay_voluntarily_nics
 
-    def get_income_tax(self) -> Decimal:
+    def get_income_tax(self) -> GBP:
         non_savings_income = self.get_non_savings_income()
         savings_income = self.get_savings_income()
         dividends_income = self.get_dividends_income()
@@ -1198,7 +1186,7 @@ class HMRC:
         (savings_tax, available_allowance) = self.calculate_savings_tax(
             savings_income, available_allowance
         )
-        (dividends_tax, available_allowance) = self.calculate_dividends_tax(
+        (dividends_tax, available_allowance) = Tax.calculate_dividends_tax(
             dividends_income, available_allowance
         )
         income_tax = non_savings_tax + savings_tax + dividends_tax
@@ -1296,7 +1284,7 @@ class HMRC:
         if spouse_total_income > higher_rate_threshold:
             return Decimal(0)
 
-        max_marriage_allowance = self.constants.get_marriage_allowance()
+        max_marriage_allowance = self.constants.marriage_allowance
 
         return min(
             max_marriage_allowance,
@@ -1389,9 +1377,9 @@ class HMRC:
     def get_non_residential_finance_property_costs_gbp(self) -> Any:
         return self.gbpb(0)
 
-    def get_non_savings_income(self) -> Any:
+    def get_non_savings_income(self) -> GBP:
         values = [self.get_trading_profit(), self.get_property_profit()]
-        non_savings_income = financial_helpers.sum_values(values)
+        non_savings_income = GBP(sum(values))
         return non_savings_income
 
     def get_not_applicable(self) -> Any:
@@ -1535,13 +1523,13 @@ class HMRC:
         return 0
 
     def get_personal_allowance(self) -> Any:
-        return self.constants.get_personal_allowance()
+        return self.constants.personal_allowance
 
     def get_personal_allowance_gbp(self) -> Any:
         return self.gbp(self.get_personal_allowance())
 
     def get_personal_savings_allowance(self) -> Any:
-        return self.constants.get_personal_savings_allowance()
+        return self.constants.personal_savings_allowance
 
     def get_please_give_any_other_information_about_this_business(self) -> Any:
         return ""
@@ -1585,7 +1573,7 @@ class HMRC:
             return 0
 
     def get_property_allowance_actual(self) -> Any:
-        return self.constants.get_property_income_allowance()
+        return self.constants.property_income_allowance
 
     def get_property_allowance_actual_gbp(self) -> Any:
         return self.gbpb(self.get_property_allowance_actual())
@@ -1611,13 +1599,13 @@ class HMRC:
         else:
             return 0
 
-    def get_property_expenses_actual(self) -> Decimal:
+    def get_property_expenses_actual(self) -> GBP:
         property_expenses = [
             self.get_rent__rates__insurance_and_ground_rents(),
             self.get_property_repairs_and_maintenance(),
             self.get_legal_or_management_and_other_professional_fees(),
         ]
-        total_property_expenses = financial_helpers.sum_values(property_expenses)
+        total_property_expenses = GBP(sum(property_expenses))
         return total_property_expenses
 
     def get_property_expenses_actual_gbp(self) -> Any:
@@ -1769,26 +1757,26 @@ class HMRC:
         return revised_basic_rate_threshold
 
     def get_savings_allowance(self) -> Any:
-        return self.constants.get_personal_savings_allowance()
+        return self.constants.personal_savings_allowance
 
     def get_savings_allowance_gbp(self) -> Any:
         savings_allowance = self.get_savings_allowance()
         return self.gbpb(savings_allowance)
 
     def get_savings_basic_rate(self) -> Any:
-        return self.constants.get_savings_basic_rate()
+        return self.constants.savings_basic_rate
 
     def get_savings_digest(self) -> Any:
         return self.get_digest_by_type("savings")
 
-    def get_savings_income(self) -> Decimal:
+    def get_savings_income(self) -> GBP:
         person_code = self.person_code
         tax_year = self.tax_year
         category_like = f"HMRC {person_code} INT income"
         savings_income = self.transactions.fetch_total_by_tax_year_category_like(
             tax_year, category_like
         )
-        return self.round_down(savings_income, 0)
+        return GBP(self.round_down(savings_income, 0))
 
     def get_savings_income_breakdown(self) -> Any:
         person_code = self.person_code
@@ -1799,7 +1787,7 @@ class HMRC:
         return self.gbpb(self.get_savings_income())
 
     def get_savings_nil_band(self) -> Any:
-        return self.constants.get_savings_nil_band()
+        return self.constants.savings_nil_band
 
     def get_savings_tax_digest(self) -> Any:
         if not self.are_there_savings_transactions():
@@ -1850,7 +1838,7 @@ class HMRC:
         return ""
 
     def get_small_profits_threshold(self) -> Any:
-        return self.constants.get_small_profits_threshold()
+        return self.constants.small_profits_threshold
 
     @cache
     def get_spouse_total_income_received(self) -> Decimal:
@@ -1859,7 +1847,7 @@ class HMRC:
         return spouse_total_income_received
 
     def get_starting_rate_limit_for_savings(self) -> Any:
-        return self.constants.get_starting_rate_limit_for_savings()
+        return self.constants.starting_rate_limit_for_savings
 
     def get_taxable_benefits_income(self) -> Any:
         person_code = self.person_code
@@ -1975,14 +1963,14 @@ class HMRC:
     def get_taxable_incapacity_benefit(self) -> Any:
         return 0
 
-    def get_taxable_income(self) -> Any:
-        values = [
+    def get_taxable_income(self) -> GBP:
+        values:list[GBP] = [
             self.get_trading_profit(),
             self.get_property_profit(),
             self.get_savings_income(),
             self.get_dividends_income(),
         ]
-        taxable_income = financial_helpers.sum_values(values)
+        taxable_income = GBP(sum(values))
         return taxable_income
 
     def get_taxable_lump_sums(self) -> Any:
@@ -2157,7 +2145,7 @@ class HMRC:
             return 0
 
     def get_trading_allowance_actual(self) -> Any:
-        trading_income_allowance = self.constants.get_trading_income_allowance()
+        trading_income_allowance = self.constants.trading_income_allowance
         return trading_income_allowance
 
     def get_trading_allowance_actual_gbp(self) -> Any:
@@ -2377,10 +2365,10 @@ class HMRC:
         return self.gbpb(0)
 
     def get_vat_registration_threshold(self) -> Any:
-        return self.constants.get_vat_registration_threshold()
+        return self.constants.vat_registration_threshold
 
     def get_weekly_state_pension(self) -> Any:
-        return self.constants.get_weekly_state_pension()
+        return self.constants.weekly_state_pension
 
     def get_weekly_state_pension_forecast(self) -> Decimal:
         weekly_state_pension_forecast = self.person.get_weekly_state_pension_forecast()
@@ -2609,7 +2597,8 @@ class HMRC:
             self.transactions.query_builder()
             .select_raw("COUNT(*)")
             .where(
-                f'"Tax year"="{tax_year}" AND "Category" LIKE "HMRC {person_code} EMP%income"'
+                f'"Tax year"="{tax_year}" '
+                f'AND "Category" LIKE "HMRC {person_code} EMP%income"'
             )
             .build()
         )

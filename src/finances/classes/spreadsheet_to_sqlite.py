@@ -8,7 +8,7 @@ from pandas import DataFrame, Series
 from finances.classes.config import Config
 from finances.classes.google_helper import GoogleHelper
 from finances.classes.pandas_helper import PandasHelper
-from finances.classes.sqlite_helper import SQLiteHelper, to_sqlite_name
+from finances.classes.sqlite_helper import SQLiteHelper, to_table_name
 from finances.generated.field_registry import field_registry
 from finances.util.boolean_helpers import boolean_string_to_int
 from finances.util.database_keys import get_primary_key_columns, has_primary_key
@@ -61,7 +61,7 @@ class SpreadSheetToSqlite:
         pass
 
     def convert_column_name(self, spreadsheet_column_name: str) -> str:
-        sqlite_column_name = to_sqlite_name(spreadsheet_column_name)
+        sqlite_column_name = to_table_name(spreadsheet_column_name)
 
         if spreadsheet_column_name.endswith(" (£)"):
             sqlite_column_name = crop(sqlite_column_name, "____")
@@ -107,7 +107,7 @@ class SpreadSheetToSqlite:
         self.sql.close_connection()
 
     def convert_worksheet(self, worksheet: Worksheet) -> None:
-        table_name = to_sqlite_name(worksheet.title)
+        table_name = to_table_name(worksheet.title)
         print(f"table_name: {table_name}")
 
         pdh = self.pdh

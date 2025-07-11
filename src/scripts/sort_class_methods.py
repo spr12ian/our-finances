@@ -15,8 +15,8 @@ def main():
         ["cls_method_sorter", "ClassTransformer"],
         ["cls_method_sorter", "MethodCollector"],
         ["cls_method_sorter", "MethodSorter"],
-        ["cls_table_hmrc_constants_by_year", "HMRC_ConstantsByYear"],
-        ["cls_table_hmrc_overrides_by_year", "HMRC_OverridesByYear"],
+        ["cls_table_hmrc_constants_by_year", "HMRCConstantsByYear"],
+        ["cls_table_hmrc_overrides_by_year", "HMRCOverridesByYear"],
         ["cls_table_hmrc_people_details", "HMRCPeopleDetails"],
     ]
 
