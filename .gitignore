@@ -1,3 +1,4 @@
+.env
 src/finances/generated/
 *.bak
 *.csv
