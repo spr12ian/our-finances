@@ -246,10 +246,12 @@ def to_column_name(name: str) -> str:
 
     return valid_method_name
 
+
 def to_table_name(name: str) -> str:
     valid_method_name = to_method_name(name)
 
     return valid_method_name
+
 
 def validate_column_name(name: str) -> None:
     if name != to_column_name(name):

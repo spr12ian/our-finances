@@ -108,6 +108,9 @@ format_check: output ## Check but don't make changes???
 	echo "🎨 Checking formatting with ruff (check mode)..." | tee "$$log_file"; \
 	hatch run ruff format --check --diff $(SRC) | tee -a "$$log_file"
 
+
+
+
 hatch-%:
 	@$(MAKE) run_with_log ACTION=$* COMMAND="hatch run $*"
 

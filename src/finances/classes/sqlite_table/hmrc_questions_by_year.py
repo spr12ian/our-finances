@@ -101,7 +101,8 @@ class HMRC_QuestionsByYear(SQLiteTable):
         how_many_rows = len(rows)
         if how_many_rows > 0:
             print(
-                f"{how_many_rows} unused questions in {core_questions} but not in {table_name}"
+                f"{how_many_rows} unused questions in {core_questions}"
+                f" but not in {table_name}"
             )
             for row in rows:
                 print(row)

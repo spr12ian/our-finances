@@ -29,7 +29,7 @@ def main() -> None:
     # List of people to generate reports for
     hmrc_people = ["S", "B"]
 
-    earliest_year = 2023
+    earliest_year = 2024
 
     tax_years = get_tax_years_from(earliest_year)
 

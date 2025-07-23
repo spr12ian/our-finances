@@ -195,6 +195,7 @@ def to_column_name(name: str) -> str:
 
     return valid_method_name
 
+
 def to_table_name(name: str) -> str:
     valid_method_name = to_method_name(name)
 

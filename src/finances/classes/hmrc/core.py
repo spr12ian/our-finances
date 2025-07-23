@@ -1964,7 +1964,7 @@ class HMRC:
         return 0
 
     def get_taxable_income(self) -> GBP:
-        values:list[GBP] = [
+        values: list[GBP] = [
             self.get_trading_profit(),
             self.get_property_profit(),
             self.get_savings_income(),
