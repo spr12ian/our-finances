@@ -1,6 +1,6 @@
 [project]
 name = "our-finances"
-version = "0.0.1" #Major, minor, patch
+version = "0.0.1"
 description = "Family accounts"
 readme = "README.md"
 requires-python = ">=3.12"
@@ -12,6 +12,7 @@ dependencies = [
   "libcst",
   "pandas",
   "pytest",
+  "python-dateutil",
   "pyyaml",
   "sqlalchemy",
   "sqlparse",
@@ -19,12 +20,19 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
-dev = ["beartype", "ipython", "mypy", "pandas-stubs", "pytest", "ruff"]
+dev = [
+  "ipython",
+  "mypy>=1.10",
+  "pandas-stubs",
+  "ruff>=0.5.0",
+  "types-python-dateutil",
+  "pytest",
+]
 
 [project.scripts]
-# CLI tools: maps `hatch run my-tool` or installs as entry points
 analyze-spreadsheet = "scripts.analyze_spreadsheet:main"
 download-sheets-to-sqlite = "scripts.download_sheets_to_sqlite:main"
+fownes-street = "scripts.fownes_street:main"
 generate-reports = "scripts.generate_reports:main"
 key-check = "scripts.key_check:main"
 first-normal-form = "scripts.first_normal_form:main"
@@ -41,35 +49,34 @@ build-backend = "hatchling.build"
 include = ["src/**", "tests/**", "README.md"]
 
 [tool.hatch.build.targets.wheel]
-packages = ["src/finances", "src/scripts", "tests"]
+# Prefer src-layout discovery instead of listing tests as a package in the wheel
+packages = ["src/finances", "src/scripts"]
 
-[tool.hatch.envs.default]
-dependencies = [
-  # Just core dependencies here if needed
-]
-
-[tool.hatch.envs.default.scripts]
-format = "hatch run dev:format"
-lint = "hatch run dev:lint"
-pre_commit_check = "hatch run dev:pre_commit_check"
-run_queries = "hatch run dev:run_queries"
-run_tests = "hatch run dev:run_tests"
-
+# Single dev environment; no default/matrix → no variable selection issues
 [tool.hatch.envs.dev]
-# Copy list from [project.optional-dependencies].dev
-dependencies = ["beartype", "ipython", "mypy", "pandas-stubs", "pytest", "ruff"]
+features = ["dev"]   # pulls [project.optional-dependencies].dev for this env
 
-# Optional: set dev env as default for commands like `hatch run`
 [tool.hatch.envs.dev.scripts]
-format = "hatch run ruff format ."
-lint = ["ruff check .", "mypy src"] # lint + check types
-pre_commit_check = ["hatch run dev:format", "hatch run dev:lint", "hatch run dev:run_tests"]
-run_queries = "execute_sqlite_queries \"$FILE\""
+# IMPORTANT: don't nest 'hatch run ...' here — just run the tools
+format = "ruff format ."
+lint = ["ruff check .", "mypy --config-file pyproject.toml src"]
+typecheck = "mypy --config-file pyproject.toml ."
+pre_commit_check = [
+  "ruff format .",
+  "ruff check .",
+  "mypy --config-file pyproject.toml src",
+  "pytest --maxfail=1 --disable-warnings -q",
+]
 run_tests = "pytest --maxfail=1 --disable-warnings -q"
+run_queries = "execute_sqlite_queries \"$FILE\""
 
 [tool.mypy]
 python_version = "3.12"
 mypy_path = "src:typings"
+strict = true
+install_types = true
+non_interactive = true
+warn_unused_ignores = true
 
 [tool.ruff]
 line-length = 88

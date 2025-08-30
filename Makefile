@@ -56,6 +56,7 @@ all: ## Run all steps
 	@$(MAKE) update
 	@$(MAKE) version
 	@$(MAKE) format
+	@$(MAKE) fownes-street
 #	@$(MAKE) lint
 	@$(MAKE) key-check
 	@$(MAKE) analyze-spreadsheet
@@ -107,9 +108,6 @@ format_check: output ## Check but don't make changes???
 	@log_file="output/format_check.log"; \
 	echo "🎨 Checking formatting with ruff (check mode)..." | tee "$$log_file"; \
 	hatch run ruff format --check --diff $(SRC) | tee -a "$$log_file"
-
-
-
 
 hatch-%:
 	@$(MAKE) run_with_log ACTION=$* COMMAND="hatch run $*"
@@ -202,6 +200,7 @@ $1: ## hatch run dev:"$(1)"
 endef
 
 scripts := \
+    fownes-street \
     key-check \
     analyze-spreadsheet \
     download-sheets-to-sqlite \
