@@ -96,7 +96,7 @@ def main() -> None:
 
     # --- extraction -------------------------------------------------------
 
-    transactions: list[Transaction] = []
+    lines: list[str] = []
     statement_year = parse_statement_year(pdf_path)
 
     with pdfplumber.open(pdf_path) as pdf:
@@ -137,12 +137,17 @@ def main() -> None:
                     transaction = Transaction(
                         date_iso, gd["desc"].strip(), credit, debit
                     )
-                    print(transaction)
 
-                    transactions.append(transaction)
+                    lines.append(str(transaction))
 
+    output = ""
+    for line in lines:
+        output += line + "\n"
 
-    print(f"Extracted {len(transactions)} transactions → {output_csv}")
+    with open(output_csv, "a") as file:
+        file.write(output)
+
+    print(f"Extracted {len(lines)} transactions → {output_csv}")
 
 
 if __name__ == "__main__":
