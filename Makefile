@@ -30,15 +30,15 @@ TREE_EXCLUDES := '__pycache__|.git|.hatch|.mypy_cache|.pytest_cache|.ruff_cache|
 
 .PHONY: \
 	all \
-	check_env \
+	check-env \
 	ci \
 	clean \
-	format_check \
+	format-check \
 	help \
-	install_hatch_plugin \
-	install_pip_package \
+	install-hatch-plugin \
+	install-pip-package \
 	output \
-	run_with_log \
+	_run-with-log \
 	shell \
 	sqlite3 \
 	sqlitebrowser \
@@ -52,7 +52,8 @@ TREE_EXCLUDES := '__pycache__|.git|.hatch|.mypy_cache|.pytest_cache|.ruff_cache|
 all: ## Run all steps
 	@echo "Running all steps..."
 	@$(MAKE) clean
-	@$(MAKE) check_env
+	@$(MAKE) check-env
+	@$(MAKE) convert-pdf-to-csv
 	@$(MAKE) update
 	@$(MAKE) version
 	@$(MAKE) format
@@ -62,16 +63,16 @@ all: ## Run all steps
 	@$(MAKE) analyze-spreadsheet
 	@$(MAKE) download-sheets-to-sqlite
 	@$(MAKE) generate-reports
-	@$(MAKE) pre_commit_check
+	@$(MAKE) pre-commit-check
 # what follows is really future development
 	@$(MAKE) vacuum-sqlite-database
 	@$(MAKE) first-normal-form
-	@$(MAKE) execute_sqlite_queries
-	@$(MAKE) generate_sqlalchemy_models
-	@$(MAKE) execute_sqlalchemy_queries
+	@$(MAKE) execute-sqlite-queries
+	@$(MAKE) generate-sqlalchemy-models
+	@$(MAKE) execute-sqlalchemy-queries
 	@echo "✅ All steps completed."
 
-check_env: ## Check required env variables are set
+check-env: ## Check required env variables are set
 	@missing=0; \
 	for var in $(REQUIRED_VARS); do \
 		if [ -z "$$\{!var\}" ]; then \
@@ -104,13 +105,13 @@ clean: output ## Clean-up the directory
 	find . -type f -name '*.stdout' -print | tee "$$stdout_file" | xargs -r rm -f; \
 	echo "✅ Cleaned."
 
-format_check: output ## Check but don't make changes???
+format-check: output ## Check but don't make changes???
 	@log_file="output/format_check.log"; \
 	echo "🎨 Checking formatting with ruff (check mode)..." | tee "$$log_file"; \
 	hatch run ruff format --check --diff $(SRC) | tee -a "$$log_file"
 
 hatch-%:
-	@$(MAKE) run_with_log ACTION=$* COMMAND="hatch run $*"
+	@$(MAKE) _run-with-log ACTION=$* COMMAND="hatch run $*"
 
 help: ## Lists available targets
 	@grep -E '^[a-zA-Z0-9_-]+:.*?## .*$$' $(MAKEFILE_LIST) | \
@@ -121,29 +122,29 @@ help: ## Lists available targets
 		printf "\033[36m%-25s\033[0m %s\n" "$$t" "hatch run $$t"; \
 	done
 	@for t in $(tools); do \
-		printf "\033[36m%-25s\033[0m %s\n" "$$t" "hatch run dev:$$t"; \
+		printf "\033[36m%-25s\033[0m %s\n" "$$t" "hatch run $$t"; \
 	done
 	@printf "\033[36m%-25s\033[0m %s\n" "all-tools"  "Run all tool tasks"
 
-install_hatch_plugin: ## Install a Hatch plugin (via pipx inject)
+install-hatch-plugin: ## Install a Hatch plugin (via pipx inject)
 	@test "$(PLUGIN)" || (echo "❌ Must provide PLUGIN=<name>"; exit 1)
 	@echo "🔌 Installing Hatch plugin $(PLUGIN)..."
 	pipx inject hatch "$(PLUGIN)"
 	@echo "✅ Plugin $(PLUGIN) installed into Hatch environment."
 
-install_pip_package: ## Install a dev pip dependency and persist to pyproject.toml
+install-pip-package: ## Install a pip dependency and persist to pyproject.toml
 	@test "$(PACKAGE)" || (echo "❌ Must provide PACKAGE=<name>"; exit 1)
-	@echo "📦 Installing pip $(PACKAGE) into dev environment..."
-	@hatch run dev:pip install "$(PACKAGE)"
-	@echo "🗘️ Adding $(PACKAGE) to [tool.hatch.envs.dev] in pyproject.toml..."
-	@sed -i '/^\[tool\.hatch\.envs\.dev\]/,/^\[/{/dependencies = \[/a\    "$(PACKAGE)",}' pyproject.toml
+	@echo "📦 Installing pip $(PACKAGE) into default environment..."
+	@hatch run pip install "$(PACKAGE)"
+	@echo "🗘️ Adding $(PACKAGE) to [project.optional-dependencies].all in pyproject.toml..."
+	@sed -i '/^\[project\.optional-dependencies\]/,/^\[/{/^\s*all\s*=\s*\[/a\  "$(PACKAGE)",}' pyproject.toml
 	@$(MAKE) update
 	@echo "✅ $(PACKAGE) installed and environment updated."
 
 output:
 	@install -d output
 
-run_with_log: output
+_run-with-log: output
 	@timestamp="$$(date '+%F_%H:%M')"; \
 	log_file="output/$${timestamp}_$(ACTION).txt"; \
 	stdout_file="output/$${timestamp}_$(ACTION).stdout"; \
@@ -161,17 +162,17 @@ run_with_log: output
 	  [ -s "$$f" ] || rm -f "$$f"; \
 	done
 
-shell: ## Enter Hatch dev environment shell
-	hatch shell dev
+shell: ## Enter Hatch default environment shell
+	hatch shell
 
-sqlite3: check_env ## SQLite command line
+sqlite3: check-env ## SQLite command line
 	@sqlite3 ${SQLITE_OUR_FINANCES_DB_NAME}
 
-sqlitebrowser: check_env ## SQLite GUI
+sqlitebrowser: check-env ## SQLite GUI
 	@sqlitebrowser ${SQLITE_OUR_FINANCES_DB_NAME}
 
 tree: output ## Current project tree
-	@$(MAKE) run_with_log ACTION=tree COMMAND="tree -a -F -I $(TREE_EXCLUDES)"
+	@$(MAKE) _run-with-log ACTION=tree COMMAND="tree -a -F -I $(TREE_EXCLUDES)"
 
 types: output
 	@log_file="output/types.log"; \
@@ -189,31 +190,36 @@ version: ## Show current project version
 
 # scripts
 define run-script
-$1: check_env ## hatch run $(1)
-	@$$(MAKE) run_with_log ACTION="$1" COMMAND="hatch run $1"
+$1: check-env ## hatch run $(1)
+	@$$(MAKE) _run-with-log ACTION="$1" COMMAND="hatch run $1"
 endef
 
 # tools
 define run-tool
-$1: ## hatch run dev:"$(1)"
-	@$$(MAKE) run_with_log ACTION="$1" COMMAND="hatch run dev:$1"
+$1: ## hatch run"$(1)"
+	@$$(MAKE) _run-with-log ACTION="$1" COMMAND="hatch run $1"
 endef
 
 scripts := \
+    convert-pdf-to-csv \
     fownes-street \
     key-check \
     analyze-spreadsheet \
     download-sheets-to-sqlite \
     generate-reports \
 	first-normal-form \
-	vacuum-sqlite-database
+	vacuum-sqlite-database \
+	execute-sqlite-queries \
+	execute-sqlalchemy-queries \
+	generate-sqlalchemy-models
+
 
 tools := \
     format \
     lint \
-    run_tests \
-    pre_commit_check \
-	run_queries
+    run-tests \
+    pre-commit-check \
+	run-queries
 
 $(foreach target,$(scripts),$(eval $(call run-script,$(target))))
 $(foreach target,$(tools),$(eval $(call run-tool,$(target))))

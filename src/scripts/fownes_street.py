@@ -380,8 +380,6 @@ DEFAULT_ASSUMPTIONS = Assumptions(
 )
 
 
-
-
 def main() -> None:
     out = run_projection(DEFAULT_ASSUMPTIONS)
 
@@ -415,6 +413,7 @@ def main() -> None:
             f"Δ £{row.keep_minus_sell:,.0f}"
         )
 
-# ========== Quick demo ==========
+
+
 if __name__ == "__main__":
     main()

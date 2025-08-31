@@ -11,7 +11,7 @@ dependencies = [
   "jinja2",
   "libcst",
   "pandas",
-  "pytest",
+  "pdfplumber",
   "python-dateutil",
   "pyyaml",
   "sqlalchemy",
@@ -20,7 +20,7 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
-dev = [
+all = [
   "ipython",
   "mypy>=1.10",
   "pandas-stubs",
@@ -31,6 +31,7 @@ dev = [
 
 [project.scripts]
 analyze-spreadsheet = "scripts.analyze_spreadsheet:main"
+convert-pdf-to-csv = "scripts.convert_pdf_to_csv:main"
 download-sheets-to-sqlite = "scripts.download_sheets_to_sqlite:main"
 fownes-street = "scripts.fownes_street:main"
 generate-reports = "scripts.generate_reports:main"
@@ -52,11 +53,12 @@ include = ["src/**", "tests/**", "README.md"]
 # Prefer src-layout discovery instead of listing tests as a package in the wheel
 packages = ["src/finances", "src/scripts"]
 
-# Single dev environment; no default/matrix → no variable selection issues
-[tool.hatch.envs.dev]
-features = ["dev"]   # pulls [project.optional-dependencies].dev for this env
 
-[tool.hatch.envs.dev.scripts]
+[tool.hatch.envs.default]
+features = ["all"]
+type = "virtual"
+
+[tool.hatch.envs.default.scripts]
 # IMPORTANT: don't nest 'hatch run ...' here — just run the tools
 format = "ruff format ."
 lint = ["ruff check .", "mypy --config-file pyproject.toml src"]
@@ -80,7 +82,7 @@ warn_unused_ignores = true
 
 [tool.ruff]
 line-length = 88
-src = ["src", "scripts"]
+src = ["src"]
 extend-exclude = ["tests/data", "scripts/old"]
 target-version = "py312"
 
