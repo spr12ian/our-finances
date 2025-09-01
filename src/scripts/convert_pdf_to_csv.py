@@ -115,7 +115,8 @@ def main() -> None:
                     credit = m.group() if m else ""
 
                     transaction = Transaction("17/01/2025", "CASHBACK", credit)
-                    print(transaction)
+
+                    lines.append(str(transaction))
 
                     continue
 
@@ -127,7 +128,7 @@ def main() -> None:
                     date_iso = parse_date(
                         gd["day"], gd["month"], gd.get("year"), statement_year
                     )
-                    if gd.get("cr") == "CR":
+                    if gd.get("cr") != "CR":
                         credit = ""
                         debit = gd["amount"]
                     else:
@@ -140,14 +141,17 @@ def main() -> None:
 
                     lines.append(str(transaction))
 
-    output = ""
-    for line in lines:
-        output += line + "\n"
+    if not lines:
+        print(f"No transactions found in {pdf_path}")
+    else:
+        output = "Date,Description,Credit (£),Debit (£)\n"
+        for line in lines:
+            output += line + "\n"
 
-    with open(output_csv, "a") as file:
-        file.write(output)
+        with open(output_csv, "w") as file:
+            file.write(output)
 
-    print(f"Extracted {len(lines)} transactions → {output_csv}")
+        print(f"Extracted {len(lines)} transactions → {output_csv}")
 
 
 if __name__ == "__main__":
