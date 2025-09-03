@@ -55,3 +55,5 @@ sqlitebrowser our_finances.sqlite >sqlitebrowser.log 2>sqlitebrowser_error.log &
 Prefer Numeric(10,2) over Float for financial data, map to Python as Decimal type
 
 make install_hatch_plugin PLUGIN=hatch-vcs
+
+sudo -v && curl https://rclone.org/install.sh | sudo bash
