@@ -1,6 +1,7 @@
+# Remember to run `hatch env update`, and `hatch build` after modifying this file.
 [project]
 name = "our-finances"
-version = "0.0.1"
+version = "0.0.2"
 description = "Family accounts"
 readme = "README.md"
 requires-python = ">=3.12"
@@ -31,7 +32,7 @@ all = [
 
 [project.scripts]
 analyze-spreadsheet = "scripts.analyze_spreadsheet:main"
-convert-pdf-to-csv = "scripts.convert_pdf_to_csv:main"
+ssacrd-pdfs-to-xlsx = "scripts.ssacrd_pdfs_to_xlsx:main"
 download-sheets-to-sqlite = "scripts.download_sheets_to_sqlite:main"
 fownes-street = "scripts.fownes_street:main"
 generate-reports = "scripts.generate_reports:main"

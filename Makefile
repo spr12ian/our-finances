@@ -34,6 +34,9 @@ TREE_EXCLUDES := '__pycache__|.git|.hatch|.mypy_cache|.pytest_cache|.ruff_cache|
 	ci \
 	clean \
 	format-check \
+	hatch-build \
+	hatch-clean \
+	hatch-update \
 	help \
 	install-hatch-plugin \
 	install-pip-package \
@@ -53,7 +56,7 @@ all: ## Run all steps
 	@echo "Running all steps..."
 	@$(MAKE) clean
 	@$(MAKE) check-env
-	@$(MAKE) convert-pdf-to-csv
+	@$(MAKE) ssacrd-pdfs-to-xlsx
 	@$(MAKE) update
 	@$(MAKE) version
 	@$(MAKE) format
@@ -110,7 +113,23 @@ format-check: output ## Check but don't make changes???
 	echo "🎨 Checking formatting with ruff (check mode)..." | tee "$$log_file"; \
 	hatch run ruff format --check --diff $(SRC) | tee -a "$$log_file"
 
-hatch-%:
+hatch-build: ## Build the project (hatch build)
+	@echo "🏗️ Building the project with hatch..."
+	@hatch build
+	@echo "✅ Project built."
+
+hatch-clean: ## Clean hatch build artifacts
+	@echo "🧹 Cleaning hatch build artifacts..."
+	@hatch env prune
+	@echo "✅ Hatch build artifacts cleaned."
+
+hatch-update: ## Update hatch environment (hatch env update)
+	@echo "🔄 Updating Hatch environment..."
+	@hatch env remove default || true
+	@hatch run python --version
+	@echo "✅ Hatch environment updated."
+
+hatch-run-%:
 	@$(MAKE) _run-with-log ACTION=$* COMMAND="hatch run $*"
 
 help: ## Lists available targets
@@ -201,7 +220,7 @@ $1: ## hatch run"$(1)"
 endef
 
 scripts := \
-    convert-pdf-to-csv \
+    ssacrd-pdfs-to-xlsx \
     fownes-street \
     key-check \
     analyze-spreadsheet \
