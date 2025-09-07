@@ -2,6 +2,7 @@
 src/finances/generated/
 *.bak
 *.csv
+*.pdf
 *.sqlite
 *.txt
 *.yml
