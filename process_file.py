@@ -1,4 +1,3 @@
-
 #!/usr/bin/env python3
 """
 Process file with optional output directory.
@@ -62,8 +61,8 @@ def main(argv: list[str] | None = None) -> int:
     # process_file(file_to_process, out_file)
     print(f"Output written to '{str(out_file)}'.")
 
-
     return 0
+
 
 if __name__ == "__main__":
     raise SystemExit(main())

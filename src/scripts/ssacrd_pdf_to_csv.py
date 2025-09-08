@@ -1,3 +1,4 @@
+import argparse
 import re
 from dataclasses import dataclass
 from datetime import datetime
@@ -22,9 +23,30 @@ class Transaction:
             return f"{self.date},{self.description},,{amount:.2f}"
 
 
-def main() -> None:
-    pdf_path = "2025-02.pdf"  # your PDF statement
-    output_csv = "transactions_2025_02.csv"
+def main(argv: list[str] | None = None) -> None:
+    p = argparse.ArgumentParser(description="Process file.")
+    p.add_argument(
+        "input_file",
+        help="File to process.",
+    )
+
+    p.add_argument(
+        "-o",
+        "--output-dir",
+        default="./output",
+        help="Folder to write output files into (tilde ok).",
+    )
+    p.add_argument(
+        "-s",
+        "--skip-existing",
+        action="store_true",
+        help="Skip conversion if the target output file already exists.",
+    )
+    ns = p.parse_args(argv)
+    pdf_path = Path(ns.input_file)  # your PDF statement
+    print(f"Processing {pdf_path}")
+
+    output_csv = Path(ns.output_dir) / f"transactions_{pdf_path.stem}.csv"
 
     # --- helpers ---------------------------------------------------------------
 
@@ -79,8 +101,8 @@ def main() -> None:
 
     FILENAME_YM = re.compile(r"(?P<year>\d{4})-(?P<month>\d{2})", re.IGNORECASE)
 
-    def parse_statement_year(pdf_file: str) -> int:
-        m = FILENAME_YM.search(Path(pdf_file).name)
+    def parse_statement_year(pdf_file: Path) -> int:
+        m = FILENAME_YM.search(pdf_file.name)
         if m:
             return int(m.group("year"))
         # fallback to current year if not encoded in filename
@@ -147,6 +169,8 @@ def main() -> None:
         output = "Date,Description,Credit (£),Debit (£)\n"
         for line in lines:
             output += line + "\n"
+
+        print(f"→ Writing: {output_csv}")
 
         with open(output_csv, "w") as file:
             file.write(output)

@@ -14,17 +14,36 @@ Usage:
 from __future__ import annotations
 
 import argparse
+import os
+import shutil
 import subprocess
 import sys
 from pathlib import Path
 
+if shutil.which("hatch") is None:
+    print(
+        "Error: 'hatch' not found in PATH. Install Hatch or add it to PATH.",
+        file=sys.stderr,
+    )
+    sys.exit(2)
+
+
+def _looks_like_path(s: str) -> bool:
+    # Treat as a path if it ends with .py or contains a path separator
+    return (
+        s.endswith(".py") or (os.sep in s) or (os.altsep is not None and os.altsep in s)
+    )
+
 
 def main(argv: list[str] | None = None) -> int:
-    p = argparse.ArgumentParser(description="Process files in bulk.")
+    p = argparse.ArgumentParser(description="Process files in bulk via Hatch.")
     # This script is useless without a Python executable.
     p.add_argument(
-        "python_script",
-        help="Path to your Python executable.",
+        "target",
+        help=(
+            "Hatch script name (from [tool.hatch.scripts]) "
+            "OR path to a Python script (e.g., src/scripts/foo.py)."
+        ),
     )
     p.add_argument(
         "-i",
@@ -57,7 +76,7 @@ def main(argv: list[str] | None = None) -> int:
     )
     ns = p.parse_args(argv)
 
-    python_script = ns.python_script
+    target = ns.target
     in_dir = Path(ns.input_dir).expanduser()
     out_dir = Path(ns.output_dir).expanduser()
     file_extension = ns.file_extension
@@ -67,8 +86,13 @@ def main(argv: list[str] | None = None) -> int:
         print(f"Input directory not found: {in_dir}", file=sys.stderr)
         return 2
 
-    file_iter = in_dir.glob("*." + file_extension)
-    files = sorted(file_iter)
+    if file_extension == "*":
+        files = sorted(in_dir.glob("*"))
+    else:
+        files = sorted(in_dir.glob(f"*.{file_extension}")) + sorted(
+            in_dir.glob(f"*.{file_extension.upper()}")
+        )
+
     if not files:
         print(f"No files found in {in_dir}", file=sys.stderr)
         return 1
@@ -78,37 +102,36 @@ def main(argv: list[str] | None = None) -> int:
     ok = 0
     fail = 0
 
-    print(f"Processing files in '{in_dir}'\n")
+    print(f"Processing files in '{in_dir}' via Hatch\n")
+
+    hatch_prefix: list[str] = ["hatch", "run"]
+
+    # Decide whether target is a hatch script or a python path
+    use_path = _looks_like_path(target)
+    if use_path:
+        target_path = str(Path(target).expanduser())
+        base_cmd = hatch_prefix + ["python", target_path, "--"]
+    else:
+        # Treat as a Hatch script alias from pyproject
+        base_cmd = hatch_prefix + [target, "--"]
+
     for file_path in files:
-        trying = (
-            f"Trying: {ns.python_script} --output-dir {str(out_dir)}"
-        )
+        cmd = base_cmd + ["--output-dir", str(out_dir)]
         if skip_existing:
-            trying += " --skip-existing"
-        trying += f" {str(file_path)}"
-        print(trying)
+            cmd.append("--skip-existing")
+        cmd.append(str(file_path))
+
+        print("Trying:", " ".join(cmd))
         try:
-            # Call your python_script with safe args (no shell quoting woes).
-            run_parameters: list[str] = [
-                sys.executable,
-                python_script,
-                "--output-dir",
-                str(out_dir),
-            ]
+            subprocess.run(cmd, check=True)
 
-            if skip_existing:
-                run_parameters.append("--skip-existing")
-
-            run_parameters.append(str(file_path))
-
-            subprocess.run(
-                run_parameters,
-                check=True,
-            )
             ok += 1
         except subprocess.CalledProcessError as e:
             print(f"✗ FAILED for {file_path}: {e}", file=sys.stderr)
             fail += 1
+        except KeyboardInterrupt:
+            print("\nAborted by user.")
+            break
 
     print(f"\nDone. {ok} succeeded, {fail} failed.")
     return 0 if fail == 0 else 3
