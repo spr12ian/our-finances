@@ -1,9 +1,14 @@
 #!/usr/bin/env python3
 """
-Batch process script for all files in input directory with optional output directory.
+Batch process all files in input directory with Python script optional output directory.
 
 Usage:
-  python3 src/scripts/batch_process.py --skip-existing
+  python3 src/scripts/batch_process.py \
+    -i ./input               # Input folder (optional, default .)
+    -o ./output              # Output folder (optional, default ./output)
+    -s                       # Skip existing output files
+    --file-extension png     # File extension to process (optional, default '*')
+    ./path/to/your_script.py # Your Python python_script script
 """
 
 from __future__ import annotations
@@ -16,15 +21,16 @@ from pathlib import Path
 
 def main(argv: list[str] | None = None) -> int:
     p = argparse.ArgumentParser(description="Process files in bulk.")
+    # This script is useless without a Python executable.
     p.add_argument(
+        "python_script",
+        help="Path to your Python executable.",
+    )
+    p.add_argument(
+        "-i",
         "--input-dir",
         default=".",
         help="Folder containing input files (tilde ok).",
-    )
-    p.add_argument(
-        "--file-extension",
-        default="*",
-        help="File extension to process (default: '*').",
     )
     # Default output folder is ./output
     # This is to avoid accidental overwrites if user runs from source folder.
@@ -33,62 +39,70 @@ def main(argv: list[str] | None = None) -> int:
     # out_dir.mkdir(parents=True, exist_ok=True)
 
     p.add_argument(
+        "-o",
         "--output-dir",
         default="./output",
         help="Folder to write output files into (tilde ok).",
     )
     p.add_argument(
-        "--recursive",
-        action="store_true",
-        help="Recurse into subfolders.",
+        "--file-extension",
+        default="*",
+        help="File extension to process (default: '*').",
     )
     p.add_argument(
+        "-s",
         "--skip-existing",
         action="store_true",
         help="Skip conversion if the target output file already exists.",
     )
-    # Note: No default here, to force user to think about it.
-    # This script is useless without a converter.
-    p.add_argument(
-        "--converter",
-        help="Path to your converter script.",
-    )
     ns = p.parse_args(argv)
 
+    python_script = ns.python_script
     in_dir = Path(ns.input_dir).expanduser()
-    file_extension = ns.file_extension
     out_dir = Path(ns.output_dir).expanduser()
-    out_dir.mkdir(parents=True, exist_ok=True)
+    file_extension = ns.file_extension
+    skip_existing = ns.skip_existing
 
     if not in_dir.exists():
         print(f"Input directory not found: {in_dir}", file=sys.stderr)
         return 2
 
-    file_iter = (
-        in_dir.rglob("*." + file_extension)
-        if ns.recursive
-        else in_dir.glob("*." + file_extension)
-    )
+    file_iter = in_dir.glob("*." + file_extension)
     files = sorted(file_iter)
     if not files:
         print(f"No files found in {in_dir}", file=sys.stderr)
         return 1
 
+    out_dir.mkdir(parents=True, exist_ok=True)
+
     ok = 0
     fail = 0
 
+    print(f"Processing files in '{in_dir}'\n")
     for file_path in files:
-        output_xlsx = out_dir / (file_path.stem + ".xlsx")
-
-        if ns.skip_existing and output_xlsx.exists():
-            print(f"↷ Skipping (exists): {output_xlsx}")
-            continue
-
-        print(f"→ Converting {file_path} → {output_xlsx}")
+        trying = (
+            f"Trying: {ns.python_script} --output-dir {str(out_dir)}"
+        )
+        if skip_existing:
+            trying += " --skip-existing"
+        trying += f" {str(file_path)}"
+        print(trying)
         try:
-            # Call your converter with safe args (no shell quoting woes).
+            # Call your python_script with safe args (no shell quoting woes).
+            run_parameters: list[str] = [
+                sys.executable,
+                python_script,
+                "--output-dir",
+                str(out_dir),
+            ]
+
+            if skip_existing:
+                run_parameters.append("--skip-existing")
+
+            run_parameters.append(str(file_path))
+
             subprocess.run(
-                [sys.executable, ns.converter, str(file_path), str(output_xlsx)],
+                run_parameters,
                 check=True,
             )
             ok += 1
