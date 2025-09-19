@@ -56,4 +56,6 @@ Prefer Numeric(10,2) over Float for financial data, map to Python as Decimal typ
 
 make install_hatch_plugin PLUGIN=hatch-vcs
 
+``` bash
 sudo -v && curl https://rclone.org/install.sh | sudo bash
+```
