@@ -58,4 +58,18 @@ make install_hatch_plugin PLUGIN=hatch-vcs
 
 ``` bash
 sudo -v && curl https://rclone.org/install.sh | sudo bash
+
+rclone version
+
+rclone config
+
+rclone authorize "drive"
+
+rclone listremotes
+
+rclone about gdrive:
+
+rclone lsd gdrive: -vv
+
+rclone copy "gdrive:Path/To/Folder" ~/GoogleDrive/Folder --progress --transfers 8 --checkers 8
 ```
