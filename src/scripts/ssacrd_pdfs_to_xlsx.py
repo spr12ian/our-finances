@@ -18,18 +18,12 @@ FILE_PROCESSOR = SCRIPTS_DIR / "ssacrd_pdf_to_csv.py"
 
 SSACRD_DIR = (
     Path.home()
-    / "data"
-    / "GoogleDrive"
-    / "My Drive"
-    / "People"
-    / "Ian Sweeney"
-    / "Financial Transactions"
-    / "SSACRD (5229 4890 4592 9253)"
+    / "SSACRD"
 )
 
-INPUT_DIR = SSACRD_DIR / "Statements (PDF)"
+INPUT_DIR = SSACRD_DIR
 
-OUTPUT_DIR = SSACRD_DIR / "Transactions (CSV)"
+OUTPUT_DIR = SSACRD_DIR
 
 
 def main() -> int:
